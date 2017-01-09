@@ -40,6 +40,20 @@ class Forest;
 
 class Node {
 	private:
+
+	//////rfs implementation
+	int cluster_size;
+	int alpha;
+	int beta;
+	int int_label; //*only leaves have it*//using integers as lables for leaves to avoid string comparison	
+	std::vector<int> cluster;	//for finding LCA mapping of u in I(S), I need to find cluter corresponding to u, since source trees won't change, why not do it once and store it in DS? :)
+	
+	int lca_mapping;
+	int lca_hlpr;
+
+	//////rfs implementation		
+
+
 	//Node *lc;			// left child
 	//Node *rc;			// right child
 	list<Node *> children; // children
@@ -87,6 +101,15 @@ class Node {
 	void init(Node *lc, Node *rc, Node *p, string n, int d) {
 //		this->lc = lc;
 //		this->rc = rc;
+
+		/////reza
+		this->alpha = 0;
+		this->beta = 0;
+		this->lca_mapping = 0;
+		this->lca_hlpr = 0;
+
+		///reza
+
 		this->p = p;
 		this->name = string(n);
 		this->twin = NULL;
@@ -117,6 +140,107 @@ class Node {
 		if (rc != NULL)
 			add_child(rc);
 	}
+
+
+
+
+//////////////////////////////////////////////////////////////
+/////////////added by REZA ///////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+	int set_cluster_size(int c) {
+		cluster_size = c;
+	}
+	int get_cluster_size() {
+		return cluster_size;
+	}
+
+	int set_cluster(vector<int> v) {
+		cluster = v;
+	}
+
+	vector<int> get_cluster() {
+		return cluster;
+	}	
+
+	int set_alpha(int a) {
+		alpha = a;
+	}
+	int get_alpha() {
+		return alpha;
+	}
+
+	int set_beta(int b) {
+		beta = b;
+	}
+	int get_beta() {
+		return beta;
+	}
+
+	int set_int_label(int b) {
+		beta = b;
+	}
+	int get_int_label() {
+		return beta;
+	}
+
+	int set_lca_mapping(int l) {
+		lca_mapping = l;
+	}
+	int get_lca_mapping() {
+		return lca_mapping;
+	}
+
+	int set_lca_hlpr(int b) {
+		lca_hlpr = b;
+	}
+	int increase_lca_hlpr_by(int b) {
+		lca_hlpr +=b;
+	}
+	int get_lca_hlpr() {
+		return lca_hlpr;
+	}
+
+	void find_cluster_int_labels_hlpr(vector<int> &leaves) {
+		list<Node *>::iterator c;
+		for(c = children.begin(); c != children.end(); c++) {
+			if ((*c)->is_leaf())
+				leaves.push_back((*c)->get_int_label());
+			else
+				(*c)->find_cluster_int_labels_hlpr(leaves);
+		}
+
+	}
+	
+	// find the leaves in this node's subtree
+	vector<int> find_cluster_int_labels() {
+		vector<int> leaves = vector<int>();
+		if (is_leaf())
+			leaves.push_back(this->get_int_label());
+		else
+			find_cluster_int_labels_hlpr(leaves);
+		//sort it. (this is helpful when finding lca). Note this is done only ONCE, so it is not that expensive
+		sort( leaves.begin(), leaves.end() );
+
+		return leaves;
+	}
+
+
+//////////////////<<<<<<<<<<<<<<<<<<<<<<</////////////////////
+/////////////added by REZA ///////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
 	// copy constructor
 	Node(const Node &n) {
 		p = NULL;
@@ -2302,20 +2426,6 @@ template <typename T> void print_vector(vector <T> V) {
 
 
 #endif
-
-
-
-//////////////////////////////////////////////////////////////
-/////////////added by REZA ///////////////////////////////////
-//////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
 
 
 

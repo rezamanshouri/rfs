@@ -70,6 +70,28 @@ std::string ReplaceAll(std::string str, const std::string& from, const std::stri
 static unsigned int NUMBER_OF_SOURCE_TREES_ZZ;
 
 
+////////////////RFS implementation//////////////////////
+#include <unordered_map>
+void initialize_alpha_beta(Node* Q);
+void set_cluster_size(Node* Q);
+void find_int_labels_for_leaves_in_supertree(Node* root, int& current_label, unordered_map<string, int>& map);
+void set_int_labels_for_leaves_in_source_tree(Node* root, unordered_map<string, int>& map);
+void compute_lca_mapping_S_R(Node* S, Node* R);
+void compute_lca_mapping_helper_1(vector<int>& cluster, Node* R, int& lca);
+void compute_lca_mapping_helper_2(vector<int>& cluster, Node* R, int& lca, bool& found);
+void set_cluster_in_tree(Node* T);
+void reset_fields_to_initial_values(Node* T);
+
+
+template <typename T>
+bool IsSubset(std::vector<T> A, std::vector<T> B)
+{
+    //std::sort(A.begin(), A.end());
+    //std::sort(B.begin(), B.end());
+    return std::includes(A.begin(), A.end(), B.begin(), B.end());
+}
+
+
 /////////////////////////////     main()     /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -78,29 +100,224 @@ int main(int argc, char** argv) {
 
     //two trees with RF distance of 4
     string suptree = "((a,(b,g)),((c,f),(d,e)));";
-    string input_tree = "(a,(b,(c,(d,(e,(f,g))))));";
+    string input_tree = "(g,(f,(e,(d,(c,(b,a))))));";
 
-    Node* supertree= build_tree(suptree);
-    adjustTree(supertree);
+    Node* T= build_tree(suptree);
+    adjustTree(T);
 
-    Node* source_tree= build_tree(input_tree);
-    adjustTree(source_tree);
+    Node* S= build_tree(input_tree);
+    adjustTree(S);
 
-    //cout << supertree->str_subtree() << endl;
+    cout << "T: " << T->str_subtree() << endl;
 
+    /*
     for (int i= 0; i < 13; i++){
       cout << i << "- " ;
-      Node* n = supertree->find_by_prenum(i);
+      Node* n = T->find_by_prenum(i);
       cout << n->str_subtree() << endl;      
     }
+    */
 
-    //suppose we want to solve SPR(v) on supertree, where v is node with prenum 10, i.e. to find best place to regraft node v
-    Node* st_root;
+    //suppose we want to solve SPR(v) on T, where v is node with prenum 10, i.e. to find best place to regraft node v
+    
+    //we make tree R = SPR(v,rt(T)) from T with the following steps:
+    //1- create a new node, R, and make rt(T) to be its child
+    //2- Make the spr move as v->spr(rt(T),0), i.e. prune p(v) from tree and regraft it between rt(T) and R
+    Node* R= new Node();
+    R->add_child(T);
+    adjustTree(R); //now prenum of nodes in T has been changed (actually +1'ed)
+    //Now in the paper's notation:
+    //T represents Q
+
+    cout << "R: " << R->str_subtree() << endl;
+    Node* v = T -> find_by_prenum(11);
+    cout << "v is: " << v->str_subtree() << endl;
+    int which_sibling = 0;
+    v->spr(T,which_sibling);
+    adjustTree(R);//DON'T FORGET THIS!!!
+    cout << "R after SPR(v,T): " << R->str_subtree() << endl;
+
+    cout << "*****************************" << endl;
+
+    Node* x = R -> find_by_prenum(1);
+    cout << "x's name: " << x -> get_name() << endl;
+    vector<Node *> cluster = vector<Node *>();
+    cluster = x -> find_leaves();
+    for (Node* n : cluster) {
+      cout << n->get_name() << endl;
+    }
+
+    cout << "T: "  << T->str_subtree() << endl;    
 
 
+    //////////////////////////////////////////////////////////
+    ///////////setting int labels for leaves/////////////////
+    unordered_map<string, int> int_label_map;
+    int starting_label = 1;
+    find_int_labels_for_leaves_in_supertree(R, starting_label, int_label_map);
+
+    for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it )
+      std::cout << it->first << ":" << it->second << endl;
+    
+
+    set_int_labels_for_leaves_in_source_tree(S, int_label_map);
+    cout << "b's label is: " << S->find_by_prenum(3)->get_int_label() << endl;
+
+
+    cout << "-------------------------------------------------" << endl;
+    std::vector<int> vv;
+    vv.push_back(3);
+    vv.push_back(4);
+    vv.push_back(6);
+    int lca;
+    compute_lca_mapping_helper_1(vv, R, lca);
+    cout << "lca mapping is: " << lca << endl;
+    int lca2 =0;
+    bool f = false;
+    compute_lca_mapping_helper_2(vv, R, lca2, f);
+    cout << "lca mapping is: " << lca2 << endl;
+
+    cout << "-------------------------------------------------" << endl;
+    set_cluster_in_tree(S);
+    compute_lca_mapping_S_R(S, R);
+
+
+    R->delete_tree();
 
 
     return 0;
+}
+
+//for all u in I(S), find the LCA mapping of u:
+//1-Let's cluster(u) be set of leaves in subtree rooted u in tree S,
+//2-Find LCA of cluster(u) in tree R, and set its lca_mapping
+void compute_lca_mapping_S_R(Node* S, Node* R) {
+    if(S->is_leaf()) {
+      //do nothing
+    }else {
+      int lca_mapping;
+      vector<int> cluster = S->get_cluster();
+      bool f = false;
+      compute_lca_mapping_helper_2(cluster, R, lca_mapping, f);
+      S->set_lca_mapping(lca_mapping);
+      //recursively set children's lca_mapping
+      list<Node *>::iterator c;
+      list<Node *> children= S->get_children();
+      for(c = children.begin(); c != children.end(); c++) {
+        compute_lca_mapping_S_R(*c, R);
+      }
+    }
+}
+
+void compute_lca_mapping_helper_1(vector<int>& cluster, Node* R, int& lca) {
+    bool lca_must_be_in_lower_levels = false;
+    Node* which_child;
+
+    list<Node *>::iterator c;
+    list<Node *> children= R->get_children();
+    for(c = children.begin(); c != children.end(); c++) {
+      vector<int> c_cluster = (*c)-> find_cluster_int_labels();
+      if (includes(c_cluster.begin(), c_cluster.end(), cluster.begin(), cluster.end())) {  //if cluster is a subset of c_cluster
+        lca_must_be_in_lower_levels = true;
+        which_child = *c;
+        break;
+      }
+    }
+
+    if(lca_must_be_in_lower_levels) {
+      compute_lca_mapping_helper_1(cluster, which_child, lca);
+    } else {
+      lca = R -> get_preorder_number();
+    }
+}
+
+//assuming "cluster" is the labels for whch we are lookig the LCA, the function returns a pointer to lca
+void compute_lca_mapping_helper_2(vector<int>& cluster, Node* R, int& lca, bool& found) {
+    if(! R->is_leaf()){
+      list<Node *>::iterator c;
+      list<Node *> children= R->get_children();
+      for(c = children.begin(); c != children.end(); c++) {
+      compute_lca_mapping_helper_2(cluster, *c, lca, found);
+      }
+    }
+
+    if(found) { // to return from nested recursive calls after 
+      return;
+    }
+
+    if(R-> get_lca_hlpr() == cluster.size()) {
+      lca = R->get_preorder_number();
+      found = true;
+      R->set_lca_hlpr(0); //to avoid for reseting lca_hlpr values to 0 for the next time we compute lca_mapping
+      return;
+    }
+
+    if(R->is_leaf()) {
+      //assuming "cluster" is SORTED!!
+      if(binary_search(cluster.begin(), cluster.end(), R->get_int_label())) {
+        ( R->get_p() ) -> increase_lca_hlpr_by(1);
+      }
+    } else {
+      ( R->get_p() ) -> increase_lca_hlpr_by(R->get_lca_hlpr());
+      R->set_lca_hlpr(0); //to avoid for reseting lca_hlpr values to 0 for the next time we compute lca_mapping
+    }
+}
+
+
+//it does two things:
+//1- sets int labels for taxa on supertree
+//2- saves the mapping for future refrence (labeling source trees, ...)
+void find_int_labels_for_leaves_in_supertree(Node* root, int& current_label, unordered_map<string, int>& map) {
+    if (root->is_leaf()) {
+        map.insert(pair<string, int>(root->get_name(), current_label));
+        root->set_int_label(current_label);
+        current_label++;
+    }else {
+      for (auto child : root->get_children()) {
+        find_int_labels_for_leaves_in_supertree(child, current_label, map);
+      }
+    }  
+}
+
+//set int labels for leaves in one source tree
+void set_int_labels_for_leaves_in_source_tree(Node* root, unordered_map<string, int>& map) {
+    if (root->is_leaf()) {
+        root->set_int_label(map.find(root->get_name())->second);
+    }else {
+      for (auto child : root->get_children()) {
+        set_int_labels_for_leaves_in_source_tree(child, map);
+      }
+    }  
+}
+
+//this method should be called before calling find_lca()
+void set_cluster_in_tree(Node* T) {
+    if (T-> is_leaf()) {
+      std::vector<int> v {T->get_int_label()};
+      T-> set_cluster(v);
+    }else {
+      T-> set_cluster(T->find_cluster_int_labels());
+    }
+
+    list<Node *>::iterator c;
+    list<Node *> children= T->get_children();
+    for(c = children.begin(); c != children.end(); c++) {
+      set_cluster_in_tree(*c);
+    }
+}
+
+//reset invalid fields in ST after each iteration to initial values
+void reset_fields_to_initial_values(Node* T) {
+    T->set_cluster_size(0);
+    //T->set_lca_hlpr(0);
+    T->set_alpha(0);
+    T->set_beta(0);
+
+    list<Node *>::iterator c;
+    list<Node *> children= T->get_children();
+    for(c = children.begin(); c != children.end(); c++) {
+      reset_fields_to_initial_values(*c);
+    }    
 }
 
 
@@ -215,12 +432,10 @@ void write_line_to_File(string s,const char* file_name) {
 
 
 void adjustTree(Node* myTree) {
-
     myTree->set_depth(0);
     myTree->fix_depths();
     myTree->preorder_number();
     myTree->edge_preorder_interval();
-
 }
 
 
