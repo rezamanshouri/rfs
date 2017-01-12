@@ -48,8 +48,9 @@ class Node {
 	int int_label; //*only leaves have it*//using integers as lables for leaves to avoid string comparison	
 	std::vector<int> cluster;	//for finding LCA mapping of u in I(S), I need to find cluter corresponding to u, since source trees won't change, why not do it once and store it in DS? :)
 	
-	int lca_mapping;
+	int lca_mapping;  //for the cluster associated to this node, lca_mapping is the prenum of the LCA node in supertree 
 	int lca_hlpr;
+	int b_in_lemma12;
 
 	//////rfs implementation		
 
@@ -107,6 +108,7 @@ class Node {
 		this->beta = 0;
 		this->lca_mapping = 0;
 		this->lca_hlpr = 0;
+		this->b_in_lemma12 = 0;
 
 		///reza
 
@@ -184,6 +186,13 @@ class Node {
 		return beta;
 	}
 
+	int set_b_in_lemma12(int l) {
+		b_in_lemma12 = l;
+	}
+	int get_b_in_lemma12() {
+		return b_in_lemma12;
+	}
+
 	int set_lca_mapping(int l) {
 		lca_mapping = l;
 	}
@@ -225,6 +234,44 @@ class Node {
 		return leaves;
 	}
 
+	//increments alpha value in all descendants of this
+	void increment_by1_alpha_in_all_descendants() {
+		list<Node *>::iterator c;
+    	list<Node *> children= get_children();
+    	for(c = children.begin(); c != children.end(); c++)  {
+    		(*c)->increment_by1_alpha_in_all_descendants_hlpr();
+    	}
+	}
+
+	void increment_by1_alpha_in_all_descendants_hlpr() {
+		set_alpha(get_alpha()+1);
+
+		list<Node *>::iterator c;
+    	list<Node *> children= get_children();
+    	for(c = children.begin(); c != children.end(); c++)  {
+    		(*c)->increment_by1_alpha_in_all_descendants_hlpr();
+    	}
+	}
+
+	//increments beta value in all descendants of this
+	void increment_by1_beta_in_all_descendants() {
+		list<Node *>::iterator c;
+    	list<Node *> children= get_children();
+    	for(c = children.begin(); c != children.end(); c++)  {
+    		(*c)->increment_by1_beta_in_all_descendants_hlpr();
+    	}
+	}
+
+	void increment_by1_beta_in_all_descendants_hlpr() {
+		set_beta(get_beta()+1);
+
+		list<Node *>::iterator c;
+    	list<Node *> children= get_children();
+    	for(c = children.begin(); c != children.end(); c++)  {
+    		(*c)->increment_by1_beta_in_all_descendants_hlpr();
+    	}
+	}
+
 
 //////////////////<<<<<<<<<<<<<<<<<<<<<<</////////////////////
 /////////////added by REZA ///////////////////////////////////
@@ -243,6 +290,15 @@ class Node {
 
 	// copy constructor
 	Node(const Node &n) {
+
+		//Reza
+		alpha = n.alpha;
+		beta = n.beta;
+		lca_mapping = n.lca_mapping;
+		lca_hlpr = n.lca_hlpr;
+		b_in_lemma12 = b_in_lemma12;
+		//
+
 		p = NULL;
 		name = n.name.c_str();
 		twin = n.twin;

@@ -79,8 +79,14 @@ void set_int_labels_for_leaves_in_source_tree(Node* root, unordered_map<string, 
 void compute_lca_mapping_S_R(Node* S, Node* R);
 void compute_lca_mapping_helper_1(vector<int>& cluster, Node* R, int& lca);
 void compute_lca_mapping_helper_2(vector<int>& cluster, Node* R, int& lca, bool& found);
-void set_cluster_in_tree(Node* T);
+void set_cluster_in_source_tree(Node* T);
+void set_cluster_size_in_supertree(Node* T);
 void reset_fields_to_initial_values(Node* T);
+void solve_SPR_RS(Node& T, Node& spr_on, Node& S);
+void traverse_S_and_update_alpha_beta_in_Q(Node& T, Node& v, Node& S);
+void find_b_in_lemma12(Node& S, Node& R); // i'm not using this now
+void suppress_nodes_with_mapping_in_Rv(Node& S_prime, Node& v);
+void preorder_trversal(Node& n);
 
 
 template <typename T>
@@ -100,7 +106,7 @@ int main(int argc, char** argv) {
 
     //two trees with RF distance of 4
     string suptree = "((a,(b,g)),((c,f),(d,e)));";
-    string input_tree = "(g,(f,(e,(d,(c,(b,a))))));";
+    string input_tree = "(c,(f,(e,(d,(g,(b,a))))));";
 
     Node* T= build_tree(suptree);
     adjustTree(T);
@@ -108,92 +114,214 @@ int main(int argc, char** argv) {
     Node* S= build_tree(input_tree);
     adjustTree(S);
 
-    cout << "T: " << T->str_subtree() << endl;
-
-    /*
-    for (int i= 0; i < 13; i++){
-      cout << i << "- " ;
-      Node* n = T->find_by_prenum(i);
-      cout << n->str_subtree() << endl;      
-    }
-    */
-
-    //suppose we want to solve SPR(v) on T, where v is node with prenum 10, i.e. to find best place to regraft node v
-    
-    //we make tree R = SPR(v,rt(T)) from T with the following steps:
-    //1- create a new node, R, and make rt(T) to be its child
-    //2- Make the spr move as v->spr(rt(T),0), i.e. prune p(v) from tree and regraft it between rt(T) and R
-    Node* R= new Node();
-    R->add_child(T);
-    adjustTree(R); //now prenum of nodes in T has been changed (actually +1'ed)
-    //Now in the paper's notation:
-    //T represents Q
-
-    cout << "R: " << R->str_subtree() << endl;
-    Node* v = T -> find_by_prenum(11);
-    cout << "v is: " << v->str_subtree() << endl;
-    int which_sibling = 0;
-    v->spr(T,which_sibling);
-    adjustTree(R);//DON'T FORGET THIS!!!
-    cout << "R after SPR(v,T): " << R->str_subtree() << endl;
-
-    cout << "*****************************" << endl;
-
-    Node* x = R -> find_by_prenum(1);
-    cout << "x's name: " << x -> get_name() << endl;
-    vector<Node *> cluster = vector<Node *>();
-    cluster = x -> find_leaves();
-    for (Node* n : cluster) {
-      cout << n->get_name() << endl;
-    }
-
-    cout << "T: "  << T->str_subtree() << endl;    
-
-
-    //////////////////////////////////////////////////////////
-    ///////////setting int labels for leaves/////////////////
+    ///////////setting int labels for leaves, should be done in main()
     unordered_map<string, int> int_label_map;
     int starting_label = 1;
-    find_int_labels_for_leaves_in_supertree(R, starting_label, int_label_map);
+    find_int_labels_for_leaves_in_supertree(T, starting_label, int_label_map);  //finding int labels for all taxa in supertree
+    set_int_labels_for_leaves_in_source_tree(S, int_label_map); // set int labels for taxa in source trees
+    //for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it ) cout << it->first << ":" << it->second << endl;
 
-    for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it )
-      std::cout << it->first << ":" << it->second << endl;
-    
-
-    set_int_labels_for_leaves_in_source_tree(S, int_label_map);
-    cout << "b's label is: " << S->find_by_prenum(3)->get_int_label() << endl;
+    //since source trees won't change, for each node in each source tree, we can find clusters only ones, and store it in DS 
+    set_cluster_in_source_tree(S);
 
 
-    cout << "-------------------------------------------------" << endl;
-    std::vector<int> vv;
-    vv.push_back(3);
-    vv.push_back(4);
-    vv.push_back(6);
-    int lca;
-    compute_lca_mapping_helper_1(vv, R, lca);
-    cout << "lca mapping is: " << lca << endl;
-    int lca2 =0;
-    bool f = false;
-    compute_lca_mapping_helper_2(vv, R, lca2, f);
-    cout << "lca mapping is: " << lca2 << endl;
 
-    cout << "-------------------------------------------------" << endl;
-    set_cluster_in_tree(S);
+    int which_sibling = 0;
+    Node* v = T->find_by_prenum(7);
+    Node* R= new Node();
+    R->add_child(T);
+    adjustTree(R);
+
+    v->spr(T,which_sibling);
+    adjustTree(R);//DON'T FORGET THIS!!!
+
+    cout << "R: " << R->str_subtree() << endl;
+    cout << "S: " << S->str_subtree() << endl;
+
+    Node* uu = S->find_by_prenum(8);
+    Node* vv = R->find_by_prenum(3);
+
     compute_lca_mapping_S_R(S, R);
+cout << ".................................." << endl;
+preorder_trversal(*S);
+
+cout << ".................................." << endl;    
+    cout << "S : " << S->str_subtree() << endl;
+    Node S_prime = Node(*S); //make a copy of S
+    cout << "S': " << S_prime.str_subtree() << endl;
+preorder_trversal(S_prime);    
+    suppress_nodes_with_mapping_in_Rv(S_prime, *vv);  //S' is now  constructed from S
+    cout << "..........after suppress.. for: " << vv->str_subtree()  << endl; cout << S_prime.str_subtree() << endl;
+    cout << "S': " << S_prime.str_subtree() << endl;
+    cout << "S:  " << S->str_subtree() << endl;      
 
 
+    //don't forget to free memory!!
     R->delete_tree();
-
+    S->delete_tree();
+    S_prime.delete_tree();
 
     return 0;
 }
 
+//tetsting
+void preorder_trversal(Node& n) {
+    cout << n.str_subtree() << endl;
+    cout << n.get_lca_mapping() << "\n"<< endl;
+
+    //just for testing:
+    list<Node *>::iterator c;
+    list<Node *> children= n.get_children();
+    for(c = children.begin(); c != children.end(); c++) {
+      preorder_trversal(**c);
+    }
+}
+
+
+
+
+
+
+//given trees T, S and node v on T to be pruned, finds, in O(n), the best place to regraft v so that RF-dist(T,S) is minimized,
+//i.e. it solves SPR(v) for T (and S as source tree)
+//it changes the T to its best SPR neighbor, too.
+void solve_SPR_RS(Node& T, Node& v, Node& S) {
+
+  //1- preprocessing step:
+  ////////////////////////////////////////////////////////
+    //we make tree R = SPR(v,rt(T)) from T with the following steps:
+    //1- create a new node, R, and make rt(T) to be its child
+    //2- Make the spr move as v->spr(rt(T),0), i.e. prune p(v) from tree and regraft it between rt(T) and R
+    Node* R= new Node();
+    R->add_child(&T);
+    adjustTree(R); //because .. prenum of nodes in T has been changed (actually +1'ed)
+
+    //cunstructing R which is SPR(v,rt(T))
+    int which_sibling = 0;
+    v.spr(&T,which_sibling);
+    adjustTree(R);//DON'T FORGET THIS!!!
+    //cout << "R after SPR(v,T): " << R->str_subtree() << endl;
+    
+    compute_lca_mapping_S_R(&S, R);
+    set_cluster_size_in_supertree(R);
+
+
+  //2- Calculating alpha and beta in Q:
+  ///////////////////////////////////////////////////////////
+    //The algorithm traverses through S, and updates alpha and beta values in Q (which is the parameter T). 
+    //Note I pass T (rather than R) to the following function, since T repreents Q in the paper's notation, and we only care about alpha&beta vaues in Q.
+    traverse_S_and_update_alpha_beta_in_Q(T, v, S);
+
+
+    T.cut_parent();
+    R->delete_tree();
+}
+
+
+//Given the way R is constructed, lca_mapping of any node in S, is either in T_v OR in T_T. (NOTE this is a recursive function and S plays the role of u in the alg in paper)
+//The way I implemented here, avoids some duplicate work (in compare to when I pass R as parameter instead of T and v).
+void traverse_S_and_update_alpha_beta_in_Q(Node& T, Node& v, Node& S) {   //note S here is u in paper's notation
+  if(S.is_leaf()) {
+    //do nothing
+  }else {
+    Node* a;
+    bool lemma10 = false;
+    //Suppose for each u in I(S), lca_mpping(u)=a
+    //There are 4 cases. 
+    //1- if u satisfies precondition of Lemma 9, i.e. a belongs to V(R_v)
+    if (a = v.find_by_prenum(S.get_lca_mapping())) {
+      //do nothing
+    }
+
+    //2- if u satisfies precondition of Lemma 11, i.e. a belongs to V(T_v) AND f_R(S)==0
+    else if (a = T.find_by_prenum(S.get_lca_mapping())) {
+      if (S.get_cluster_size() != a->get_cluster_size()) { //is f_R(S)==0
+        //do nothing
+      }else { //precondition of lemma 10 is true
+        lemma10 = true;
+      }
+    } 
+
+    //3- if u satisfies precondition of Lemma 10, i.e. a belongs to V(T_v) AND f_R(S)==1
+    else if (lemma10) {
+      a->increment_by1_beta_in_all_descendants();
+    } 
+
+    //Lemma 12's precondition: a=T->p() AND |L(R_b)|+|L(R_v)|=|L(S_u)|
+    //Note: if S's lca_mapping is not found in T_v or T_T, then it's lca_mapping is definitely parent of T (or v) which is the only child of R
+    else {
+      //sooooo the tricky part is to find b here:
+      Node S_prime = Node(S); //make a copy of S
+      suppress_nodes_with_mapping_in_Rv(S_prime, v);  //S' is now  constructed from S
+      Node* u_in_S_prime = S_prime.find_by_prenum(S.get_preorder_number()); //find u (S in parameters) in S'  
+      int lca_mapping_lemma12;
+      vector<int> cluster = u_in_S_prime->find_cluster_int_labels();  //note u's cluster field is not valid in S', and I should find it again
+      bool f = false;
+      compute_lca_mapping_helper_2(cluster, T.get_p(), lca_mapping_lemma12, f);
+      Node* b_in_lemma12 = (T.get_p())->find_by_prenum(lca_mapping_lemma12);
+      S_prime.delete_tree(); // don't forget to free memory
+
+      if ( ((b_in_lemma12->find_leaves()).size()) + ((v.find_leaves()).size()) == (S.get_cluster_size()) ) { //|L(R_b)|+|L(R_v)|=?|L(S_u)|
+        b_in_lemma12->increment_by1_alpha_in_all_descendants();
+      }
+
+    }
+
+
+
+    list<Node *>::iterator c;
+    list<Node *> children= S.get_children();
+    for(c = children.begin(); c != children.end(); c++) {
+      traverse_S_and_update_alpha_beta_in_Q(T, v, **c);
+    }
+  } 
+}
+
+//pre-orderly traverses tree S, and suppresses all nodes in it for which lca_mapping is in T_v
+void suppress_nodes_with_mapping_in_Rv(Node& S, Node& v) {
+    if(v.find_by_prenum(S.get_lca_mapping())) {
+      cout << "remove node : " << S.str_subtree() << endl;
+      Node* p = S.get_p();
+      p -> delete_child(&S);
+      S.delete_tree();  //prevent memory leak!
+      if(p -> get_children().size() == 1) {
+        Node* pp = p->get_p();
+        p -> contract_node();
+      }
+    } else {
+      list<Node *>::iterator c;
+      list<Node *> children= S.get_children();
+      for(c = children.begin(); c != children.end(); c++) {
+        suppress_nodes_with_mapping_in_Rv(**c, v);
+      }
+    }
+
+
+}
+
+//Why do we need all the following 3 parameters:
+//S: we need S to make a copy of it and make S' from it (now all prenum, cluster, ... are invalid)
+//u: u is the node for which I know I will need to know b_in_lemma12 field (u exists in both S and S')
+//R: b_in_lemma12 is the mapping of u in R
+//v: cuz S' is constructed from S based on v
+void find_b_in_lemma12(Node& u, Node& S, Node& R, Node& v) {
+  int prenum_of_u = u.get_preorder_number();
+  Node S_prime = Node(S); //make a copy of S
+
+}
+
+
 //for all u in I(S), find the LCA mapping of u:
 //1-Let's cluster(u) be set of leaves in subtree rooted u in tree S,
 //2-Find LCA of cluster(u) in tree R, and set its lca_mapping
+//NOTE: lca_mapping is the prenum f the LCA node in R
 void compute_lca_mapping_S_R(Node* S, Node* R) {
     if(S->is_leaf()) {
-      //do nothing
+      int lca_mapping;
+      vector<int> cluster = S->get_cluster();
+      bool f = false;
+      compute_lca_mapping_helper_2(cluster, R, lca_mapping, f);
+      S->set_lca_mapping(lca_mapping);
     }else {
       int lca_mapping;
       vector<int> cluster = S->get_cluster();
@@ -231,7 +359,8 @@ void compute_lca_mapping_helper_1(vector<int>& cluster, Node* R, int& lca) {
     }
 }
 
-//assuming "cluster" is the labels for whch we are lookig the LCA, the function returns a pointer to lca
+//assuming "cluster" is the labels for which we are lookig for the LCA, the function finds the LCA,
+//and assigns its prenum to parameter "lca"
 void compute_lca_mapping_helper_2(vector<int>& cluster, Node* R, int& lca, bool& found) {
     if(! R->is_leaf()){
       list<Node *>::iterator c;
@@ -253,10 +382,18 @@ void compute_lca_mapping_helper_2(vector<int>& cluster, Node* R, int& lca, bool&
     }
 
     if(R->is_leaf()) {
-      //assuming "cluster" is SORTED!!
-      if(binary_search(cluster.begin(), cluster.end(), R->get_int_label())) {
-        ( R->get_p() ) -> increase_lca_hlpr_by(1);
-      }
+      if(cluster.size() == 1) { //leaves can have lca as well
+        if (R->get_int_label() == cluster[0]) {
+          lca = R->get_preorder_number();
+          found = true;
+          return;
+        }
+      }else {
+        //assuming "cluster" is SORTED!!
+        if(binary_search(cluster.begin(), cluster.end(), R->get_int_label())) {
+          ( R->get_p() ) -> increase_lca_hlpr_by(1);
+        }
+      }  
     } else {
       ( R->get_p() ) -> increase_lca_hlpr_by(R->get_lca_hlpr());
       R->set_lca_hlpr(0); //to avoid for reseting lca_hlpr values to 0 for the next time we compute lca_mapping
@@ -290,19 +427,38 @@ void set_int_labels_for_leaves_in_source_tree(Node* root, unordered_map<string, 
     }  
 }
 
+//finds clusters associated with each node in each SOURCE tree, and stores it in DS to avoid repeated work
 //this method should be called before calling find_lca()
-void set_cluster_in_tree(Node* T) {
+//note a node's cluster is a SORTED vector contining int_labels of the leaves in subtree induced at that node
+void set_cluster_in_source_tree(Node* T) {
     if (T-> is_leaf()) {
       std::vector<int> v {T->get_int_label()};
       T-> set_cluster(v);
+      T-> set_cluster_size(1);
     }else {
       T-> set_cluster(T->find_cluster_int_labels());
+      T-> set_cluster_size((T->get_cluster()).size());
     }
 
     list<Node *>::iterator c;
     list<Node *> children= T->get_children();
     for(c = children.begin(); c != children.end(); c++) {
-      set_cluster_in_tree(*c);
+      set_cluster_in_source_tree(*c);
+    }
+}
+
+//find and set cluster_size for each node in the supertree
+void set_cluster_size_in_supertree(Node* T) {
+    if (T-> is_leaf()) {
+      T-> set_cluster_size(1);
+    }else {
+      T-> set_cluster_size((T->find_leaves()).size());
+    }
+
+    list<Node *>::iterator c;
+    list<Node *> children= T->get_children();
+    for(c = children.begin(); c != children.end(); c++) {
+      set_cluster_size_in_supertree(*c);
     }
 }
 

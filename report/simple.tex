@@ -1,0 +1,42 @@
+\title{RFS Implementation}
+\author{
+        Reza Manshouri \\
+                Department of Computer Science and Computer Engineering\\
+        Texas A\&M University \\}
+\date{\today}
+
+\documentclass[12pt]{article}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Robinson Foulds Supertree (RFS) is one of the fastest supertree algorithms for supertree construction which yields relatively high quality supertrees. Recently, we found new technique, Edge Ratchet, with which we were able to improve upon RFS in some data sets. In our initial implementation, we used an exhaustive search for loval search. Since the exhaustive search is very expensive and not practical for data sets with even 100 taxa, we used random neighbourhood selection. In this approach, in each iteration of hill-climbing search, we randomly chose a small percentage of the neighbourhood, say 5\%, and searched through it exhaustively to find the best neighbour. However, this approach has two main drawbacks. Firs, even with this approach, 2 complete ratchet iterations took more than 48 hours for Marsupials with 267 taxa. Second, random selection of a small portion of neighbourhood is highly prone to result in low quality solutions since we simply ignore a huge percentage of neighbours in each iteration. These made it too difficult and time consuming to further investigate Edge Ratchet technique and test its effectiveness to improve over RFS in larger data sets. 
+
+Thus, we decided to implement RFS and use it as a subroutine in hill-climbing algorithm. We expect by using RFS algorithm, the time to find the best SPR neighbour to be improved greatly in the second phase of each ratchet iteration where we look for a local minimum on un-weighted data set.
+  
+\end{abstract}
+
+\section{Introduction}
+This is time for all good men to come to the aid of their party!
+
+\paragraph{Outline}
+The remainder of this article is organized as follows.
+Section~\ref{previous work} gives account of previous work.
+Our new and exciting results are described in Section~\ref{results}.
+Finally, Section~\ref{conclusions} gives the conclusions.
+
+\section{Previous work}\label{previous work}
+A much longer \LaTeXe{} example was written by Gil~\cite{Gil:02}.
+
+\section{Results}\label{results}
+In this section we describe the results.
+
+\section{Conclusions}\label{conclusions}
+We worked hard, and achieved very little.
+
+\bibliographystyle{abbrv}
+\bibliography{simple}
+
+\end{document}
+This is never printed
