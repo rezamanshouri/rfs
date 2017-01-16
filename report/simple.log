@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.1415926-2.5-0.9999.3 (TeX Live 2013/Debian) (format=xelatex 2016.12.4)  11 JAN 2017 16:03
+This is XeTeX, Version 3.1415926-2.5-0.9999.3 (TeX Live 2013/Debian) (format=xelatex 2016.12.4)  13 JAN 2017 00:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -46,28 +46,21 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 
 ]
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 30.
+(Font)              <12> on input line 25.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 30.
+(Font)              <8> on input line 25.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 30.
-
-
-LaTeX Warning: Citation `Gil:02' on page 2 undefined on input line 30.
-
+(Font)              <6> on input line 25.
+ [2] [3] [4]
 No file simple.bbl.
-[2] (./simple.aux)
-
-LaTeX Warning: There were undefined references.
-
- ) 
+[5] (./simple.aux) ) 
 Here is how much of TeX's memory you used:
- 238 strings out of 495615
- 2501 string characters out of 6186810
- 50347 words of memory out of 5000000
- 3516 multiletter control sequences out of 15000+600000
- 9109 words of font info for 32 fonts, out of 8000000 for 9000
+ 234 strings out of 495615
+ 2450 string characters out of 6186810
+ 51363 words of memory out of 5000000
+ 3512 multiletter control sequences out of 15000+600000
+ 8802 words of font info for 31 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 22i,6n,19p,1194b,199s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 22i,6n,19p,1123b,199s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on simple.pdf (2 pages).
+Output written on simple.pdf (5 pages).
