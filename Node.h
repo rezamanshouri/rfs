@@ -272,14 +272,32 @@ class Node {
     	}
 	}
 
+	//jsut to copy some fields from S to S' so that I don't have to calculate them agan
+	void copy_fields_from_S(Node &n) {
+
+		alpha = n.alpha;
+		beta = n.beta;
+		int_label = n.int_label;
+		lca_mapping = n.lca_mapping;
+		lca_hlpr = n.lca_hlpr;
+		b_in_lemma12 = b_in_lemma12;
+		cluster = n.cluster;
+
+		list<Node *>::iterator c, c2;
+		c = children.begin();
+		c2 = n.get_children().begin();
+
+    	while(c != get_children().end())  {
+    		(*c)->copy_fields_from_S(**c2);
+    		c2++;
+    		c++;
+    	}
+
+	}
 
 //////////////////<<<<<<<<<<<<<<<<<<<<<<</////////////////////
 /////////////added by REZA ///////////////////////////////////
 //////////////////////////////////////////////////////////////
-
-
-
-
 
 
 
@@ -297,6 +315,9 @@ class Node {
 		lca_mapping = n.lca_mapping;
 		lca_hlpr = n.lca_hlpr;
 		b_in_lemma12 = b_in_lemma12;
+		cluster = n.cluster;
+
+
 		//
 
 		p = NULL;
