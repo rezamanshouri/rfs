@@ -46,11 +46,12 @@ class Node {
 	int alpha;
 	int beta;
 	int int_label; //*only leaves have it*//using integers as lables for leaves to avoid string comparison	
-	std::vector<int> cluster;	//for finding LCA mapping of u in I(S), I need to find cluter corresponding to u, since source trees won't change, why not do it once and store it in DS? :)
+	std::vector<int> cluster;	//inclues all int labels of leaves in subtree induced on this node	
+							//for finding LCA mapping of u in I(S), I need to find cluter corresponding to u, since source trees won't change, why not do it once and store it in DS? :)
 	
-	int lca_mapping;  //for the cluster associated to this node, lca_mapping is the prenum of the LCA node in supertree 
+	Node* lca_mapping;  //for the cluster associated to this node, lca_mapping is the prenum of the LCA node in supertree 
 	int lca_hlpr;
-	int b_in_lemma12;
+	Node* b_in_lemma12;
 
 	//////rfs implementation		
 
@@ -186,17 +187,17 @@ class Node {
 		return beta;
 	}
 
-	int set_b_in_lemma12(int l) {
-		b_in_lemma12 = l;
+	Node* set_b_in_lemma12(Node* n) {
+		b_in_lemma12 = n;
 	}
-	int get_b_in_lemma12() {
+	Node* get_b_in_lemma12() {
 		return b_in_lemma12;
 	}
 
-	int set_lca_mapping(int l) {
-		lca_mapping = l;
+	Node* set_lca_mapping(Node* n) {
+		lca_mapping = n;
 	}
-	int get_lca_mapping() {
+	Node* get_lca_mapping() {
 		return lca_mapping;
 	}
 
