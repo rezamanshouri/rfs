@@ -181,10 +181,10 @@ class Node {
 	}
 
 	int set_int_label(int b) {
-		beta = b;
+		int_label = b;
 	}
 	int get_int_label() {
-		return beta;
+		return int_label;
 	}
 
 	Node* set_b_in_lemma12(Node* n) {
