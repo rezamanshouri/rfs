@@ -49,6 +49,7 @@ class Node {
 	std::vector<int> cluster;	//inclues all int labels of leaves in subtree induced on this node	
 							//for finding LCA mapping of u in I(S), I need to find cluter corresponding to u, since source trees won't change, why not do it once and store it in DS? :)
 	
+	int edge_weight;	//this will be the weight of the edge between this and its parent
 	Node* lca_mapping;  //for the cluster associated to this node, lca_mapping is the prenum of the LCA node in supertree 
 	int lca_hlpr;
 	Node* b_in_lemma12;
@@ -110,6 +111,7 @@ class Node {
 		this->lca_mapping = 0;
 		this->lca_hlpr = 0;
 		this->b_in_lemma12 = 0;
+		this->edge_weight = 1;
 
 		///reza
 
@@ -187,6 +189,13 @@ class Node {
 		return int_label;
 	}
 
+	int set_edge_weight(int w) {
+		edge_weight = w;
+	}
+	int get_edge_weight() {
+		return edge_weight;
+	}
+
 	Node* set_b_in_lemma12(Node* n) {
 		b_in_lemma12 = n;
 	}
@@ -236,40 +245,40 @@ class Node {
 	}
 
 	//increments alpha value in all descendants of this
-	void increment_by1_alpha_in_all_descendants() {
+	void increment_alpha_in_all_descendants(int weight) {
 		list<Node *>::iterator c;
     	list<Node *> children= get_children();
     	for(c = children.begin(); c != children.end(); c++)  {
-    		(*c)->increment_by1_alpha_in_all_descendants_hlpr();
+    		(*c)->increment_alpha_in_all_descendants_hlpr(weight);
     	}
 	}
 
-	void increment_by1_alpha_in_all_descendants_hlpr() {
-		set_alpha(get_alpha()+1);
+	void increment_alpha_in_all_descendants_hlpr(int weight) {
+		set_alpha(get_alpha() + weight);
 
 		list<Node *>::iterator c;
     	list<Node *> children= get_children();
     	for(c = children.begin(); c != children.end(); c++)  {
-    		(*c)->increment_by1_alpha_in_all_descendants_hlpr();
+    		(*c)->increment_alpha_in_all_descendants_hlpr(weight);
     	}
 	}
 
 	//increments beta value in all descendants of this
-	void increment_by1_beta_in_all_descendants() {
+	void increment_beta_in_all_descendants(int weight) {
 		list<Node *>::iterator c;
     	list<Node *> children= get_children();
     	for(c = children.begin(); c != children.end(); c++)  {
-    		(*c)->increment_by1_beta_in_all_descendants_hlpr();
+    		(*c)->increment_beta_in_all_descendants_hlpr(weight);
     	}
 	}
 
-	void increment_by1_beta_in_all_descendants_hlpr() {
-		set_beta(get_beta()+1);
+	void increment_beta_in_all_descendants_hlpr(int weight) {
+		set_beta(get_beta() + weight);
 
 		list<Node *>::iterator c;
     	list<Node *> children= get_children();
     	for(c = children.begin(); c != children.end(); c++)  {
-    		(*c)->increment_by1_beta_in_all_descendants_hlpr();
+    		(*c)->increment_beta_in_all_descendants_hlpr(weight);
     	}
 	}
 
@@ -296,6 +305,61 @@ class Node {
 
 	}
 
+
+	//when called on root, traverses the tree preorderly, and re-weights ~ "percentage_to_be_reweighted"% of edge legths to "new_weight"
+	void reweight_edges_in_source_tree(int percentage_to_be_reweighted, int new_weight) {
+		
+		vector <int> internal_nodes;
+		find_preordernum_of_internal_nodes(internal_nodes);
+		//shuffle prenums
+		random_shuffle ( internal_nodes.begin(), internal_nodes.end() );
+		//num of nodes to be re-weighted
+		int num_of_edges_to_be_reweighted= (internal_nodes.size() * percentage_to_be_reweighted)/100;
+		//pick the first "num_of_edges_to_be_reweighted" elements as prenum of nodes to be reweighted
+		vector<int>::const_iterator first = internal_nodes.begin();
+		vector<int>::const_iterator last = internal_nodes.begin() + num_of_edges_to_be_reweighted;
+		vector<int> nodes_to_be_reweighted(first, last);
+
+		update_edge_weights(nodes_to_be_reweighted, new_weight);
+
+	}
+
+
+	//traverses the tree preorderly, and re-weights nodes whose prenum is in "nodes" to "weight"
+	//It also resets OTHER nodes' weight to default value, 1, so that we don't end up increasing #of edges that are reweighted
+	void update_edge_weights(std::vector<int>& nodes, int weight) {
+		if (find(nodes.begin(), nodes.end(), get_preorder_number()) != nodes.end()) { //if prenum of current node is in "nodes"
+			set_edge_weight(weight);
+		}else { //reset to default
+			set_edge_weight(1);
+		}
+
+		list<Node *>::iterator c;
+    	list<Node *> children= get_children();
+    	for(c = children.begin(); c != children.end(); c++)  {
+    		(*c)->update_edge_weights(nodes, weight);
+    	}
+	}
+
+
+
+	//finds number of internal nodes (i.e. total #of nodes minus root and leaves)
+	void find_preordernum_of_internal_nodes(vector<int>& nodes) {
+		if(p == NULL || is_leaf()) { //if root or leaf, 
+			//do nothing
+		}else {
+			nodes.push_back(get_preorder_number());
+		}
+
+		list<Node *>::iterator c;
+    	list<Node *> children= get_children();
+    	for(c = children.begin(); c != children.end(); c++)  {
+    		(*c)->find_preordernum_of_internal_nodes(nodes);
+    	}
+	}
+
+
+
 //////////////////<<<<<<<<<<<<<<<<<<<<<<</////////////////////
 /////////////added by REZA ///////////////////////////////////
 //////////////////////////////////////////////////////////////
@@ -317,6 +381,7 @@ class Node {
 		lca_hlpr = n.lca_hlpr;
 		b_in_lemma12 = b_in_lemma12;
 		cluster = n.cluster;
+		edge_weight = n.edge_weight;
 
 
 		//

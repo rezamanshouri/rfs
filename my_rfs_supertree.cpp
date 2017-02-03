@@ -82,18 +82,18 @@ void compute_lca_mapping_helper_2(vector<int>& cluster, Node* R, Node*& lca, boo
 void set_cluster_in_source_tree(Node* T);
 void set_cluster_size_in_supertree(Node* T);
 void reset_fields_to_initial_values(Node* T);
-Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node& T, Node& spr_on, Node& S);
-void traverse_S_and_update_alpha_beta_in_Q(Node& T, Node& v, Node& S, Node& S_prime);
+Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node& T, Node& spr_on, Node& S, bool weighted);
+void traverse_S_and_update_alpha_beta_in_Q(Node& T, Node& v, Node& S, Node& S_prime, bool weighted);
 void find_b_in_lemma12(Node& S, Node& R); // i'm not using this now
 void suppress_nodes_with_mapping_in_Rv(Node& S_prime, Node& v);
 void find_best_regraft_place(Node& n, Node*& best_regraft_place, int& max);
 void preorder_trversal(Node& n);
-void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft);
-void find_F_T(Node& S, Node& T, int& best);
+void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted);
+void find_F_T(Node& S, Node& T, int& best, bool weighted);
 void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
 
-
+void print_weighted_tree(Node& n);
 
 template <typename T>
 bool IsSubset(std::vector<T> A, std::vector<T> B)
@@ -109,18 +109,21 @@ bool IsSubset(std::vector<T> A, std::vector<T> B)
 int NUM_SPR_NGHBRS = 0;
 
 int main(int argc, char** argv) {
+  srand(time(NULL));
 
   //running time
   clock_t start_time, finish_time;
   start_time = clock();
 
-  //two trees with RF distance of 4
+
   string suptree = "((a,(b,g)),((c,f),(d,e)));";
-  string input_tree = "(c,(f,(e,(d,(g,(b,a))))));";
+  //string input_tree = "(c,(f,(e,(d,(g,(b,a))))));";
+  string input_tree = "(a,((c,f),(d,(e,(b,g)))));";
 
 
   //string suptree = "((Pygoscelis_adeliae,(((Eudyptes_chrysolophus,Eudyptes_chrysocome),Aptenodytes_patagonicus),((Pygoscelis_antarctica,Pygoscelis_papua),((Eudyptes_pachyrhynchus,Megadyptes_antipodes),(Spheniscus_demersus,Eudyptula_minor))))),((Gavia_stellata,Gavia_immer),(((Oceanodroma_melania,(Oceanodroma_tethys,Halocyptena_microsoma)),(((Oceanodroma_castro,Hydrobates_pelagicus),(Oceanodroma_furcata,Oceanodroma_hornbyi)),(Oceanodroma_leucorhoa,Oceanodroma_tristrami))),((((Garrodia_nereis,Pelagodroma_marina),(Fregetta_grallaria,Fregetta_tropica)),Oceanites_oceanicus),(((Pelecanoides_garnotii,((Pelecanoides_georgicus,Pelecanoides_magellani),Pelecanoides_urinatrix)),(((Pterodroma_axillaris,(Pterodroma_nigripennis,Pterodroma_cervicalis)),((((Pterodroma_alba,(((Pterodroma_baraui,Pterodroma_arminjoniana),(Pterodroma_neglecta,Pterodroma_externa)),(Pterodroma_heraldica,(Pterodroma_sandwichensis,Pterodroma_phaeopygia)))),Pterodroma_inexpectata),(Pterodroma_ultima,(Pterodroma_solandri,(Pterodroma_mollis,((Pterodroma_hasitata,((Pterodroma_madeira,Pterodroma_feae),Pterodroma_cahow)),(Pterodroma_magentae,(Pterodroma_incerta,(Pterodroma_lessonii,Pterodroma_macroptera)))))))),(Pterodroma_hypoleuca,((Pterodroma_pycrofti,Pterodroma_longirostris),(Pterodroma_brevipes,(Pterodroma_leucoptera,(Pterodroma_cookii,Pterodroma_defilippiana))))))),((Pagodroma_nivea,((Daption_capense,((Macronectes_halli,Macronectes_giganteus),(Fulmarus_glacialis,Fulmarus_glacialoides))),Thalassoica_antarctica)),((Procellaria_cinerea,((Lugensa_brevirostris,((((Puffinus_gravis,(Puffinus_griseus,(Puffinus_creatopus,Puffinus_carneipes))),(Puffinus_bulleri,Puffinus_pacificus)),Puffinus_tenuirostris),((Calonectris_diomedea,Calonectris_leucomelas),(Puffinus_nativitatis,(((Puffinus_huttoni,Puffinus_gavia),(((Puffinus_opisthomelas,Puffinus_puffinus),Puffinus_auricularis),(Puffinus_assimilis,Puffinus_lherminieri))),(Puffinus_mauretanicus,Puffinus_yelkouan)))))),(Pseudobulweria_aterrima,Pseudobulweria_rostrata))),(((Procellaria_westlandica,(Procellaria_aequinoctialis,Procellaria_parkinsoni)),Bulweria_bulwerii),((Pachyptila_turtur,(Pachyptila_vittata,(Pachyptila_desolata,Pachyptila_salvini))),Halobaena_caerulea)))))),(((Phoebastria_irrorata,((Phoebastria_immutabilis,Phoebastria_nigripes),Phoebastria_albatrus)),((Diomedea_sanfordi,Diomedea_epomophora),(Diomedea_dabbenena,((Diomedea_gibsoni,Diomedea_antipodensis),(Diomedea_amsterdamensis,Diomedea_exulans))))),((Phoebetria_fusca,Phoebetria_palpebrata),((Thalassarche_bassi,Thalassarche_chlororhynchus),((Thalassarche_chrysostoma,(Thalassarche_melanophris,Thalassarche_impavida)),(Thalassarche_bulleri,(Thalassarche_cauta,(Thalassarche_salvini,Thalassarche_eremita))))))))))));";
   //string input_tree = "((Puffinus_lherminieri,Pterodroma_cervicalis),((((Puffinus_nativitatis,((((Procellaria_cinerea,(Lugensa_brevirostris,(((((((((Pygoscelis_adeliae,(Puffinus_auricularis,((Pygoscelis_antarctica,(Pygoscelis_papua,((Eudyptula_minor,Spheniscus_demersus),(Megadyptes_antipodes,Eudyptes_pachyrhynchus)))),(Aptenodytes_patagonicus,(Eudyptes_chrysocome,Eudyptes_chrysolophus))))),(Gavia_immer,Gavia_stellata)),(((Oceanodroma_hornbyi,(Oceanodroma_furcata,(Oceanodroma_castro,Hydrobates_pelagicus))),(Oceanodroma_leucorhoa,Oceanodroma_tristrami)),(Oceanodroma_melania,(Halocyptena_microsoma,Oceanodroma_tethys)))),(Oceanites_oceanicus,((Fregetta_tropica,Fregetta_grallaria),(Pelagodroma_marina,Garrodia_nereis)))),(((((Thalassarche_chrysostoma,(Thalassarche_melanophris,Thalassarche_impavida)),(Thalassarche_bulleri,(Thalassarche_cauta,(Thalassarche_eremita,Thalassarche_salvini)))),(Thalassarche_chlororhynchus,Thalassarche_bassi)),(Phoebetria_fusca,Phoebetria_palpebrata)),(((Diomedea_dabbenena,((Diomedea_exulans,Diomedea_amsterdamensis),(Diomedea_gibsoni,Diomedea_antipodensis))),(Diomedea_epomophora,Diomedea_sanfordi)),(Phoebastria_irrorata,(Phoebastria_albatrus,(Phoebastria_immutabilis,Phoebastria_nigripes)))))),(Pelecanoides_garnotii,(Pelecanoides_urinatrix,(Pelecanoides_georgicus,Pelecanoides_magellani)))),(((((Pterodroma_ultima,(Pterodroma_solandri,(((Pterodroma_magentae,(Pterodroma_incerta,(Pterodroma_lessonii,Pterodroma_macroptera))),(Pterodroma_hasitata,((Pterodroma_feae,Pterodroma_madeira),Pterodroma_cahow))),Pterodroma_mollis))),(Pterodroma_inexpectata,((((Pterodroma_externa,Pterodroma_neglecta),(Pterodroma_baraui,Pterodroma_arminjoniana)),(Pterodroma_heraldica,(Pterodroma_phaeopygia,Pterodroma_sandwichensis))),Pterodroma_alba))),(((Pterodroma_brevipes,(Pterodroma_leucoptera,(Pterodroma_cookii,Pterodroma_defilippiana))),(Pterodroma_pycrofti,Pterodroma_longirostris)),Pterodroma_hypoleuca)),Pterodroma_axillaris),Pterodroma_nigripennis)),(Pagodroma_nivea,(Thalassoica_antarctica,(Daption_capense,((Macronectes_giganteus,Macronectes_halli),(Fulmarus_glacialis,Fulmarus_glacialoides)))))),((Halobaena_caerulea,(Pachyptila_turtur,(Pachyptila_vittata,(Pachyptila_salvini,Pachyptila_desolata)))),(Bulweria_bulwerii,(Procellaria_westlandica,(Procellaria_aequinoctialis,Procellaria_parkinsoni))))))),(Pseudobulweria_aterrima,Pseudobulweria_rostrata)),(Puffinus_tenuirostris,(((Puffinus_griseus,(Puffinus_carneipes,Puffinus_creatopus)),Puffinus_gravis),(Puffinus_pacificus,Puffinus_bulleri)))),(Calonectris_diomedea,Calonectris_leucomelas))),(Puffinus_huttoni,Puffinus_gavia)),((Puffinus_puffinus,Puffinus_opisthomelas),(Puffinus_yelkouan,Puffinus_mauretanicus))),Puffinus_assimilis));";
+  //string input_tree = "((((Procellaria_parkinsoni,(Puffinus_nativitatis,Procellaria_aequinoctialis)),((((((Eudyptes_chrysocome,(((Calonectris_diomedea,Pterodroma_externa),Thalassarche_chrysostoma),(Pterodroma_hasitata,Thalassarche_impavida))),(((((Thalassarche_bulleri,Oceanodroma_furcata),Pterodroma_feae),(Halocyptena_microsoma,Puffinus_creatopus)),((Diomedea_amsterdamensis,Puffinus_mauretanicus),Pelecanoides_urinatrix)),Oceanodroma_tristrami)),(Fulmarus_glacialis,Aptenodytes_patagonicus)),((((((Lugensa_brevirostris,Pterodroma_arminjoniana),((Pterodroma_hypoleuca,Pterodroma_incerta),Calonectris_leucomelas)),(((Pterodroma_alba,Puffinus_carneipes),(Pterodroma_phaeopygia,Pterodroma_solandri)),Pterodroma_sandwichensis)),(((Fregetta_tropica,(Pterodroma_leucoptera,(Pterodroma_mollis,Pygoscelis_antarctica))),((Puffinus_opisthomelas,Pseudobulweria_rostrata),Pagodroma_nivea)),(Oceanodroma_castro,Phoebastria_albatrus))),((Pterodroma_axillaris,Hydrobates_pelagicus),(Pelagodroma_marina,(Diomedea_gibsoni,Pygoscelis_adeliae)))),((Garrodia_nereis,Puffinus_tenuirostris),((Gavia_immer,Phoebastria_nigripes),((Pterodroma_cahow,Puffinus_bulleri),Thalassarche_melanophris))))),(((((Spheniscus_demersus,Thalassarche_bassi),((Macronectes_giganteus,(Pterodroma_defilippiana,Pachyptila_desolata)),Diomedea_sanfordi)),((((Pterodroma_heraldica,Diomedea_epomophora),Megadyptes_antipodes),((Bulweria_bulwerii,Pterodroma_brevipes),(Phoebastria_irrorata,Diomedea_exulans))),(Pygoscelis_papua,Phoebetria_palpebrata))),((Pterodroma_magentae,(Fulmarus_glacialoides,Oceanites_oceanicus)),(((Thalassarche_cauta,Eudyptes_pachyrhynchus),Pterodroma_cervicalis),(Thalassarche_salvini,Procellaria_westlandica)))),((Thalassarche_chlororhynchus,(Diomedea_dabbenena,Gavia_stellata)),((Pterodroma_nigripennis,Halobaena_caerulea),Puffinus_assimilis)))),((Puffinus_puffinus,Oceanodroma_leucorhoa),Pelecanoides_garnotii))),(((((((Puffinus_gavia,Daption_capense),(Fregetta_grallaria,Puffinus_auricularis)),(((Puffinus_griseus,(Pterodroma_baraui,Pseudobulweria_aterrima)),Diomedea_antipodensis),(Pachyptila_turtur,Pelecanoides_magellani))),(Phoebastria_immutabilis,((Oceanodroma_tethys,Thalassoica_antarctica),Pachyptila_salvini))),((Puffinus_huttoni,(Pterodroma_ultima,Pterodroma_cookii)),Puffinus_pacificus)),(((Macronectes_halli,(Pterodroma_madeira,Thalassarche_eremita)),(Pachyptila_vittata,(Pelecanoides_georgicus,Pterodroma_lessonii))),Pterodroma_longirostris)),((Oceanodroma_hornbyi,(Eudyptula_minor,Pterodroma_inexpectata)),Eudyptes_chrysolophus))),(((((Puffinus_yelkouan,Oceanodroma_melania),Procellaria_cinerea),(Pterodroma_neglecta,Phoebetria_fusca)),Pterodroma_pycrofti),(Puffinus_gravis,(Pterodroma_macroptera,Puffinus_lherminieri))));";
 
   Node* T = build_tree(suptree);
   adjustTree(T);
@@ -153,9 +156,10 @@ int main(int argc, char** argv) {
 
   Node* best_node_to_prune;
   Node* best_node_to_regraft;
-  find_best_node_to_prune_and_its_best_regraft_place(*T, *S, best_node_to_prune, best_node_to_regraft);
+  bool weighted = false;
+  find_best_node_to_prune_and_its_best_regraft_place(*T, *S, best_node_to_prune, best_node_to_regraft, weighted);
   int which_sibling = 0;
-  best_node_to_prune->spr(best_node_to_regraft, which_sibling);
+  Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
 
   //perform best possible spr move of the neighbourhood
   /*
@@ -174,7 +178,9 @@ int main(int argc, char** argv) {
   float diff ((float)finish_time - (float)start_time);
   float seconds = diff / CLOCKS_PER_SEC;
 
-  cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
+  cout << "source tree:" << endl;
+  cout << input_tree << endl;
   cout << "intial ST:" << endl;
   cout << suptree << endl;
   cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
@@ -182,8 +188,61 @@ int main(int argc, char** argv) {
   cout << "--------------------------------------------------------------------------------------------------" << endl;
   cout << "\nNUM_SPR_NGHBRS : " << NUM_SPR_NGHBRS << endl;
   cout << "the running time is: " << seconds << " sec." << endl;
-  cout << "--------------------------------------------------------------------------------------------------" << endl;
+  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
 
+
+
+
+  /*
+
+  cout << "Now let's see what is the result when WEIGHTED RF is used as optimality criteria: \n" << endl;
+
+  Node* SS = build_tree(input_tree);
+  adjustTree(SS);
+  Node* TT = build_tree(suptree);
+  adjustTree(TT);
+    ///////////setting int labels for leaves, should be done in main()
+  unordered_map<string, int> int_label_map1;
+  int starting_label1 = 1;
+  find_int_labels_for_leaves_in_supertree(TT, starting_label1, int_label_map1);  //finding int labels for all taxa in supertree
+  set_int_labels_for_leaves_in_source_tree(SS, int_label_map1); // set int labels for taxa in source trees
+  //for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it ) cout << it->first << ":" << it->second << endl;
+
+  //since source trees won't change, for each node in each source tree, we can find clusters only ones, and store it in DS
+  set_cluster_in_source_tree(SS);
+
+
+
+
+  int weight = 9;
+  int perc = 30;
+  SS->reweight_edges_in_source_tree(perc, weight);
+
+  Node* best_node_to_prune1;
+  Node* best_node_to_regraft1;
+  bool weighted1 = true;
+  find_best_node_to_prune_and_its_best_regraft_place(*TT, *SS, best_node_to_prune1, best_node_to_regraft1, weighted1);
+  int which_sibling1 = 0;
+  Node* old_sibling1 = best_node_to_prune1->spr(best_node_to_regraft1, which_sibling1);
+
+
+
+  finish_time = clock();
+  float diff2 ((float)finish_time - (float)start_time);
+  seconds = diff2 / CLOCKS_PER_SEC;
+
+  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
+  cout << "intial ST:" << endl;
+  cout << suptree << endl;
+  cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
+  cout << TT->str_subtree() << ";" << endl;
+  cout << "--------------------------------------------------------------------------------------------------" << endl;
+  cout << "\nNUM_SPR_NGHBRS : " << NUM_SPR_NGHBRS << endl;
+  cout << "the running time is: " << seconds << " sec." << endl;
+  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
+
+  print_weighted_tree(*SS);
+  */
 
   //don't forget to free memory!!
   T->delete_tree();
@@ -198,6 +257,7 @@ void preorder_trversal(Node& n) {
   //cout << " prenum is : " << n.get_preorder_number() << endl;
   //cout << "lca mapping node is: " << n.get_lca_mapping().str_subtree() << "\n" << endl;
   cout << n.get_alpha() << "-" << n.get_beta() << "= " << n.get_alpha() - n.get_beta() << "\n" << endl;
+  //cout << n.get_edge_weight() << "\n" << endl;
 
   //just for testing:
   list<Node *>::iterator c;
@@ -207,12 +267,28 @@ void preorder_trversal(Node& n) {
   }
 }
 
+//tetsting
+void print_weighted_tree(Node& n) {
+  cout << n.str_subtree() << endl;
+  //cout << " prenum is : " << n.get_preorder_number() << endl;
+  //cout << "lca mapping node is: " << n.get_lca_mapping().str_subtree() << "\n" << endl;
+  //cout << n.get_alpha() << "-" << n.get_beta() << "= " << n.get_alpha() - n.get_beta() << "\n" << endl;
+  cout << n.get_edge_weight() << "\n" << endl;
+
+  //just for testing:
+  list<Node *>::iterator c;
+  list<Node *> children = n.get_children();
+  for (c = children.begin(); c != children.end(); c++) {
+    print_weighted_tree(**c);
+  }
+}
+
 
 //For each internal node of T to be pruned, find best regraft place
 //alongside, keep track of best SPR neighbor seen (keep track of best node to be pruned and its best regraft place):
 //the neighbour with smaller |F_T| is better:
 //because RF_dist(S,T)=|I(T)| + |I(S)| - 2|F_T|
-void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft) {
+void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
   Node best_neighbor;
 
   int min_F = INT_MAX;
@@ -223,6 +299,7 @@ void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* 
   put_all_nodes_in_vector(T, internal_nodes);
   vector<Node*>::iterator iter, end;
   //any internal node except root may be pruned, iter plave the role of "v" in the algorithm
+
   for (iter = internal_nodes.begin(), end = internal_nodes.end(); iter != end;  iter++) {
 
     if (!(*iter)->get_p()) { //root or its children
@@ -231,7 +308,7 @@ void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* 
 
     cout << "\n-------------------------------------------------------" << endl;
 
-    Node* best_regraft_place = apply_SPR_RS_algorithm_to_find_alpha_betas(T, **iter, S);
+    Node* best_regraft_place = apply_SPR_RS_algorithm_to_find_alpha_betas(T, **iter, S, weighted);
 
     int which_sibling = 0;
     cout << "------T before: " << T.str_subtree() << endl;
@@ -242,8 +319,8 @@ void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* 
     cout << "------T after : " << T.str_subtree()  << "\n" << endl;
 
 
-    int current_F = 0 ;
-    find_F_T(S, T, current_F);
+    int current_F = -1 ;  //start from -1 instead of 0 since F is ("RF-dist"+1), That's because the edge connecting root to its children is counted twice (if binary)
+    find_F_T(S, T, current_F, weighted);
     cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
     if (current_F < min_F) {
       cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F  << "\n\n" << endl;
@@ -254,10 +331,11 @@ void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* 
     (*iter)->spr(old_sibling, which_sibling);
     //reset_alpha_beta(T);
     adjustTree(&T);
+
   }
 
   best_node_to_prune = best_prune;
-  best_node_to_regraft= best_regraft;
+  best_node_to_regraft = best_regraft;
 
 }
 
@@ -295,14 +373,14 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes) {
 //assuming S has correct values for lca_mapping, finds the number of internal nodes whose corresponding lca does not exist in T
 //Note the way I implemented find_best_node_to_prune_and_its_best_regraft_place(), I don't want to change T so that I have to do calculations (lca_mapping, ...) for each v to be pruned
 //The node T being passed to this function is T', i.e. best neghibour for given v to be pruned.
-//THUS the lca_mappings are NOT valid anymore.
-void find_F_T(Node & S, Node & T, int& best) {
+//THUS the lca_mappings are NOT valid anymore, and that's why I compute it again here
+void find_F_T(Node & S, Node & T, int& best, bool weighted) {
   if (S.is_leaf()) {
     return;
   }
 
   //cout << "_____________________"  << endl;
-  //cout << "S: " << S.str_subtree() << endl;
+  //cout << "cluster: " << S.str_subtree() << endl;
   //cout << "S lca mapping: " <<  S.get_lca_mapping()<< endl;
   //cout << "T: " << T.str_subtree() << endl;
   //preorder_trversal(T);
@@ -316,13 +394,19 @@ void find_F_T(Node & S, Node & T, int& best) {
   //cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
 
   if (S.get_cluster_size() != lca_mapping_in_T_prime->get_cluster_size()) { //f(u)=0 , here u is S
-    best++;
+    //cout << "___________NOT EXIST" << endl;
+    if (weighted) {
+      best += S.get_edge_weight();
+    } else {
+      best++;
+    }
+
   }
 
   list<Node *>::iterator c;
   list<Node *> children = S.get_children();
   for (c = children.begin(); c != children.end(); c++) {
-    find_F_T(**c, T, best);
+    find_F_T(**c, T, best, weighted);
   }
 }
 
@@ -339,7 +423,7 @@ void find_best_regraft_place(Node& T, Node*& best_regraft_place, int& max) {
   }
 
   //after considering each node to be pruned, we update alpha beta values, BUT they should be reset to 0
-  //I do it here cuz 1- I don't change T untill I find the best spe move (i.e. best node to prun and best place for it to be regrafted),
+  //I do it here cuz 1- I don't change T untill I find the best spr move (i.e. best node to be pruned and best place for it to be regrafted),
   //2-this is the last time I will need current alpha beta for the current v to be pruned
   T.set_alpha(0);
   T.set_beta(0);
@@ -356,7 +440,7 @@ void find_best_regraft_place(Node& T, Node*& best_regraft_place, int& max) {
 //i.e. it solves SPR(v) for T (and S as source tree)
 //it changes the T to its best SPR neighbor, too.
 //Returns best place to regraft
-Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node & T, Node & v, Node & S) {
+Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node & T, Node & v, Node & S, bool weighted) {
 
   Node* best_regraft_place = 0;
 
@@ -399,7 +483,7 @@ Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node & T, Node & v, Node & S) {
     //cout << "-------------------S' after : " << S_prime->str_subtree() << endl;
 
 
-    traverse_S_and_update_alpha_beta_in_Q(*Q, v, S, *S_prime);
+    traverse_S_and_update_alpha_beta_in_Q(*Q, v, S, *S_prime, weighted);
 
     cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
     preorder_trversal(*Q);
@@ -440,7 +524,7 @@ Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node & T, Node & v, Node & S) {
 
 
     //Note T now is Q in paper's notation
-    traverse_S_and_update_alpha_beta_in_Q(T, v, S, *S_prime);
+    traverse_S_and_update_alpha_beta_in_Q(T, v, S, *S_prime, weighted);
 
     cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
     preorder_trversal(T);
@@ -462,42 +546,55 @@ Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node & T, Node & v, Node & S) {
 //Given the way R is constructed, lca_mapping of any node in S, is either in T_v OR in T_T. (NOTE this is a recursive function and S plays the role of u in the alg in paper)
 //The way I implemented here, avoids some duplicate work (in compare to when I pass R as parameter instead of T and v).
 //Note T now is Q in paper's notation
-void traverse_S_and_update_alpha_beta_in_Q(Node & T, Node & v, Node & S, Node & S_prime) { //note S here is u in paper's notation
+void traverse_S_and_update_alpha_beta_in_Q(Node & T, Node & v, Node & S, Node & S_prime, bool weighted) { //note S here is u in paper's notation
 
-
-  if (S.is_leaf()) {
+  //only for internal nodes, i.e. non-root and non-leaf
+  if (S.is_leaf()) {  //if leaf
     //do nothing
-  } else {
-    //cout << "node in S being considered: " << S.str_subtree() << endl;
-    //cout << "its lca_mapping's prenum is: " << S.get_lca_mapping() << endl;
+
+  } else if (S.get_p() == NULL) { //if root
+    list<Node *>::iterator c;
+    list<Node *> children = S.get_children();
+    for (c = children.begin(); c != children.end(); c++) {
+      traverse_S_and_update_alpha_beta_in_Q(T, v, **c, S_prime, weighted);
+    }
+  } else {  //if internal node
+
+    cout << "++++++++++++++++++++node u in S being considered: " << S.str_subtree() << endl;
+    cout << "its lca_mapping is: " << S.get_lca_mapping()->str_subtree() << endl;
     Node* a;
-    bool lemma10 = false;
+
     //Suppose for each u in I(S), lca_mpping(u)=a
     //There are 4 cases.
     //1- if u satisfies precondition of Lemma 9, i.e. a belongs to V(R_v)
-    if (a = v.find_by_prenum(S.get_lca_mapping() -> get_preorder_number())) { //cout << "lemma 9" << "\n" <<  endl;
+    if (a = v.find_by_prenum(S.get_lca_mapping() -> get_preorder_number())) {
+      cout << "lemma 9" << "\n" <<  endl;
       //do nothing
     }
 
-    //2- if u satisfies precondition of Lemma 11, i.e. a belongs to V(T_v) AND f_R(S)==0
+    //2- if u satisfies precondition of Lemma 11, i.e. a belongs to V(Q_v) -which is T here- AND f_R(S)==0
     else if (a = T.find_by_prenum(S.get_lca_mapping()  -> get_preorder_number() )) {
       if (S.get_cluster_size() != a->get_cluster_size()) { //is f_R(S)==0
-        //cout << "lemma 11" << "\n" <<  endl;
+        cout << "lemma 11" << "\n" <<  endl;
         //do nothing
       } else { //precondition of lemma 10 is true
-        lemma10 = true;
+        //3- if u satisfies precondition of Lemma 10, i.e. a belongs to V(T_v) AND f_R(S)==1
+        cout << "lemma 10" << "\n" <<  endl;
+        if (weighted) {
+          int w = S.get_edge_weight();
+          a->increment_beta_in_all_descendants(w);
+          cout << "________w____increment beta on : " << a->str_subtree() << endl;
+        } else {
+          a->increment_beta_in_all_descendants(1);
+          cout << "____________increment beta on : " << a->str_subtree() << endl;
+        }
       }
-    }
-
-    //3- if u satisfies precondition of Lemma 10, i.e. a belongs to V(T_v) AND f_R(S)==1
-    else if (lemma10) { //cout << "lemma 10" << "\n" <<  endl;
-      a->increment_by1_beta_in_all_descendants();
     }
 
     //Lemma 12's precondition: a=T->p() AND |L(R_b)|+|L(R_v)|=|L(S_u)|
     //Note: if S's lca_mapping is not found in T_v or T_T, then it's lca_mapping is definitely parent of T (or v) which is the only child of R
-    else { //cout << "lemma 12" <<  endl;
-
+    else {
+      cout << "lemma 12" <<  endl;
 
       Node* u_in_S_prime = S_prime.find_by_prenum(S.get_preorder_number()); //find u (S in parameters) in S'
       Node* lca_mapping_lemma12;
@@ -508,18 +605,27 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & T, Node & v, Node & S, Node & 
 
 
       if ( ((b_in_lemma12->find_leaves()).size()) + ((v.find_leaves()).size()) == (S.get_cluster_size()) ) { //|L(R_b)|+|L(R_v)|=?|L(S_u)|
-        b_in_lemma12->increment_by1_alpha_in_all_descendants();
+        cout << (b_in_lemma12->find_leaves()).size() << "+" << ((v.find_leaves()).size()) << " == " << (S.get_cluster_size()) << endl;
+        if (weighted) {
+          int w = S.get_edge_weight();
+          b_in_lemma12->increment_alpha_in_all_descendants(w);
+          cout << "_____w_______increment alpha on : " << b_in_lemma12->str_subtree() << endl;
+        } else {
+          b_in_lemma12->increment_alpha_in_all_descendants(1);
+          cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
+        }
+
       }
 
     }
 
-
-
     list<Node *>::iterator c;
     list<Node *> children = S.get_children();
     for (c = children.begin(); c != children.end(); c++) {
-      traverse_S_and_update_alpha_beta_in_Q(T, v, **c, S_prime);
+      traverse_S_and_update_alpha_beta_in_Q(T, v, **c, S_prime, weighted);
     }
+
+
   }
 }
 
