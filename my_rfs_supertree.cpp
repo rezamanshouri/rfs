@@ -82,13 +82,13 @@ void compute_lca_mapping_helper_2(vector<int>& cluster, Node* R, Node*& lca, boo
 void set_cluster_in_source_tree(Node* T);
 void set_cluster_size_in_supertree(Node* T);
 void reset_fields_to_initial_values(Node* T);
-Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node& T, Node& spr_on, Node& S, bool weighted);
+Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& spr_on, Node& S, bool weighted);
 void traverse_S_and_update_alpha_beta_in_Q(Node& T, Node& v, Node& S, Node& S_prime, bool weighted);
 void find_b_in_lemma12(Node& S, Node& R); // i'm not using this now
 void suppress_nodes_with_mapping_in_Rv(Node& S_prime, Node& v);
 void find_best_regraft_place(Node& n, Node*& best_regraft_place, int& max);
 void preorder_trversal(Node& n);
-void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted);
+int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted);
 void find_F_T(Node& S, Node& T, int& best, bool weighted);
 void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
@@ -115,8 +115,8 @@ int main(int argc, char** argv) {
   clock_t start_time, finish_time;
   start_time = clock();
 
-
-  string suptree = "((a,(b,g)),((c,f),(d,e)));";
+  string suptree = "(g,(f,(e,(d,(c,(b,a))))));";
+  //string suptree = "(((c,f),(d,e)),(a,(b,g)));";
   //string input_tree = "(c,(f,(e,(d,(g,(b,a))))));";
   string input_tree = "(a,((c,f),(d,(e,(b,g)))));";
 
@@ -143,54 +143,78 @@ int main(int argc, char** argv) {
 
 
 
+
+
+
+
   //tttttttttttttttttttttttttttttttesting
+  int best_score = 1000;
+  for (int i = 0; i < 15; ++i)
+  {
+    NUM_SPR_NGHBRS = 0;
+    start_time = clock();
 
-  cout << "Suppose we want to solve SPR_RS for the following supertree (T) and given sourse tree(S):" << endl;
-  cout << "S: \n" << S->str_subtree() << endl;
-  cout << "\nT: \n" << T->str_subtree() << "\n" << endl;
+    cout << "Suppose we want to solve SPR_RS for the following supertree (T) and given sourse tree(S):" << endl;
+    cout << "S: " << S->str_subtree() << endl;
+    cout << "T: " << T->str_subtree() << "\n" << endl;
 
 
-  //Node* v = T->find_by_prenum(6);
-  //cout << "v: " << v->str_subtree() << "\n" << endl;
+
+    Node* best_node_to_prune;
+    Node* best_node_to_regraft;
+    bool weighted = false;
+    int current_score = find_best_node_to_prune_and_its_best_regraft_place(*T, *S, best_node_to_prune, best_node_to_regraft, weighted);
+    
+    if(current_score < best_score){
+    
+      best_score = current_score;
 
 
-  Node* best_node_to_prune;
-  Node* best_node_to_regraft;
-  bool weighted = false;
-  find_best_node_to_prune_and_its_best_regraft_place(*T, *S, best_node_to_prune, best_node_to_regraft, weighted);
-  int which_sibling = 0;
-  Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
+    int which_sibling = 0;
+    Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
 
-  //perform best possible spr move of the neighbourhood
-  /*
-  int which_sibling = 0;
-  if (! best_node_to_regraft->get_p()) { //if best node to regraft is root
-    best_node_to_prune->spr(best_node_to_regraft, which_sibling);
-    return *(best_node_to_prune->get_p());
-  } else {
-    best_node_to_prune->spr(best_node_to_regraft, which_sibling);
-    return T;
+    //perform best possible spr move of the neighbourhood
+    /*
+    int which_sibling = 0;
+    if (! best_node_to_regraft->get_p()) { //if best node to regraft is root
+      best_node_to_prune->spr(best_node_to_regraft, which_sibling);
+      return *(best_node_to_prune->get_p());
+    } else {
+      best_node_to_prune->spr(best_node_to_regraft, which_sibling);
+      return T;
+    }
+    */
+
+
+    T = best_node_to_prune->find_root();
+    adjustTree(T);
+
+
+    finish_time = clock();
+    float diff ((float)finish_time - (float)start_time);
+    float seconds = diff / CLOCKS_PER_SEC;
+
+    //cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
+    //cout << "source tree:" << endl;
+    //cout << S->str_subtree() << endl;
+    //cout << "intial ST:" << endl;
+    //cout << T->str_subtree() << endl;
+    //cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
+    cout << "T': " <<  T->str_subtree() << ";" << endl;
+    //cout << "--------------------------------------------------------------------------------------------------" << endl;
+    cout << "\nNUM_SPR_NGHBRS : " << NUM_SPR_NGHBRS << endl;
+    cout << "the running time is: " << seconds << " sec." << endl;
+    cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n" << endl;
+
+}
+else {
+  break;
+}
+
+
+
+
   }
-  */
-
-
-  finish_time = clock();
-  float diff ((float)finish_time - (float)start_time);
-  float seconds = diff / CLOCKS_PER_SEC;
-
-  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
-  cout << "source tree:" << endl;
-  cout << input_tree << endl;
-  cout << "intial ST:" << endl;
-  cout << suptree << endl;
-  cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
-  cout << T->str_subtree() << ";" << endl;
-  cout << "--------------------------------------------------------------------------------------------------" << endl;
-  cout << "\nNUM_SPR_NGHBRS : " << NUM_SPR_NGHBRS << endl;
-  cout << "the running time is: " << seconds << " sec." << endl;
-  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
-
-
 
 
   /*
@@ -288,7 +312,8 @@ void print_weighted_tree(Node& n) {
 //alongside, keep track of best SPR neighbor seen (keep track of best node to be pruned and its best regraft place):
 //the neighbour with smaller |F_T| is better:
 //because RF_dist(S,T)=|I(T)| + |I(S)| - 2|F_T|
-void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
+//returns min_F found
+int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
   Node best_neighbor;
 
   int min_F = INT_MAX;
@@ -306,24 +331,26 @@ void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* 
       continue;
     }
 
-    cout << "\n-------------------------------------------------------" << endl;
+    //cout << "\n-------------------------------------------------------" << endl;
 
-    Node* best_regraft_place = apply_SPR_RS_algorithm_to_find_alpha_betas(T, **iter, S, weighted);
+    Node* best_regraft_place = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, S, weighted);
 
     int which_sibling = 0;
-    cout << "------T before: " << T.str_subtree() << endl;
-    cout << "-----spr_on(v): " << (*iter)->str_subtree() << endl;
-    cout << "--best regraft: " << best_regraft_place->str_subtree() << endl;
+    //cout << "------T before: " << T.str_subtree() << endl;
+    //cout << "\n\n-----spr_on(v): " << (*iter)->str_subtree() << endl;
+    //cout << "--best regraft: " << best_regraft_place->str_subtree() << endl;
     Node* old_sibling = (*iter)->spr(best_regraft_place, which_sibling);
     adjustTree(&T);
-    cout << "------T after : " << T.str_subtree()  << "\n" << endl;
+    //cout << "------T after : " << T.str_subtree() << endl;
 
 
-    int current_F = -1 ;  //start from -1 instead of 0 since F is ("RF-dist"+1), That's because the edge connecting root to its children is counted twice (if binary)
+    int current_F = 0 ;  //start from -1 instead of 0 since F is ("RF-dist"+1), That's because the edge connecting root to its children is counted twice (if binary)
     find_F_T(S, T, current_F, weighted);
-    cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
+    //cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
     if (current_F < min_F) {
-      cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F  << "\n\n" << endl;
+      cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F << endl;
+      //cout << "--best regraft: " << best_regraft_place->str_subtree() <<  endl;
+
       min_F = current_F;
       best_prune = *iter;
       best_regraft = best_regraft_place;
@@ -336,6 +363,8 @@ void find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* 
 
   best_node_to_prune = best_prune;
   best_node_to_regraft = best_regraft;
+
+  return min_F;
 
 }
 
@@ -370,11 +399,12 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes) {
 }
 
 
+//Actually finds RF distance!!
 //assuming S has correct values for lca_mapping, finds the number of internal nodes whose corresponding lca does not exist in T
 //Note the way I implemented find_best_node_to_prune_and_its_best_regraft_place(), I don't want to change T so that I have to do calculations (lca_mapping, ...) for each v to be pruned
 //The node T being passed to this function is T', i.e. best neghibour for given v to be pruned.
 //THUS the lca_mappings are NOT valid anymore, and that's why I compute it again here
-void find_F_T(Node & S, Node & T, int& best, bool weighted) {
+void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime, bool weighted) {
   if (S.is_leaf()) {
     return;
   }
@@ -388,17 +418,17 @@ void find_F_T(Node & S, Node & T, int& best, bool weighted) {
   vector<int> cluster = S.get_cluster();
   Node* lca_mapping_in_T_prime;
   bool f = false;
-  compute_lca_mapping_helper_2(cluster, &T, lca_mapping_in_T_prime, f);
+  compute_lca_mapping_helper_2(cluster, &T_prime, lca_mapping_in_T_prime, f);
 
-  //cout << "                     Node u is: " << S.str_subtree() << endl;
+  //cout << ".....................Node u is: " << S.str_subtree() << endl;
   //cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
 
-  if (S.get_cluster_size() != lca_mapping_in_T_prime->get_cluster_size()) { //f(u)=0 , here u is S
-    //cout << "___________NOT EXIST" << endl;
+  if ( (cluster.size()) != (lca_mapping_in_T_prime->number_of_leaves()) ) { //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz it will return cluster size of "this" in T not T'
+    //cout << "___________NOT EXIST: " << cluster.size()  << "!=" << lca_mapping_in_T_prime->number_of_leaves() << endl;
     if (weighted) {
-      best += S.get_edge_weight();
+      num_clusters_not_in_T_prime += S.get_edge_weight();
     } else {
-      best++;
+      num_clusters_not_in_T_prime ++;
     }
 
   }
@@ -406,7 +436,7 @@ void find_F_T(Node & S, Node & T, int& best, bool weighted) {
   list<Node *>::iterator c;
   list<Node *> children = S.get_children();
   for (c = children.begin(); c != children.end(); c++) {
-    find_F_T(**c, T, best, weighted);
+    find_F_T(**c, T_prime, num_clusters_not_in_T_prime, weighted);
   }
 }
 
@@ -440,7 +470,7 @@ void find_best_regraft_place(Node& T, Node*& best_regraft_place, int& max) {
 //i.e. it solves SPR(v) for T (and S as source tree)
 //it changes the T to its best SPR neighbor, too.
 //Returns best place to regraft
-Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node & T, Node & v, Node & S, bool weighted) {
+Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node & S, bool weighted) {
 
   Node* best_regraft_place = 0;
 
@@ -485,8 +515,8 @@ Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node & T, Node & v, Node & S, b
 
     traverse_S_and_update_alpha_beta_in_Q(*Q, v, S, *S_prime, weighted);
 
-    cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
-    preorder_trversal(*Q);
+    //cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
+    //preorder_trversal(*Q);
 
     int max_alpha_minus_beta = INT_MIN;
     find_best_regraft_place(*Q, best_regraft_place, max_alpha_minus_beta);  //NOTE Q should be passed
@@ -526,8 +556,8 @@ Node* apply_SPR_RS_algorithm_to_find_alpha_betas(Node & T, Node & v, Node & S, b
     //Note T now is Q in paper's notation
     traverse_S_and_update_alpha_beta_in_Q(T, v, S, *S_prime, weighted);
 
-    cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
-    preorder_trversal(T);
+    //cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
+    //preorder_trversal(T);
 
     int max_alpha_minus_beta = INT_MIN;
     find_best_regraft_place(T, best_regraft_place, max_alpha_minus_beta);  //NOTE here T is actually root of Q in apper notation
@@ -560,33 +590,33 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & T, Node & v, Node & S, Node & 
     }
   } else {  //if internal node
 
-    cout << "++++++++++++++++++++node u in S being considered: " << S.str_subtree() << endl;
-    cout << "its lca_mapping is: " << S.get_lca_mapping()->str_subtree() << endl;
+    //cout << "++++++++++++++++++++node u in S being considered: " << S.str_subtree() << endl;
+    //cout << "its lca_mapping is: " << S.get_lca_mapping()->str_subtree() << endl;
     Node* a;
 
     //Suppose for each u in I(S), lca_mpping(u)=a
     //There are 4 cases.
     //1- if u satisfies precondition of Lemma 9, i.e. a belongs to V(R_v)
     if (a = v.find_by_prenum(S.get_lca_mapping() -> get_preorder_number())) {
-      cout << "lemma 9" << "\n" <<  endl;
+      //cout << "lemma 9" << "\n" <<  endl;
       //do nothing
     }
 
     //2- if u satisfies precondition of Lemma 11, i.e. a belongs to V(Q_v) -which is T here- AND f_R(S)==0
     else if (a = T.find_by_prenum(S.get_lca_mapping()  -> get_preorder_number() )) {
       if (S.get_cluster_size() != a->get_cluster_size()) { //is f_R(S)==0
-        cout << "lemma 11" << "\n" <<  endl;
+        //cout << "lemma 11" << "\n" <<  endl;
         //do nothing
       } else { //precondition of lemma 10 is true
         //3- if u satisfies precondition of Lemma 10, i.e. a belongs to V(T_v) AND f_R(S)==1
-        cout << "lemma 10" << "\n" <<  endl;
+        //cout << "lemma 10" << "\n" <<  endl;
         if (weighted) {
           int w = S.get_edge_weight();
           a->increment_beta_in_all_descendants(w);
-          cout << "________w____increment beta on : " << a->str_subtree() << endl;
+          //cout << "________w____increment beta on : " << a->str_subtree() << endl;
         } else {
           a->increment_beta_in_all_descendants(1);
-          cout << "____________increment beta on : " << a->str_subtree() << endl;
+          //cout << "____________increment beta on : " << a->str_subtree() << endl;
         }
       }
     }
@@ -594,7 +624,7 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & T, Node & v, Node & S, Node & 
     //Lemma 12's precondition: a=T->p() AND |L(R_b)|+|L(R_v)|=|L(S_u)|
     //Note: if S's lca_mapping is not found in T_v or T_T, then it's lca_mapping is definitely parent of T (or v) which is the only child of R
     else {
-      cout << "lemma 12" <<  endl;
+      //cout << "lemma 12" <<  endl;
 
       Node* u_in_S_prime = S_prime.find_by_prenum(S.get_preorder_number()); //find u (S in parameters) in S'
       Node* lca_mapping_lemma12;
@@ -605,14 +635,14 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & T, Node & v, Node & S, Node & 
 
 
       if ( ((b_in_lemma12->find_leaves()).size()) + ((v.find_leaves()).size()) == (S.get_cluster_size()) ) { //|L(R_b)|+|L(R_v)|=?|L(S_u)|
-        cout << (b_in_lemma12->find_leaves()).size() << "+" << ((v.find_leaves()).size()) << " == " << (S.get_cluster_size()) << endl;
+        //cout << (b_in_lemma12->find_leaves()).size() << "+" << ((v.find_leaves()).size()) << " == " << (S.get_cluster_size()) << endl;
         if (weighted) {
           int w = S.get_edge_weight();
           b_in_lemma12->increment_alpha_in_all_descendants(w);
-          cout << "_____w_______increment alpha on : " << b_in_lemma12->str_subtree() << endl;
+          //cout << "_____w_______increment alpha on : " << b_in_lemma12->str_subtree() << endl;
         } else {
           b_in_lemma12->increment_alpha_in_all_descendants(1);
-          cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
+          //cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
         }
 
       }
