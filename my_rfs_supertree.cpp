@@ -89,7 +89,8 @@ void suppress_nodes_with_mapping_in_Rv(Node& S_prime, Node& v);
 void find_best_regraft_place(Node& n, Node*& best_regraft_place, int& max);
 void preorder_trversal(Node& n);
 int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted);
-void find_F_T(Node& S, Node& T, int& best, bool weighted);
+void find_F_T(Node& S, Node& T, int& best);
+void find_weighted_rf_dist(Node& S, Node& T_prime, int& dist);
 void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
 
@@ -109,21 +110,48 @@ bool IsSubset(std::vector<T> A, std::vector<T> B)
 int NUM_SPR_NGHBRS = 0;
 
 int main(int argc, char** argv) {
-  srand(time(NULL));
+  srand((unsigned)time(NULL));
 
-  //running time
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//running time
   clock_t start_time, finish_time;
   start_time = clock();
 
   string suptree = "(a,(c,(d,(e,(f,(b,g))))));";
-  //string suptree = "(((c,f),(d,e)),(a,(b,g)));";
-  //string input_tree = "(c,(f,(e,(d,(g,(b,a))))));";
+//string suptree = "(((c,f),(d,e)),(a,(b,g)));";
+//string input_tree = "(c,(f,(e,(d,(g,(b,a))))));";
   string input_tree = "(a,((c,f),(d,(e,(b,g)))));";
 
 
-  //string suptree = "((Pygoscelis_adeliae,(((Eudyptes_chrysolophus,Eudyptes_chrysocome),Aptenodytes_patagonicus),((Pygoscelis_antarctica,Pygoscelis_papua),((Eudyptes_pachyrhynchus,Megadyptes_antipodes),(Spheniscus_demersus,Eudyptula_minor))))),((Gavia_stellata,Gavia_immer),(((Oceanodroma_melania,(Oceanodroma_tethys,Halocyptena_microsoma)),(((Oceanodroma_castro,Hydrobates_pelagicus),(Oceanodroma_furcata,Oceanodroma_hornbyi)),(Oceanodroma_leucorhoa,Oceanodroma_tristrami))),((((Garrodia_nereis,Pelagodroma_marina),(Fregetta_grallaria,Fregetta_tropica)),Oceanites_oceanicus),(((Pelecanoides_garnotii,((Pelecanoides_georgicus,Pelecanoides_magellani),Pelecanoides_urinatrix)),(((Pterodroma_axillaris,(Pterodroma_nigripennis,Pterodroma_cervicalis)),((((Pterodroma_alba,(((Pterodroma_baraui,Pterodroma_arminjoniana),(Pterodroma_neglecta,Pterodroma_externa)),(Pterodroma_heraldica,(Pterodroma_sandwichensis,Pterodroma_phaeopygia)))),Pterodroma_inexpectata),(Pterodroma_ultima,(Pterodroma_solandri,(Pterodroma_mollis,((Pterodroma_hasitata,((Pterodroma_madeira,Pterodroma_feae),Pterodroma_cahow)),(Pterodroma_magentae,(Pterodroma_incerta,(Pterodroma_lessonii,Pterodroma_macroptera)))))))),(Pterodroma_hypoleuca,((Pterodroma_pycrofti,Pterodroma_longirostris),(Pterodroma_brevipes,(Pterodroma_leucoptera,(Pterodroma_cookii,Pterodroma_defilippiana))))))),((Pagodroma_nivea,((Daption_capense,((Macronectes_halli,Macronectes_giganteus),(Fulmarus_glacialis,Fulmarus_glacialoides))),Thalassoica_antarctica)),((Procellaria_cinerea,((Lugensa_brevirostris,((((Puffinus_gravis,(Puffinus_griseus,(Puffinus_creatopus,Puffinus_carneipes))),(Puffinus_bulleri,Puffinus_pacificus)),Puffinus_tenuirostris),((Calonectris_diomedea,Calonectris_leucomelas),(Puffinus_nativitatis,(((Puffinus_huttoni,Puffinus_gavia),(((Puffinus_opisthomelas,Puffinus_puffinus),Puffinus_auricularis),(Puffinus_assimilis,Puffinus_lherminieri))),(Puffinus_mauretanicus,Puffinus_yelkouan)))))),(Pseudobulweria_aterrima,Pseudobulweria_rostrata))),(((Procellaria_westlandica,(Procellaria_aequinoctialis,Procellaria_parkinsoni)),Bulweria_bulwerii),((Pachyptila_turtur,(Pachyptila_vittata,(Pachyptila_desolata,Pachyptila_salvini))),Halobaena_caerulea)))))),(((Phoebastria_irrorata,((Phoebastria_immutabilis,Phoebastria_nigripes),Phoebastria_albatrus)),((Diomedea_sanfordi,Diomedea_epomophora),(Diomedea_dabbenena,((Diomedea_gibsoni,Diomedea_antipodensis),(Diomedea_amsterdamensis,Diomedea_exulans))))),((Phoebetria_fusca,Phoebetria_palpebrata),((Thalassarche_bassi,Thalassarche_chlororhynchus),((Thalassarche_chrysostoma,(Thalassarche_melanophris,Thalassarche_impavida)),(Thalassarche_bulleri,(Thalassarche_cauta,(Thalassarche_salvini,Thalassarche_eremita))))))))))));";
-  //string input_tree = "((Puffinus_lherminieri,Pterodroma_cervicalis),((((Puffinus_nativitatis,((((Procellaria_cinerea,(Lugensa_brevirostris,(((((((((Pygoscelis_adeliae,(Puffinus_auricularis,((Pygoscelis_antarctica,(Pygoscelis_papua,((Eudyptula_minor,Spheniscus_demersus),(Megadyptes_antipodes,Eudyptes_pachyrhynchus)))),(Aptenodytes_patagonicus,(Eudyptes_chrysocome,Eudyptes_chrysolophus))))),(Gavia_immer,Gavia_stellata)),(((Oceanodroma_hornbyi,(Oceanodroma_furcata,(Oceanodroma_castro,Hydrobates_pelagicus))),(Oceanodroma_leucorhoa,Oceanodroma_tristrami)),(Oceanodroma_melania,(Halocyptena_microsoma,Oceanodroma_tethys)))),(Oceanites_oceanicus,((Fregetta_tropica,Fregetta_grallaria),(Pelagodroma_marina,Garrodia_nereis)))),(((((Thalassarche_chrysostoma,(Thalassarche_melanophris,Thalassarche_impavida)),(Thalassarche_bulleri,(Thalassarche_cauta,(Thalassarche_eremita,Thalassarche_salvini)))),(Thalassarche_chlororhynchus,Thalassarche_bassi)),(Phoebetria_fusca,Phoebetria_palpebrata)),(((Diomedea_dabbenena,((Diomedea_exulans,Diomedea_amsterdamensis),(Diomedea_gibsoni,Diomedea_antipodensis))),(Diomedea_epomophora,Diomedea_sanfordi)),(Phoebastria_irrorata,(Phoebastria_albatrus,(Phoebastria_immutabilis,Phoebastria_nigripes)))))),(Pelecanoides_garnotii,(Pelecanoides_urinatrix,(Pelecanoides_georgicus,Pelecanoides_magellani)))),(((((Pterodroma_ultima,(Pterodroma_solandri,(((Pterodroma_magentae,(Pterodroma_incerta,(Pterodroma_lessonii,Pterodroma_macroptera))),(Pterodroma_hasitata,((Pterodroma_feae,Pterodroma_madeira),Pterodroma_cahow))),Pterodroma_mollis))),(Pterodroma_inexpectata,((((Pterodroma_externa,Pterodroma_neglecta),(Pterodroma_baraui,Pterodroma_arminjoniana)),(Pterodroma_heraldica,(Pterodroma_phaeopygia,Pterodroma_sandwichensis))),Pterodroma_alba))),(((Pterodroma_brevipes,(Pterodroma_leucoptera,(Pterodroma_cookii,Pterodroma_defilippiana))),(Pterodroma_pycrofti,Pterodroma_longirostris)),Pterodroma_hypoleuca)),Pterodroma_axillaris),Pterodroma_nigripennis)),(Pagodroma_nivea,(Thalassoica_antarctica,(Daption_capense,((Macronectes_giganteus,Macronectes_halli),(Fulmarus_glacialis,Fulmarus_glacialoides)))))),((Halobaena_caerulea,(Pachyptila_turtur,(Pachyptila_vittata,(Pachyptila_salvini,Pachyptila_desolata)))),(Bulweria_bulwerii,(Procellaria_westlandica,(Procellaria_aequinoctialis,Procellaria_parkinsoni))))))),(Pseudobulweria_aterrima,Pseudobulweria_rostrata)),(Puffinus_tenuirostris,(((Puffinus_griseus,(Puffinus_carneipes,Puffinus_creatopus)),Puffinus_gravis),(Puffinus_pacificus,Puffinus_bulleri)))),(Calonectris_diomedea,Calonectris_leucomelas))),(Puffinus_huttoni,Puffinus_gavia)),((Puffinus_puffinus,Puffinus_opisthomelas),(Puffinus_yelkouan,Puffinus_mauretanicus))),Puffinus_assimilis));";
-  //string input_tree = "((((Procellaria_parkinsoni,(Puffinus_nativitatis,Procellaria_aequinoctialis)),((((((Eudyptes_chrysocome,(((Calonectris_diomedea,Pterodroma_externa),Thalassarche_chrysostoma),(Pterodroma_hasitata,Thalassarche_impavida))),(((((Thalassarche_bulleri,Oceanodroma_furcata),Pterodroma_feae),(Halocyptena_microsoma,Puffinus_creatopus)),((Diomedea_amsterdamensis,Puffinus_mauretanicus),Pelecanoides_urinatrix)),Oceanodroma_tristrami)),(Fulmarus_glacialis,Aptenodytes_patagonicus)),((((((Lugensa_brevirostris,Pterodroma_arminjoniana),((Pterodroma_hypoleuca,Pterodroma_incerta),Calonectris_leucomelas)),(((Pterodroma_alba,Puffinus_carneipes),(Pterodroma_phaeopygia,Pterodroma_solandri)),Pterodroma_sandwichensis)),(((Fregetta_tropica,(Pterodroma_leucoptera,(Pterodroma_mollis,Pygoscelis_antarctica))),((Puffinus_opisthomelas,Pseudobulweria_rostrata),Pagodroma_nivea)),(Oceanodroma_castro,Phoebastria_albatrus))),((Pterodroma_axillaris,Hydrobates_pelagicus),(Pelagodroma_marina,(Diomedea_gibsoni,Pygoscelis_adeliae)))),((Garrodia_nereis,Puffinus_tenuirostris),((Gavia_immer,Phoebastria_nigripes),((Pterodroma_cahow,Puffinus_bulleri),Thalassarche_melanophris))))),(((((Spheniscus_demersus,Thalassarche_bassi),((Macronectes_giganteus,(Pterodroma_defilippiana,Pachyptila_desolata)),Diomedea_sanfordi)),((((Pterodroma_heraldica,Diomedea_epomophora),Megadyptes_antipodes),((Bulweria_bulwerii,Pterodroma_brevipes),(Phoebastria_irrorata,Diomedea_exulans))),(Pygoscelis_papua,Phoebetria_palpebrata))),((Pterodroma_magentae,(Fulmarus_glacialoides,Oceanites_oceanicus)),(((Thalassarche_cauta,Eudyptes_pachyrhynchus),Pterodroma_cervicalis),(Thalassarche_salvini,Procellaria_westlandica)))),((Thalassarche_chlororhynchus,(Diomedea_dabbenena,Gavia_stellata)),((Pterodroma_nigripennis,Halobaena_caerulea),Puffinus_assimilis)))),((Puffinus_puffinus,Oceanodroma_leucorhoa),Pelecanoides_garnotii))),(((((((Puffinus_gavia,Daption_capense),(Fregetta_grallaria,Puffinus_auricularis)),(((Puffinus_griseus,(Pterodroma_baraui,Pseudobulweria_aterrima)),Diomedea_antipodensis),(Pachyptila_turtur,Pelecanoides_magellani))),(Phoebastria_immutabilis,((Oceanodroma_tethys,Thalassoica_antarctica),Pachyptila_salvini))),((Puffinus_huttoni,(Pterodroma_ultima,Pterodroma_cookii)),Puffinus_pacificus)),(((Macronectes_halli,(Pterodroma_madeira,Thalassarche_eremita)),(Pachyptila_vittata,(Pelecanoides_georgicus,Pterodroma_lessonii))),Pterodroma_longirostris)),((Oceanodroma_hornbyi,(Eudyptula_minor,Pterodroma_inexpectata)),Eudyptes_chrysolophus))),(((((Puffinus_yelkouan,Oceanodroma_melania),Procellaria_cinerea),(Pterodroma_neglecta,Phoebetria_fusca)),Pterodroma_pycrofti),(Puffinus_gravis,(Pterodroma_macroptera,Puffinus_lherminieri))));";
+//string suptree = "((Pygoscelis_adeliae,(((Eudyptes_chrysolophus,Eudyptes_chrysocome),Aptenodytes_patagonicus),((Pygoscelis_antarctica,Pygoscelis_papua),((Eudyptes_pachyrhynchus,Megadyptes_antipodes),(Spheniscus_demersus,Eudyptula_minor))))),((Gavia_stellata,Gavia_immer),(((Oceanodroma_melania,(Oceanodroma_tethys,Halocyptena_microsoma)),(((Oceanodroma_castro,Hydrobates_pelagicus),(Oceanodroma_furcata,Oceanodroma_hornbyi)),(Oceanodroma_leucorhoa,Oceanodroma_tristrami))),((((Garrodia_nereis,Pelagodroma_marina),(Fregetta_grallaria,Fregetta_tropica)),Oceanites_oceanicus),(((Pelecanoides_garnotii,((Pelecanoides_georgicus,Pelecanoides_magellani),Pelecanoides_urinatrix)),(((Pterodroma_axillaris,(Pterodroma_nigripennis,Pterodroma_cervicalis)),((((Pterodroma_alba,(((Pterodroma_baraui,Pterodroma_arminjoniana),(Pterodroma_neglecta,Pterodroma_externa)),(Pterodroma_heraldica,(Pterodroma_sandwichensis,Pterodroma_phaeopygia)))),Pterodroma_inexpectata),(Pterodroma_ultima,(Pterodroma_solandri,(Pterodroma_mollis,((Pterodroma_hasitata,((Pterodroma_madeira,Pterodroma_feae),Pterodroma_cahow)),(Pterodroma_magentae,(Pterodroma_incerta,(Pterodroma_lessonii,Pterodroma_macroptera)))))))),(Pterodroma_hypoleuca,((Pterodroma_pycrofti,Pterodroma_longirostris),(Pterodroma_brevipes,(Pterodroma_leucoptera,(Pterodroma_cookii,Pterodroma_defilippiana))))))),((Pagodroma_nivea,((Daption_capense,((Macronectes_halli,Macronectes_giganteus),(Fulmarus_glacialis,Fulmarus_glacialoides))),Thalassoica_antarctica)),((Procellaria_cinerea,((Lugensa_brevirostris,((((Puffinus_gravis,(Puffinus_griseus,(Puffinus_creatopus,Puffinus_carneipes))),(Puffinus_bulleri,Puffinus_pacificus)),Puffinus_tenuirostris),((Calonectris_diomedea,Calonectris_leucomelas),(Puffinus_nativitatis,(((Puffinus_huttoni,Puffinus_gavia),(((Puffinus_opisthomelas,Puffinus_puffinus),Puffinus_auricularis),(Puffinus_assimilis,Puffinus_lherminieri))),(Puffinus_mauretanicus,Puffinus_yelkouan)))))),(Pseudobulweria_aterrima,Pseudobulweria_rostrata))),(((Procellaria_westlandica,(Procellaria_aequinoctialis,Procellaria_parkinsoni)),Bulweria_bulwerii),((Pachyptila_turtur,(Pachyptila_vittata,(Pachyptila_desolata,Pachyptila_salvini))),Halobaena_caerulea)))))),(((Phoebastria_irrorata,((Phoebastria_immutabilis,Phoebastria_nigripes),Phoebastria_albatrus)),((Diomedea_sanfordi,Diomedea_epomophora),(Diomedea_dabbenena,((Diomedea_gibsoni,Diomedea_antipodensis),(Diomedea_amsterdamensis,Diomedea_exulans))))),((Phoebetria_fusca,Phoebetria_palpebrata),((Thalassarche_bassi,Thalassarche_chlororhynchus),((Thalassarche_chrysostoma,(Thalassarche_melanophris,Thalassarche_impavida)),(Thalassarche_bulleri,(Thalassarche_cauta,(Thalassarche_salvini,Thalassarche_eremita))))))))))));";
+//string input_tree = "((Puffinus_lherminieri,Pterodroma_cervicalis),((((Puffinus_nativitatis,((((Procellaria_cinerea,(Lugensa_brevirostris,(((((((((Pygoscelis_adeliae,(Puffinus_auricularis,((Pygoscelis_antarctica,(Pygoscelis_papua,((Eudyptula_minor,Spheniscus_demersus),(Megadyptes_antipodes,Eudyptes_pachyrhynchus)))),(Aptenodytes_patagonicus,(Eudyptes_chrysocome,Eudyptes_chrysolophus))))),(Gavia_immer,Gavia_stellata)),(((Oceanodroma_hornbyi,(Oceanodroma_furcata,(Oceanodroma_castro,Hydrobates_pelagicus))),(Oceanodroma_leucorhoa,Oceanodroma_tristrami)),(Oceanodroma_melania,(Halocyptena_microsoma,Oceanodroma_tethys)))),(Oceanites_oceanicus,((Fregetta_tropica,Fregetta_grallaria),(Pelagodroma_marina,Garrodia_nereis)))),(((((Thalassarche_chrysostoma,(Thalassarche_melanophris,Thalassarche_impavida)),(Thalassarche_bulleri,(Thalassarche_cauta,(Thalassarche_eremita,Thalassarche_salvini)))),(Thalassarche_chlororhynchus,Thalassarche_bassi)),(Phoebetria_fusca,Phoebetria_palpebrata)),(((Diomedea_dabbenena,((Diomedea_exulans,Diomedea_amsterdamensis),(Diomedea_gibsoni,Diomedea_antipodensis))),(Diomedea_epomophora,Diomedea_sanfordi)),(Phoebastria_irrorata,(Phoebastria_albatrus,(Phoebastria_immutabilis,Phoebastria_nigripes)))))),(Pelecanoides_garnotii,(Pelecanoides_urinatrix,(Pelecanoides_georgicus,Pelecanoides_magellani)))),(((((Pterodroma_ultima,(Pterodroma_solandri,(((Pterodroma_magentae,(Pterodroma_incerta,(Pterodroma_lessonii,Pterodroma_macroptera))),(Pterodroma_hasitata,((Pterodroma_feae,Pterodroma_madeira),Pterodroma_cahow))),Pterodroma_mollis))),(Pterodroma_inexpectata,((((Pterodroma_externa,Pterodroma_neglecta),(Pterodroma_baraui,Pterodroma_arminjoniana)),(Pterodroma_heraldica,(Pterodroma_phaeopygia,Pterodroma_sandwichensis))),Pterodroma_alba))),(((Pterodroma_brevipes,(Pterodroma_leucoptera,(Pterodroma_cookii,Pterodroma_defilippiana))),(Pterodroma_pycrofti,Pterodroma_longirostris)),Pterodroma_hypoleuca)),Pterodroma_axillaris),Pterodroma_nigripennis)),(Pagodroma_nivea,(Thalassoica_antarctica,(Daption_capense,((Macronectes_giganteus,Macronectes_halli),(Fulmarus_glacialis,Fulmarus_glacialoides)))))),((Halobaena_caerulea,(Pachyptila_turtur,(Pachyptila_vittata,(Pachyptila_salvini,Pachyptila_desolata)))),(Bulweria_bulwerii,(Procellaria_westlandica,(Procellaria_aequinoctialis,Procellaria_parkinsoni))))))),(Pseudobulweria_aterrima,Pseudobulweria_rostrata)),(Puffinus_tenuirostris,(((Puffinus_griseus,(Puffinus_carneipes,Puffinus_creatopus)),Puffinus_gravis),(Puffinus_pacificus,Puffinus_bulleri)))),(Calonectris_diomedea,Calonectris_leucomelas))),(Puffinus_huttoni,Puffinus_gavia)),((Puffinus_puffinus,Puffinus_opisthomelas),(Puffinus_yelkouan,Puffinus_mauretanicus))),Puffinus_assimilis));";
+//string input_tree = "((((Procellaria_parkinsoni,(Puffinus_nativitatis,Procellaria_aequinoctialis)),((((((Eudyptes_chrysocome,(((Calonectris_diomedea,Pterodroma_externa),Thalassarche_chrysostoma),(Pterodroma_hasitata,Thalassarche_impavida))),(((((Thalassarche_bulleri,Oceanodroma_furcata),Pterodroma_feae),(Halocyptena_microsoma,Puffinus_creatopus)),((Diomedea_amsterdamensis,Puffinus_mauretanicus),Pelecanoides_urinatrix)),Oceanodroma_tristrami)),(Fulmarus_glacialis,Aptenodytes_patagonicus)),((((((Lugensa_brevirostris,Pterodroma_arminjoniana),((Pterodroma_hypoleuca,Pterodroma_incerta),Calonectris_leucomelas)),(((Pterodroma_alba,Puffinus_carneipes),(Pterodroma_phaeopygia,Pterodroma_solandri)),Pterodroma_sandwichensis)),(((Fregetta_tropica,(Pterodroma_leucoptera,(Pterodroma_mollis,Pygoscelis_antarctica))),((Puffinus_opisthomelas,Pseudobulweria_rostrata),Pagodroma_nivea)),(Oceanodroma_castro,Phoebastria_albatrus))),((Pterodroma_axillaris,Hydrobates_pelagicus),(Pelagodroma_marina,(Diomedea_gibsoni,Pygoscelis_adeliae)))),((Garrodia_nereis,Puffinus_tenuirostris),((Gavia_immer,Phoebastria_nigripes),((Pterodroma_cahow,Puffinus_bulleri),Thalassarche_melanophris))))),(((((Spheniscus_demersus,Thalassarche_bassi),((Macronectes_giganteus,(Pterodroma_defilippiana,Pachyptila_desolata)),Diomedea_sanfordi)),((((Pterodroma_heraldica,Diomedea_epomophora),Megadyptes_antipodes),((Bulweria_bulwerii,Pterodroma_brevipes),(Phoebastria_irrorata,Diomedea_exulans))),(Pygoscelis_papua,Phoebetria_palpebrata))),((Pterodroma_magentae,(Fulmarus_glacialoides,Oceanites_oceanicus)),(((Thalassarche_cauta,Eudyptes_pachyrhynchus),Pterodroma_cervicalis),(Thalassarche_salvini,Procellaria_westlandica)))),((Thalassarche_chlororhynchus,(Diomedea_dabbenena,Gavia_stellata)),((Pterodroma_nigripennis,Halobaena_caerulea),Puffinus_assimilis)))),((Puffinus_puffinus,Oceanodroma_leucorhoa),Pelecanoides_garnotii))),(((((((Puffinus_gavia,Daption_capense),(Fregetta_grallaria,Puffinus_auricularis)),(((Puffinus_griseus,(Pterodroma_baraui,Pseudobulweria_aterrima)),Diomedea_antipodensis),(Pachyptila_turtur,Pelecanoides_magellani))),(Phoebastria_immutabilis,((Oceanodroma_tethys,Thalassoica_antarctica),Pachyptila_salvini))),((Puffinus_huttoni,(Pterodroma_ultima,Pterodroma_cookii)),Puffinus_pacificus)),(((Macronectes_halli,(Pterodroma_madeira,Thalassarche_eremita)),(Pachyptila_vittata,(Pelecanoides_georgicus,Pterodroma_lessonii))),Pterodroma_longirostris)),((Oceanodroma_hornbyi,(Eudyptula_minor,Pterodroma_inexpectata)),Eudyptes_chrysolophus))),(((((Puffinus_yelkouan,Oceanodroma_melania),Procellaria_cinerea),(Pterodroma_neglecta,Phoebetria_fusca)),Pterodroma_pycrofti),(Puffinus_gravis,(Pterodroma_macroptera,Puffinus_lherminieri))));";
 
   Node* T = build_tree(suptree);
   adjustTree(T);
@@ -131,14 +159,14 @@ int main(int argc, char** argv) {
   Node* S = build_tree(input_tree);
   adjustTree(S);
 
-  ///////////setting int labels for leaves, should be done in main()
+///////////setting int labels for leaves, should be done in main()
   unordered_map<string, int> int_label_map;
   int starting_label = 1;
   find_int_labels_for_leaves_in_supertree(T, starting_label, int_label_map);  //finding int labels for all taxa in supertree
   set_int_labels_for_leaves_in_source_tree(S, int_label_map); // set int labels for taxa in source trees
-  //for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it ) cout << it->first << ":" << it->second << endl;
+//for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it ) cout << it->first << ":" << it->second << endl;
 
-  //since source trees won't change, for each node in each source tree, we can find clusters only ones, and store it in DS
+//since source trees won't change, for each node in each source tree, we can find clusters only ones, and store it in DS
   set_cluster_in_source_tree(S);
 
 
@@ -147,7 +175,7 @@ int main(int argc, char** argv) {
 
 
 
-  //tttttttttttttttttttttttttttttttesting
+//tttttttttttttttttttttttttttttttesting
   int best_score = 1000;
   for (int i = 0; i < 0; ++i)
   {
@@ -228,20 +256,20 @@ int main(int argc, char** argv) {
   adjustTree(SS);
   Node* TT = build_tree(suptree);
   adjustTree(TT);
-  ///////////setting int labels for leaves, should be done in main()
+///////////setting int labels for leaves, should be done in main()
   unordered_map<string, int> int_label_map1;
   int starting_label1 = 1;
   find_int_labels_for_leaves_in_supertree(TT, starting_label1, int_label_map1);  //finding int labels for all taxa in supertree
   set_int_labels_for_leaves_in_source_tree(SS, int_label_map1); // set int labels for taxa in source trees
-  //for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it ) cout << it->first << ":" << it->second << endl;
+//for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it ) cout << it->first << ":" << it->second << endl;
 
-  //since source trees won't change, for each node in each source tree, we can find clusters only ones, and store it in DS
+//since source trees won't change, for each node in each source tree, we can find clusters only ones, and store it in DS
   set_cluster_in_source_tree(SS);
 
 
 
 
-  int weight = 2;
+  int weight = 5;
   int perc = 50;
   SS->reweight_edges_in_source_tree(perc, weight);
 
@@ -271,7 +299,7 @@ int main(int argc, char** argv) {
   print_weighted_tree(*SS);
 
 
-  //don't forget to free memory!!
+//don't forget to free memory!!
   T->delete_tree();
   S->delete_tree();
 
@@ -346,8 +374,13 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* &
     cout << "------T after : " << T.str_subtree() << endl;
 
 
-    int current_F = 0 ;  //start from -1 instead of 0 since F is ("RF-dist"+1), That's because the edge connecting root to its children is counted twice (if binary)
-    find_F_T(S, T, current_F, weighted);
+    int current_F = 0 ;
+    if (weighted) {
+      find_weighted_rf_dist(S, T, current_F);
+    } else {
+      find_F_T(S, T, current_F);
+    }
+
     cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
     if (current_F < min_F) {
       cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F << endl;
@@ -406,7 +439,7 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes) {
 //Note the way I implemented find_best_node_to_prune_and_its_best_regraft_place(), I don't want to change T so that I have to do calculations (lca_mapping, ...) for each v to be pruned
 //The node T being passed to this function is T', i.e. best neghibour for given v to be pruned.
 //THUS the lca_mappings are NOT valid anymore, and that's why I compute it again here
-void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime, bool weighted) {
+void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime) {
   //if S curresponds to a trivial bipartition, i.e. bipartition with one leaf on one side, DO NOT count it. There are 2 cases:
   //1- it is a leaf
   //2- it is child of root, and it's sibling is a leaf
@@ -419,7 +452,7 @@ void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime, bool wei
     list<Node *>::iterator c;
     list<Node *> children = S.get_children();
     for (c = children.begin(); c != children.end(); c++) {
-      find_F_T(**c, T_prime, num_clusters_not_in_T_prime, weighted);
+      find_F_T(**c, T_prime, num_clusters_not_in_T_prime);
     }
 
     if (S.get_p() == NULL) { //root
@@ -436,18 +469,57 @@ void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime, bool wei
       cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
 
       if ( (cluster.size()) != (lca_mapping_in_T_prime->number_of_leaves()) ) { //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz it will return cluster size of "this" in T not T'
-        if (weighted) {
-          cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
-          num_clusters_not_in_T_prime += S.get_edge_weight();
-        } else {
-          num_clusters_not_in_T_prime ++;
-        }
-
+        num_clusters_not_in_T_prime ++;
       }
     }
   }
 
 }
+
+
+//calculates the (weighted_RF_dist - num_bipartitions_in_T), that's because the "num_bipartitions_in_T" is constant when
+//comparing RF_dist of two different T's and S
+void find_weighted_rf_dist(Node& S, Node& T_prime, int& dist) {
+  //if S curresponds to a trivial bipartition, i.e. bipartition with one leaf on one side, DO NOT count it. There are 2 cases:
+  //1- it is a leaf
+  //2- it is child of root, and it's sibling is a leaf
+  //Also we don't count bipartition curresponding to roo ROOT
+  if (S.is_leaf()) { //leaf
+    return;
+  }
+  else {
+    //preorderly
+    list<Node *>::iterator c;
+    list<Node *> children = S.get_children();
+    for (c = children.begin(); c != children.end(); c++) {
+      find_weighted_rf_dist(**c, T_prime, dist);
+    }
+
+    if (S.get_p() == NULL) { //root
+      //do not count
+    } else if (S.get_p()->get_p() == NULL && S.get_sibling()->is_leaf()) {
+      //do not count
+    } else {  //a non-trivial bipartition
+      vector<int> cluster = S.get_cluster();
+      Node* lca_mapping_in_T_prime;
+      bool f = false;
+      compute_lca_mapping_helper_2(cluster, &T_prime, lca_mapping_in_T_prime, f);
+
+      cout << ".....................Node u is: " << S.str_subtree() << endl;
+      cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
+
+      //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz it will return cluster size of "this" in T not T'
+      if ( (cluster.size()) != (lca_mapping_in_T_prime->number_of_leaves()) ) { //if u belongs to X (see your notes)
+        cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
+        dist += S.get_edge_weight();
+      } else {  //if u belongs to Z (see your notes)
+        dist += (S.get_edge_weight() - 2);
+      }
+    }
+  }
+
+}
+
 
 
 //finds node for which "alpha - beta" is maximized
