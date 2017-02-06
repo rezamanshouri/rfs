@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
   clock_t start_time, finish_time;
   start_time = clock();
 
-  string suptree = "(g,(f,(e,(d,(c,(b,a))))));";
+  string suptree = "(a,(c,(d,(e,(f,(b,g))))));";
   //string suptree = "(((c,f),(d,e)),(a,(b,g)));";
   //string input_tree = "(c,(f,(e,(d,(g,(b,a))))));";
   string input_tree = "(a,((c,f),(d,(e,(b,g)))));";
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 
   //tttttttttttttttttttttttttttttttesting
   int best_score = 1000;
-  for (int i = 0; i < 15; ++i)
+  for (int i = 0; i < 0; ++i)
   {
     NUM_SPR_NGHBRS = 0;
     start_time = clock();
@@ -164,52 +164,52 @@ int main(int argc, char** argv) {
     Node* best_node_to_regraft;
     bool weighted = false;
     int current_score = find_best_node_to_prune_and_its_best_regraft_place(*T, *S, best_node_to_prune, best_node_to_regraft, weighted);
-    
-    if(current_score < best_score){
-    
+
+    if (current_score < best_score) {
+
       best_score = current_score;
 
 
-    int which_sibling = 0;
-    Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
+      int which_sibling = 0;
+      Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
 
-    //perform best possible spr move of the neighbourhood
-    /*
-    int which_sibling = 0;
-    if (! best_node_to_regraft->get_p()) { //if best node to regraft is root
-      best_node_to_prune->spr(best_node_to_regraft, which_sibling);
-      return *(best_node_to_prune->get_p());
-    } else {
-      best_node_to_prune->spr(best_node_to_regraft, which_sibling);
-      return T;
+      //perform best possible spr move of the neighbourhood
+      /*
+      int which_sibling = 0;
+      if (! best_node_to_regraft->get_p()) { //if best node to regraft is root
+        best_node_to_prune->spr(best_node_to_regraft, which_sibling);
+        return *(best_node_to_prune->get_p());
+      } else {
+        best_node_to_prune->spr(best_node_to_regraft, which_sibling);
+        return T;
+      }
+      */
+
+
+      T = best_node_to_prune->find_root();
+      adjustTree(T);
+
+
+      finish_time = clock();
+      float diff ((float)finish_time - (float)start_time);
+      float seconds = diff / CLOCKS_PER_SEC;
+
+      //cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
+      //cout << "source tree:" << endl;
+      //cout << S->str_subtree() << endl;
+      //cout << "intial ST:" << endl;
+      //cout << T->str_subtree() << endl;
+      //cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
+      cout << "T': " <<  T->str_subtree() << ";" << endl;
+      //cout << "--------------------------------------------------------------------------------------------------" << endl;
+      cout << "\nNUM_SPR_NGHBRS : " << NUM_SPR_NGHBRS << endl;
+      cout << "the running time is: " << seconds << " sec." << endl;
+      cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n" << endl;
+
     }
-    */
-
-
-    T = best_node_to_prune->find_root();
-    adjustTree(T);
-
-
-    finish_time = clock();
-    float diff ((float)finish_time - (float)start_time);
-    float seconds = diff / CLOCKS_PER_SEC;
-
-    //cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
-    //cout << "source tree:" << endl;
-    //cout << S->str_subtree() << endl;
-    //cout << "intial ST:" << endl;
-    //cout << T->str_subtree() << endl;
-    //cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
-    cout << "T': " <<  T->str_subtree() << ";" << endl;
-    //cout << "--------------------------------------------------------------------------------------------------" << endl;
-    cout << "\nNUM_SPR_NGHBRS : " << NUM_SPR_NGHBRS << endl;
-    cout << "the running time is: " << seconds << " sec." << endl;
-    cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n" << endl;
-
-}
-else {
-  break;
-}
+    else {
+      break;
+    }
 
 
 
@@ -217,15 +217,18 @@ else {
   }
 
 
-  /*
 
+  cout << "-------------------------------------------------------------------------------------------" << endl;
+  cout << "-------------------------------------------------------------------------------------------" << endl;
+  cout << "-------------------------------------------------------------------------------------------" << endl;
+  cout << "-------------------------------------------------------------------------------------------" << endl;
   cout << "Now let's see what is the result when WEIGHTED RF is used as optimality criteria: \n" << endl;
 
   Node* SS = build_tree(input_tree);
   adjustTree(SS);
   Node* TT = build_tree(suptree);
   adjustTree(TT);
-    ///////////setting int labels for leaves, should be done in main()
+  ///////////setting int labels for leaves, should be done in main()
   unordered_map<string, int> int_label_map1;
   int starting_label1 = 1;
   find_int_labels_for_leaves_in_supertree(TT, starting_label1, int_label_map1);  //finding int labels for all taxa in supertree
@@ -238,8 +241,8 @@ else {
 
 
 
-  int weight = 9;
-  int perc = 30;
+  int weight = 2;
+  int perc = 50;
   SS->reweight_edges_in_source_tree(perc, weight);
 
   Node* best_node_to_prune1;
@@ -253,11 +256,11 @@ else {
 
   finish_time = clock();
   float diff2 ((float)finish_time - (float)start_time);
-  seconds = diff2 / CLOCKS_PER_SEC;
+  float  seconds = diff2 / CLOCKS_PER_SEC;
 
   cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
-  cout << "intial ST:" << endl;
-  cout << suptree << endl;
+  cout << "source_tree: " << input_tree << endl;
+  cout << "intial   ST: " << suptree << endl;
   cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
   cout << TT->str_subtree() << ";" << endl;
   cout << "--------------------------------------------------------------------------------------------------" << endl;
@@ -266,7 +269,7 @@ else {
   cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
 
   print_weighted_tree(*SS);
-  */
+
 
   //don't forget to free memory!!
   T->delete_tree();
@@ -324,7 +327,6 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* &
   put_all_nodes_in_vector(T, internal_nodes);
   vector<Node*>::iterator iter, end;
   //any internal node except root may be pruned, iter plave the role of "v" in the algorithm
-
   for (iter = internal_nodes.begin(), end = internal_nodes.end(); iter != end;  iter++) {
 
     if (!(*iter)->get_p()) { //root or its children
@@ -336,17 +338,17 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* &
     Node* best_regraft_place = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, S, weighted);
 
     int which_sibling = 0;
-    //cout << "------T before: " << T.str_subtree() << endl;
-    //cout << "\n\n-----spr_on(v): " << (*iter)->str_subtree() << endl;
-    //cout << "--best regraft: " << best_regraft_place->str_subtree() << endl;
+    cout << "\n\n------T before: " << T.str_subtree() << endl;
+    cout << "-----spr_on(v): " << (*iter)->str_subtree() << endl;
+    cout << "--best regraft: " << best_regraft_place->str_subtree() << endl;
     Node* old_sibling = (*iter)->spr(best_regraft_place, which_sibling);
     adjustTree(&T);
-    //cout << "------T after : " << T.str_subtree() << endl;
+    cout << "------T after : " << T.str_subtree() << endl;
 
 
     int current_F = 0 ;  //start from -1 instead of 0 since F is ("RF-dist"+1), That's because the edge connecting root to its children is counted twice (if binary)
     find_F_T(S, T, current_F, weighted);
-    //cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
+    cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
     if (current_F < min_F) {
       cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F << endl;
       //cout << "--best regraft: " << best_regraft_place->str_subtree() <<  endl;
@@ -405,39 +407,46 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes) {
 //The node T being passed to this function is T', i.e. best neghibour for given v to be pruned.
 //THUS the lca_mappings are NOT valid anymore, and that's why I compute it again here
 void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime, bool weighted) {
-  if (S.is_leaf()) {
+  //if S curresponds to a trivial bipartition, i.e. bipartition with one leaf on one side, DO NOT count it. There are 2 cases:
+  //1- it is a leaf
+  //2- it is child of root, and it's sibling is a leaf
+  //Also we don't count bipartition curresponding to roo ROOT
+  if (S.is_leaf()) { //leaf
     return;
   }
-
-  //cout << "_____________________"  << endl;
-  //cout << "cluster: " << S.str_subtree() << endl;
-  //cout << "S lca mapping: " <<  S.get_lca_mapping()<< endl;
-  //cout << "T: " << T.str_subtree() << endl;
-  //preorder_trversal(T);
-
-  vector<int> cluster = S.get_cluster();
-  Node* lca_mapping_in_T_prime;
-  bool f = false;
-  compute_lca_mapping_helper_2(cluster, &T_prime, lca_mapping_in_T_prime, f);
-
-  //cout << ".....................Node u is: " << S.str_subtree() << endl;
-  //cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
-
-  if ( (cluster.size()) != (lca_mapping_in_T_prime->number_of_leaves()) ) { //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz it will return cluster size of "this" in T not T'
-    //cout << "___________NOT EXIST: " << cluster.size()  << "!=" << lca_mapping_in_T_prime->number_of_leaves() << endl;
-    if (weighted) {
-      num_clusters_not_in_T_prime += S.get_edge_weight();
-    } else {
-      num_clusters_not_in_T_prime ++;
+  else {
+    //preorderly
+    list<Node *>::iterator c;
+    list<Node *> children = S.get_children();
+    for (c = children.begin(); c != children.end(); c++) {
+      find_F_T(**c, T_prime, num_clusters_not_in_T_prime, weighted);
     }
 
+    if (S.get_p() == NULL) { //root
+      //do not count
+    } else if (S.get_p()->get_p() == NULL && S.get_sibling()->is_leaf()) {
+      //do not count
+    } else {  //a non-trivial bipartition
+      vector<int> cluster = S.get_cluster();
+      Node* lca_mapping_in_T_prime;
+      bool f = false;
+      compute_lca_mapping_helper_2(cluster, &T_prime, lca_mapping_in_T_prime, f);
+
+      cout << ".....................Node u is: " << S.str_subtree() << endl;
+      cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
+
+      if ( (cluster.size()) != (lca_mapping_in_T_prime->number_of_leaves()) ) { //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz it will return cluster size of "this" in T not T'
+        if (weighted) {
+          cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
+          num_clusters_not_in_T_prime += S.get_edge_weight();
+        } else {
+          num_clusters_not_in_T_prime ++;
+        }
+
+      }
+    }
   }
 
-  list<Node *>::iterator c;
-  list<Node *> children = S.get_children();
-  for (c = children.begin(); c != children.end(); c++) {
-    find_F_T(**c, T_prime, num_clusters_not_in_T_prime, weighted);
-  }
 }
 
 
