@@ -105,6 +105,14 @@ bool IsSubset(std::vector<T> A, std::vector<T> B)
 }
 
 
+//////////////////////from ratchet:
+vector<string> split(const string &s, char delim);
+void split(const string &s, char delim, vector<string> &elems);
+set<string> find_non_common_taxa_set(const string &supertree, const string &source_tree);
+
+
+
+
 /////////////////////////////     main()     /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 int NUM_SPR_NGHBRS = 0;
@@ -112,199 +120,226 @@ int NUM_SPR_NGHBRS = 0;
 int main(int argc, char** argv) {
   srand((unsigned)time(NULL));
 
+  cout << "Please enter the pre-specified number of 'ratchet' iterations: " << endl;
+  //pre-specified number of iterations if it didn't stop after this number of iterations
+  int number_of_ratchet_iterations;
+  cin >> number_of_ratchet_iterations;
+
+  cout << "Please enter the percentage of clades to be re-weighted in Ratchet search (between 0 and 100): " << endl;
+  int percentage_of_clades_to_be_reweighted ;
+  cin >> percentage_of_clades_to_be_reweighted;
+
+  cout << "Please enter the new weight to which clades be re-weighted in Ratchet search (between 0 and 10): " << endl;
+  int ratchet_weight;
+  cin >> ratchet_weight;
+
+  cout << "********************************************************************" << endl;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//running time
-  clock_t start_time, finish_time;
-  start_time = clock();
-
-  string suptree = "(a,(c,(d,(e,(f,(b,g))))));";
-//string suptree = "(((c,f),(d,e)),(a,(b,g)));";
-//string input_tree = "(c,(f,(e,(d,(g,(b,a))))));";
-  string input_tree = "(a,((c,f),(d,(e,(b,g)))));";
-
-
-//string suptree = "((Pygoscelis_adeliae,(((Eudyptes_chrysolophus,Eudyptes_chrysocome),Aptenodytes_patagonicus),((Pygoscelis_antarctica,Pygoscelis_papua),((Eudyptes_pachyrhynchus,Megadyptes_antipodes),(Spheniscus_demersus,Eudyptula_minor))))),((Gavia_stellata,Gavia_immer),(((Oceanodroma_melania,(Oceanodroma_tethys,Halocyptena_microsoma)),(((Oceanodroma_castro,Hydrobates_pelagicus),(Oceanodroma_furcata,Oceanodroma_hornbyi)),(Oceanodroma_leucorhoa,Oceanodroma_tristrami))),((((Garrodia_nereis,Pelagodroma_marina),(Fregetta_grallaria,Fregetta_tropica)),Oceanites_oceanicus),(((Pelecanoides_garnotii,((Pelecanoides_georgicus,Pelecanoides_magellani),Pelecanoides_urinatrix)),(((Pterodroma_axillaris,(Pterodroma_nigripennis,Pterodroma_cervicalis)),((((Pterodroma_alba,(((Pterodroma_baraui,Pterodroma_arminjoniana),(Pterodroma_neglecta,Pterodroma_externa)),(Pterodroma_heraldica,(Pterodroma_sandwichensis,Pterodroma_phaeopygia)))),Pterodroma_inexpectata),(Pterodroma_ultima,(Pterodroma_solandri,(Pterodroma_mollis,((Pterodroma_hasitata,((Pterodroma_madeira,Pterodroma_feae),Pterodroma_cahow)),(Pterodroma_magentae,(Pterodroma_incerta,(Pterodroma_lessonii,Pterodroma_macroptera)))))))),(Pterodroma_hypoleuca,((Pterodroma_pycrofti,Pterodroma_longirostris),(Pterodroma_brevipes,(Pterodroma_leucoptera,(Pterodroma_cookii,Pterodroma_defilippiana))))))),((Pagodroma_nivea,((Daption_capense,((Macronectes_halli,Macronectes_giganteus),(Fulmarus_glacialis,Fulmarus_glacialoides))),Thalassoica_antarctica)),((Procellaria_cinerea,((Lugensa_brevirostris,((((Puffinus_gravis,(Puffinus_griseus,(Puffinus_creatopus,Puffinus_carneipes))),(Puffinus_bulleri,Puffinus_pacificus)),Puffinus_tenuirostris),((Calonectris_diomedea,Calonectris_leucomelas),(Puffinus_nativitatis,(((Puffinus_huttoni,Puffinus_gavia),(((Puffinus_opisthomelas,Puffinus_puffinus),Puffinus_auricularis),(Puffinus_assimilis,Puffinus_lherminieri))),(Puffinus_mauretanicus,Puffinus_yelkouan)))))),(Pseudobulweria_aterrima,Pseudobulweria_rostrata))),(((Procellaria_westlandica,(Procellaria_aequinoctialis,Procellaria_parkinsoni)),Bulweria_bulwerii),((Pachyptila_turtur,(Pachyptila_vittata,(Pachyptila_desolata,Pachyptila_salvini))),Halobaena_caerulea)))))),(((Phoebastria_irrorata,((Phoebastria_immutabilis,Phoebastria_nigripes),Phoebastria_albatrus)),((Diomedea_sanfordi,Diomedea_epomophora),(Diomedea_dabbenena,((Diomedea_gibsoni,Diomedea_antipodensis),(Diomedea_amsterdamensis,Diomedea_exulans))))),((Phoebetria_fusca,Phoebetria_palpebrata),((Thalassarche_bassi,Thalassarche_chlororhynchus),((Thalassarche_chrysostoma,(Thalassarche_melanophris,Thalassarche_impavida)),(Thalassarche_bulleri,(Thalassarche_cauta,(Thalassarche_salvini,Thalassarche_eremita))))))))))));";
-//string input_tree = "((Puffinus_lherminieri,Pterodroma_cervicalis),((((Puffinus_nativitatis,((((Procellaria_cinerea,(Lugensa_brevirostris,(((((((((Pygoscelis_adeliae,(Puffinus_auricularis,((Pygoscelis_antarctica,(Pygoscelis_papua,((Eudyptula_minor,Spheniscus_demersus),(Megadyptes_antipodes,Eudyptes_pachyrhynchus)))),(Aptenodytes_patagonicus,(Eudyptes_chrysocome,Eudyptes_chrysolophus))))),(Gavia_immer,Gavia_stellata)),(((Oceanodroma_hornbyi,(Oceanodroma_furcata,(Oceanodroma_castro,Hydrobates_pelagicus))),(Oceanodroma_leucorhoa,Oceanodroma_tristrami)),(Oceanodroma_melania,(Halocyptena_microsoma,Oceanodroma_tethys)))),(Oceanites_oceanicus,((Fregetta_tropica,Fregetta_grallaria),(Pelagodroma_marina,Garrodia_nereis)))),(((((Thalassarche_chrysostoma,(Thalassarche_melanophris,Thalassarche_impavida)),(Thalassarche_bulleri,(Thalassarche_cauta,(Thalassarche_eremita,Thalassarche_salvini)))),(Thalassarche_chlororhynchus,Thalassarche_bassi)),(Phoebetria_fusca,Phoebetria_palpebrata)),(((Diomedea_dabbenena,((Diomedea_exulans,Diomedea_amsterdamensis),(Diomedea_gibsoni,Diomedea_antipodensis))),(Diomedea_epomophora,Diomedea_sanfordi)),(Phoebastria_irrorata,(Phoebastria_albatrus,(Phoebastria_immutabilis,Phoebastria_nigripes)))))),(Pelecanoides_garnotii,(Pelecanoides_urinatrix,(Pelecanoides_georgicus,Pelecanoides_magellani)))),(((((Pterodroma_ultima,(Pterodroma_solandri,(((Pterodroma_magentae,(Pterodroma_incerta,(Pterodroma_lessonii,Pterodroma_macroptera))),(Pterodroma_hasitata,((Pterodroma_feae,Pterodroma_madeira),Pterodroma_cahow))),Pterodroma_mollis))),(Pterodroma_inexpectata,((((Pterodroma_externa,Pterodroma_neglecta),(Pterodroma_baraui,Pterodroma_arminjoniana)),(Pterodroma_heraldica,(Pterodroma_phaeopygia,Pterodroma_sandwichensis))),Pterodroma_alba))),(((Pterodroma_brevipes,(Pterodroma_leucoptera,(Pterodroma_cookii,Pterodroma_defilippiana))),(Pterodroma_pycrofti,Pterodroma_longirostris)),Pterodroma_hypoleuca)),Pterodroma_axillaris),Pterodroma_nigripennis)),(Pagodroma_nivea,(Thalassoica_antarctica,(Daption_capense,((Macronectes_giganteus,Macronectes_halli),(Fulmarus_glacialis,Fulmarus_glacialoides)))))),((Halobaena_caerulea,(Pachyptila_turtur,(Pachyptila_vittata,(Pachyptila_salvini,Pachyptila_desolata)))),(Bulweria_bulwerii,(Procellaria_westlandica,(Procellaria_aequinoctialis,Procellaria_parkinsoni))))))),(Pseudobulweria_aterrima,Pseudobulweria_rostrata)),(Puffinus_tenuirostris,(((Puffinus_griseus,(Puffinus_carneipes,Puffinus_creatopus)),Puffinus_gravis),(Puffinus_pacificus,Puffinus_bulleri)))),(Calonectris_diomedea,Calonectris_leucomelas))),(Puffinus_huttoni,Puffinus_gavia)),((Puffinus_puffinus,Puffinus_opisthomelas),(Puffinus_yelkouan,Puffinus_mauretanicus))),Puffinus_assimilis));";
-//string input_tree = "((((Procellaria_parkinsoni,(Puffinus_nativitatis,Procellaria_aequinoctialis)),((((((Eudyptes_chrysocome,(((Calonectris_diomedea,Pterodroma_externa),Thalassarche_chrysostoma),(Pterodroma_hasitata,Thalassarche_impavida))),(((((Thalassarche_bulleri,Oceanodroma_furcata),Pterodroma_feae),(Halocyptena_microsoma,Puffinus_creatopus)),((Diomedea_amsterdamensis,Puffinus_mauretanicus),Pelecanoides_urinatrix)),Oceanodroma_tristrami)),(Fulmarus_glacialis,Aptenodytes_patagonicus)),((((((Lugensa_brevirostris,Pterodroma_arminjoniana),((Pterodroma_hypoleuca,Pterodroma_incerta),Calonectris_leucomelas)),(((Pterodroma_alba,Puffinus_carneipes),(Pterodroma_phaeopygia,Pterodroma_solandri)),Pterodroma_sandwichensis)),(((Fregetta_tropica,(Pterodroma_leucoptera,(Pterodroma_mollis,Pygoscelis_antarctica))),((Puffinus_opisthomelas,Pseudobulweria_rostrata),Pagodroma_nivea)),(Oceanodroma_castro,Phoebastria_albatrus))),((Pterodroma_axillaris,Hydrobates_pelagicus),(Pelagodroma_marina,(Diomedea_gibsoni,Pygoscelis_adeliae)))),((Garrodia_nereis,Puffinus_tenuirostris),((Gavia_immer,Phoebastria_nigripes),((Pterodroma_cahow,Puffinus_bulleri),Thalassarche_melanophris))))),(((((Spheniscus_demersus,Thalassarche_bassi),((Macronectes_giganteus,(Pterodroma_defilippiana,Pachyptila_desolata)),Diomedea_sanfordi)),((((Pterodroma_heraldica,Diomedea_epomophora),Megadyptes_antipodes),((Bulweria_bulwerii,Pterodroma_brevipes),(Phoebastria_irrorata,Diomedea_exulans))),(Pygoscelis_papua,Phoebetria_palpebrata))),((Pterodroma_magentae,(Fulmarus_glacialoides,Oceanites_oceanicus)),(((Thalassarche_cauta,Eudyptes_pachyrhynchus),Pterodroma_cervicalis),(Thalassarche_salvini,Procellaria_westlandica)))),((Thalassarche_chlororhynchus,(Diomedea_dabbenena,Gavia_stellata)),((Pterodroma_nigripennis,Halobaena_caerulea),Puffinus_assimilis)))),((Puffinus_puffinus,Oceanodroma_leucorhoa),Pelecanoides_garnotii))),(((((((Puffinus_gavia,Daption_capense),(Fregetta_grallaria,Puffinus_auricularis)),(((Puffinus_griseus,(Pterodroma_baraui,Pseudobulweria_aterrima)),Diomedea_antipodensis),(Pachyptila_turtur,Pelecanoides_magellani))),(Phoebastria_immutabilis,((Oceanodroma_tethys,Thalassoica_antarctica),Pachyptila_salvini))),((Puffinus_huttoni,(Pterodroma_ultima,Pterodroma_cookii)),Puffinus_pacificus)),(((Macronectes_halli,(Pterodroma_madeira,Thalassarche_eremita)),(Pachyptila_vittata,(Pelecanoides_georgicus,Pterodroma_lessonii))),Pterodroma_longirostris)),((Oceanodroma_hornbyi,(Eudyptula_minor,Pterodroma_inexpectata)),Eudyptes_chrysolophus))),(((((Puffinus_yelkouan,Oceanodroma_melania),Procellaria_cinerea),(Pterodroma_neglecta,Phoebetria_fusca)),Pterodroma_pycrofti),(Puffinus_gravis,(Pterodroma_macroptera,Puffinus_lherminieri))));";
-
-  Node* T = build_tree(suptree);
-  adjustTree(T);
-
-  Node* S = build_tree(input_tree);
-  adjustTree(S);
-
-///////////setting int labels for leaves, should be done in main()
-  unordered_map<string, int> int_label_map;
-  int starting_label = 1;
-  find_int_labels_for_leaves_in_supertree(T, starting_label, int_label_map);  //finding int labels for all taxa in supertree
-  set_int_labels_for_leaves_in_source_tree(S, int_label_map); // set int labels for taxa in source trees
-//for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it ) cout << it->first << ":" << it->second << endl;
-
-//since source trees won't change, for each node in each source tree, we can find clusters only ones, and store it in DS
-  set_cluster_in_source_tree(S);
-
-
-
-
-
-
-
-//tttttttttttttttttttttttttttttttesting
-  int best_score = 1000;
-  for (int i = 0; i < 0; ++i)
+  string init_supertree;
+  ifstream init_sup("initial_supertree");
+  if (init_sup.good())
   {
-    NUM_SPR_NGHBRS = 0;
-    start_time = clock();
+    string sLine;
+    getline(init_sup, sLine);
+    init_supertree = sLine;
+  } else {
+    cout << "Initial supertree file not found!!" << endl;
+    return -1;
+  }
 
-    cout << "Suppose we want to solve SPR_RS for the following supertree (T) and given sourse tree(S):" << endl;
-    cout << "S: " << S->str_subtree() << endl;
-    cout << "T: " << T->str_subtree() << "\n" << endl;
+  int number_of_source_trees = 0;
+  ifstream myfile1(argv[1]);
+  string l0;
+  while (std::getline(myfile1, l0))
+  {
+    number_of_source_trees ++;
+  }
+  myfile1.close();
 
+  ::NUMBER_OF_SOURCE_TREES_ZZ = number_of_source_trees;
 
-
-    Node* best_node_to_prune;
-    Node* best_node_to_regraft;
-    bool weighted = false;
-    int current_score = find_best_node_to_prune_and_its_best_regraft_place(*T, *S, best_node_to_prune, best_node_to_regraft, weighted);
-
-    if (current_score < best_score) {
-
-      best_score = current_score;
-
-
-      int which_sibling = 0;
-      Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
-
-      //perform best possible spr move of the neighbourhood
-      /*
-      int which_sibling = 0;
-      if (! best_node_to_regraft->get_p()) { //if best node to regraft is root
-        best_node_to_prune->spr(best_node_to_regraft, which_sibling);
-        return *(best_node_to_prune->get_p());
-      } else {
-        best_node_to_prune->spr(best_node_to_regraft, which_sibling);
-        return T;
-      }
-      */
-
-
-      T = best_node_to_prune->find_root();
-      adjustTree(T);
+  string source_trees_newick[number_of_source_trees];
+  Node* source_trees_root[number_of_source_trees];
+  int cntr0 = 0;
+  ifstream myfile2(argv[1]);
+  string l1;  //hopefully size of trees are not larger than str.max_size()
+  while (std::getline(myfile2, l1))
+  {
+    source_trees_newick[cntr0] = l1;
+    source_trees_root[cntr0] = build_tree(l1);
+    adjustTree(source_trees_root[cntr0]);
+    cntr0 ++;
+  }
+  myfile2.close();
 
 
-      finish_time = clock();
-      float diff ((float)finish_time - (float)start_time);
-      float seconds = diff / CLOCKS_PER_SEC;
-
-      //cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
-      //cout << "source tree:" << endl;
-      //cout << S->str_subtree() << endl;
-      //cout << "intial ST:" << endl;
-      //cout << T->str_subtree() << endl;
-      //cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
-      cout << "T': " <<  T->str_subtree() << ";" << endl;
-      //cout << "--------------------------------------------------------------------------------------------------" << endl;
-      cout << "\nNUM_SPR_NGHBRS : " << NUM_SPR_NGHBRS << endl;
-      cout << "the running time is: " << seconds << " sec." << endl;
-      cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n" << endl;
-
-    }
-    else {
-      break;
-    }
-
-
-
-
+  //non-shared taxa between each source tree and any supertree is the same in any iteration.
+  //thus, I calculate it once here and just use it.
+  set<string> non_shared_taxa_arr[number_of_source_trees];
+  int cntr2 = 0;
+  for (string t : source_trees_newick) {
+    non_shared_taxa_arr[cntr2] = find_non_common_taxa_set(init_supertree, t);
+    cntr2 ++;
   }
 
 
+  ///////////setting int labels for leaves, i.e. mapping names to integers from 1 to n
+  Node* supertree = build_tree(init_supertree);
+  adjustTree(supertree);
 
-  cout << "-------------------------------------------------------------------------------------------" << endl;
-  cout << "-------------------------------------------------------------------------------------------" << endl;
-  cout << "-------------------------------------------------------------------------------------------" << endl;
-  cout << "-------------------------------------------------------------------------------------------" << endl;
-  cout << "Now let's see what is the result when WEIGHTED RF is used as optimality criteria: \n" << endl;
+  unordered_map<string, int> int_label_map;
+  int starting_label = 1;
+  find_int_labels_for_leaves_in_supertree(supertree, starting_label, int_label_map);  //finding int labels for all taxa in supertree
+  // set int labels for taxa in source trees
+  for (int i = 0; i < number_of_source_trees; i++) {
+    set_int_labels_for_leaves_in_source_tree(source_trees_root[i], int_label_map);
+    //also, since source trees won't change, for each node in each source tree, lets find clusters only ones, and store it in DS
+    set_cluster_in_source_tree(source_trees_root[i]);
+  }
 
-  Node* SS = build_tree(input_tree);
-  adjustTree(SS);
-  Node* TT = build_tree(suptree);
-  adjustTree(TT);
-///////////setting int labels for leaves, should be done in main()
-  unordered_map<string, int> int_label_map1;
-  int starting_label1 = 1;
-  find_int_labels_for_leaves_in_supertree(TT, starting_label1, int_label_map1);  //finding int labels for all taxa in supertree
-  set_int_labels_for_leaves_in_source_tree(SS, int_label_map1); // set int labels for taxa in source trees
-//for ( auto it = int_label_map.begin(); it != int_label_map.end(); ++it ) cout << it->first << ":" << it->second << endl;
 
-//since source trees won't change, for each node in each source tree, we can find clusters only ones, and store it in DS
-  set_cluster_in_source_tree(SS);
+  cout << "pre-processing steps completed, let's start running edge-ratchet algorithm using RFS" << endl;
+  cout << "********************************************************************" << endl;
 
 
 
-
-  int weight = 5;
-  int perc = 50;
-  SS->reweight_edges_in_source_tree(perc, weight);
-
-  Node* best_node_to_prune1;
-  Node* best_node_to_regraft1;
-  bool weighted1 = true;
-  find_best_node_to_prune_and_its_best_regraft_place(*TT, *SS, best_node_to_prune1, best_node_to_regraft1, weighted1);
-  int which_sibling1 = 0;
-  Node* old_sibling1 = best_node_to_prune1->spr(best_node_to_regraft1, which_sibling1);
+  //running time
+  clock_t start_time_total, finish_time_total;
+  start_time_total = clock();
 
 
+  //just to keep track of best ST seen throughout the algorithm
+  string the_best_supertree_seen = init_supertree;
+  int the_best_rf_distance_seen = INT_MAX;
 
-  finish_time = clock();
-  float diff2 ((float)finish_time - (float)start_time);
-  float  seconds = diff2 / CLOCKS_PER_SEC;
 
-  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
-  cout << "source_tree: " << input_tree << endl;
-  cout << "intial   ST: " << suptree << endl;
-  cout << "\n-------------------------  best ST found in SPR neighbourhood:   -------------------------------" << endl;
-  cout << TT->str_subtree() << ";" << endl;
-  cout << "--------------------------------------------------------------------------------------------------" << endl;
-  cout << "\nNUM_SPR_NGHBRS : " << NUM_SPR_NGHBRS << endl;
+  ////////////////////////////////////////////////
+  //////////////////////ratchet///////////////////
+  ////////////////////////////////////////////////
+
+  //ratchet search loop
+  for (int ratchet_counter = 1; ratchet_counter < number_of_ratchet_iterations + 1; ratchet_counter++) {
+
+    bool ratchet = true; //when true, use re-weighted input trees; when false, use unweighted trees.
+    if (ratchet) {
+      for (int i = 0; i < number_of_source_trees; ++i) {
+        source_trees_root[i]->reweight_edges_in_source_tree(percentage_of_clades_to_be_reweighted, ratchet_weight);
+        //cout << source_trees_root[i]->str_subtree() << endl;
+      }
+      //print_weighted_tree(*source_trees_root[0]);
+    }
+
+
+    int best_score_of_current_hill = INT_MAX;
+    string best_supertree_of_current_hill;
+
+    //search until reaching a local optimum
+    int iteration = 0;
+    while (true) {
+      clock_t start_time_iter, finish_time_iter;
+      start_time_iter = clock();
+
+      iteration ++;
+
+      Node* best_node_to_prune;
+      Node* best_node_to_regraft;
+      cout << "\ninit  ST: " << supertree->str_subtree() << "\n";
+      int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, *source_trees_root[0], best_node_to_prune, best_node_to_regraft, ratchet);
+
+      if (current_score < best_score_of_current_hill) {
+
+        int which_sibling = 0;
+        Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
+
+
+        supertree = best_node_to_prune->find_root();
+        adjustTree(supertree);
+
+        best_score_of_current_hill = current_score;
+        best_supertree_of_current_hill = supertree->str_subtree();
+
+        finish_time_iter = clock();
+        float diff ((float)finish_time_iter - (float)start_time_iter);
+        float iter_time = diff / CLOCKS_PER_SEC;
+        cout << "Iter: " << iteration << ", num_spr_neighbours: " <<
+             NUM_SPR_NGHBRS << ", RF_dist: " << current_score << ", time(sec) : " << iter_time << endl;
+        cout << "final ST: " << supertree->str_subtree() << "\n";    
+
+      }
+      else { // local optimum
+        
+        if (ratchet) {
+          cout << "\nratchet local opt (re-weighted) reached." << endl;
+          cout << "---------------------------------------------------\n" << endl;
+        } else {
+          cout << "\nregular local opt (original weights) reached. ###" << endl;
+        }
+
+        //cout << "We have reached a local optimum which has better \(or equal\) WRF distance than all its spr-neighbors\n";
+        //cout << "The best SuperTree found after " << iteration << " number of iterations is: " "\n";
+        //cout << "And its RF distance is " << best_score_of_current_hill << "\n";
+        //cout << "--------------------------------------------------------" << endl;
+
+
+
+        if (!ratchet) { //we are at the end of one ratchet iteration
+
+          cout << "=======================================end of " << ratchet_counter << "-th ratchet iter=========================================" << endl;
+          cout << "========================================================================================================" << endl;
+
+          if (best_score_of_current_hill < the_best_rf_distance_seen) { //keep track of best supertree seen so far
+            the_best_rf_distance_seen = best_score_of_current_hill;
+            the_best_supertree_seen = best_supertree_of_current_hill;
+          }
+
+          break;  //end of second phase of ONE ratchet iteration
+
+        } else { //now perform a regular branch swapping
+          best_score_of_current_hill = INT_MAX;  //this line so necessary!!
+          //Because we are about to start a completely new hill climbing with new objective function.
+          //without this line, after 2nd ratchet iter, no improvement will be made since the weighted
+          //distance is always larger than un-weighted and the init ST from previous step is local opt
+          //already.
+
+          ratchet = false;
+          iteration = 0;
+        }
+
+      }
+
+    }//end of one branch swapping search loop
+
+
+  }//end of ratchet search loop
+
+
+  finish_time_total = clock();
+  float diff ((float)finish_time_total - (float)start_time_total);
+  float seconds = diff / CLOCKS_PER_SEC;
+  //cout << "The #of clock ticks of this iteration: " << diff << endl;
+  cout << "\n" << source_trees_root[0]->str_subtree() << endl;
+  cout << "\n" << init_supertree << endl;
+  cout << "\n" << the_best_supertree_seen << endl;
+
+  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+  cout << "The best SuperTree found after " << number_of_ratchet_iterations << " number of ratchet iterations is: " << endl;
+  //cout << "And its RF distance is " << the_best_rf_distance_seen << endl;
   cout << "the running time is: " << seconds << " sec." << endl;
-  cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n" << endl;
+  cout << the_best_supertree_seen << endl;
+  cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 
-  print_weighted_tree(*SS);
 
 
-//don't forget to free memory!!
-  T->delete_tree();
-  S->delete_tree();
+  //don't forget to free memory!!
+  supertree->delete_tree();
+  for (int i = 0; i < number_of_source_trees; ++i) {
+    source_trees_root[i]->delete_tree();
+  }
 
   return 0;
 }
+
 
 //tetsting
 void preorder_trversal(Node& n) {
@@ -366,12 +401,12 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* &
     Node* best_regraft_place = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, S, weighted);
 
     int which_sibling = 0;
-    cout << "\n\n------T before: " << T.str_subtree() << endl;
-    cout << "-----spr_on(v): " << (*iter)->str_subtree() << endl;
-    cout << "--best regraft: " << best_regraft_place->str_subtree() << endl;
+    //cout << "\n\n------T before: " << T.str_subtree() << endl;
+    //cout << "-----spr_on(v): " << (*iter)->str_subtree() << endl;
+    //cout << "--best regraft: " << best_regraft_place->str_subtree() << endl;
     Node* old_sibling = (*iter)->spr(best_regraft_place, which_sibling);
     adjustTree(&T);
-    cout << "------T after : " << T.str_subtree() << endl;
+    //cout << "------T after : " << T.str_subtree() << endl;
 
 
     int current_F = 0 ;
@@ -381,9 +416,9 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node& S, Node* &
       find_F_T(S, T, current_F);
     }
 
-    cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
+    //cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
     if (current_F < min_F) {
-      cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F << endl;
+      //cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F << endl;
       //cout << "--best regraft: " << best_regraft_place->str_subtree() <<  endl;
 
       min_F = current_F;
@@ -465,8 +500,8 @@ void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime) {
       bool f = false;
       compute_lca_mapping_helper_2(cluster, &T_prime, lca_mapping_in_T_prime, f);
 
-      cout << ".....................Node u is: " << S.str_subtree() << endl;
-      cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
+      //cout << ".....................Node u is: " << S.str_subtree() << endl;
+      //cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
 
       if ( (cluster.size()) != (lca_mapping_in_T_prime->number_of_leaves()) ) { //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz it will return cluster size of "this" in T not T'
         num_clusters_not_in_T_prime ++;
@@ -505,12 +540,12 @@ void find_weighted_rf_dist(Node& S, Node& T_prime, int& dist) {
       bool f = false;
       compute_lca_mapping_helper_2(cluster, &T_prime, lca_mapping_in_T_prime, f);
 
-      cout << ".....................Node u is: " << S.str_subtree() << endl;
-      cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
+      //cout << ".....................Node u is: " << S.str_subtree() << endl;
+      //cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
 
       //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz it will return cluster size of "this" in T not T'
       if ( (cluster.size()) != (lca_mapping_in_T_prime->number_of_leaves()) ) { //if u belongs to X (see your notes)
-        cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
+        //cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
         dist += S.get_edge_weight();
       } else {  //if u belongs to Z (see your notes)
         dist += (S.get_edge_weight() - 2);
@@ -1081,3 +1116,53 @@ void total_number_of_nodes(Node * node, int& total_nodes) {
 
 
 
+
+set<string> find_non_common_taxa_set(const string &supertree, const string &source_tree){
+  set<string> supertree_taxon_set;
+  set<string> source_tree_taxon_set;
+  set<string> non_shared_taxon_set;
+
+  //get taxon set of source tree
+  regex reg("[^\\w]+");
+  string temp1 = regex_replace(source_tree, reg, " ");  //replacing all parenthesis, comma, and semi-colon with white space
+  temp1 = regex_replace(temp1, regex("^ +| +$|( ) +"), "$1"); //removing leading, trailing and extra spaces
+  vector<string> source_tree_taxon_vector = split(temp1, ' ');
+  for (auto i : source_tree_taxon_vector) {
+    source_tree_taxon_set.insert(i);
+  }
+
+
+  //get taxon set of supertree
+  string temp2 = regex_replace(supertree, reg, " ");  //replacing all parenthesis, comma, and semi-colon with white space
+  temp2 = regex_replace(temp2, regex("^ +| +$|( ) +"), "$1"); //removing leading, trailing and extra spaces
+  vector<string> supertree_taxon_vector = split(temp2, ' ');
+  for (auto i : supertree_taxon_vector) {
+    supertree_taxon_set.insert(i);
+  }
+
+  //find set difference
+  set_difference( supertree_taxon_set.begin(), supertree_taxon_set.end(), source_tree_taxon_set.begin(), source_tree_taxon_set.end(), inserter(non_shared_taxon_set, non_shared_taxon_set.begin()));
+
+  //for symmetric difference you can use the following
+  //set_symmetric_difference( supertree_taxon_set.begin(), supertree_taxon_set.end(), source_tree_taxon_set.begin(), source_tree_taxon_set.end(), inserter(non_shared_taxon_set, non_shared_taxon_set.begin()));
+
+  return non_shared_taxon_set;
+}
+
+
+
+void split(const string &s, char delim, vector<string> &elems) {
+  stringstream ss;
+  ss.str(s);
+  string item;
+  while (getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+}
+
+
+vector<string> split(const string &s, char delim) {
+  vector<string> elems;
+  split(s, delim, elems);
+  return elems;
+}
