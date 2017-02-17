@@ -53,6 +53,7 @@ private:
 	Node* lca_mapping;  //for the cluster associated to this node, lca_mapping is the prenum of the LCA node in supertree
 	int lca_hlpr;
 	Node* b_in_lemma12;
+	bool XXX;
 
 	//////rfs implementation
 
@@ -112,6 +113,7 @@ public:
 		this->lca_hlpr = 0;
 		this->b_in_lemma12 = 0;
 		this->edge_weight = 1;
+		this->XXX = false;
 
 		///reza
 
@@ -220,6 +222,14 @@ public:
 		return lca_hlpr;
 	}
 
+
+	void set_XXX(bool b) {
+		XXX = b;
+	}
+	bool get_XXX() {
+		return XXX;
+	}
+
 	void find_cluster_int_labels_hlpr(vector<int> &leaves) {
 		list<Node *>::iterator c;
 		for (c = children.begin(); c != children.end(); c++) {
@@ -230,7 +240,7 @@ public:
 		}
 
 	}
-	
+
 	// find the leaves in this node's subtree
 	vector<int> find_cluster_int_labels() {
 		vector<int> leaves = vector<int>();
@@ -304,23 +314,49 @@ public:
 		}
 	}
 
-	//jsut to copy some fields from S to S' so that I don't have to calculate them agan
-	void copy_fields_from_S(Node &n) {
+	//jsut to copy some fields from S to S' so that I don't have to calculate them again
+	void copy_fields_for_source_tree(Node &n) {
 
-		alpha = n.alpha;
-		beta = n.beta;
+		//alpha = n.alpha;
+		//beta = n.beta;
 		int_label = n.int_label;
 		lca_mapping = n.lca_mapping;
-		lca_hlpr = n.lca_hlpr;
-		b_in_lemma12 = b_in_lemma12;
-		cluster = n.cluster;
+		//lca_hlpr = n.lca_hlpr;
+		//b_in_lemma12 = b_in_lemma12;
+		cluster = n.cluster;	//by default it's a deep copy
 
 		list<Node *>::iterator c, c2;
 		c = children.begin();
 		c2 = n.get_children().begin();
 
 		while (c != get_children().end())  {
-			(*c)->copy_fields_from_S(**c2);
+			(*c)->copy_fields_for_source_tree(**c2);
+			c2++;
+			c++;
+		}
+
+	}
+
+
+	//jsut to copy some fields from S to S' so that I don't have to calculate them again
+	void copy_fields_for_supertree(Node &n) {
+
+		//alpha = n.alpha;
+		//beta = n.beta;
+		if(is_leaf()) {
+			int_label = n.int_label;
+		}	
+		//lca_mapping = n.lca_mapping;
+		//lca_hlpr = n.lca_hlpr;
+		//b_in_lemma12 = b_in_lemma12;
+		//cluster = n.cluster;	//by default it's a deep copy
+
+		list<Node *>::iterator c, c2;
+		c = children.begin();
+		c2 = n.get_children().begin();
+
+		while (c != get_children().end())  {
+			(*c)->copy_fields_for_source_tree(**c2);
 			c2++;
 			c++;
 		}
