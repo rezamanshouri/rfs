@@ -647,12 +647,12 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* 
 
 		Node* v_in_restricted_st = restricted_suptree->find_by_prenum(v.get_preorder_number());//corresponding node in restricted_st
 
-		//cout << "----------------------\n";
-		//cout << "---------v is: " << v.str_subtree() << endl;
-		//cout << "source   tree: " << source_trees_array[i]->str_subtree() << endl;
-		//cout << "restricted_st: " << restricted_suptree->str_subtree() << "\n" <<  endl;
-		//cout << "supertree    : " << T.str_subtree() << endl;
-		//cout << "node  v  is: " << v.str_subtree() << endl;
+		cout << "----------------------\n";
+		cout << "---------v is: " << v.str_subtree() << endl;
+		cout << "source   tree: " << source_trees_array[i]->str_subtree() << endl;
+		cout << "restricted_st: " << restricted_suptree->str_subtree() <<  endl;
+		cout << "supertree    : " << T.str_subtree() << endl;
+		cout << "node  v  is: " << v.str_subtree() << endl;
 
 
 		//1- preprocessing step:
@@ -670,7 +670,7 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* 
 
 		//BUT if v's parent is T (root), then handle it separately
 		if (v.get_p() == &T) {
-			//cout << "v is child of T, and should be handled differently.." << endl;
+			cout << "....v is child of T, and should be handled differently.." << endl;
 
 			Q =  v.get_sibling();
 			Q_in_restricted_st = v_in_restricted_st->get_sibling();
@@ -678,7 +678,7 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* 
 			//cout << "In preprocessing step, the algorithm, initializes alpha, beta, cluster size, lca_mapping, and also constructs R from T as discussed in paper: " << endl;
 			//cout << "R: " << T.str_subtree() << "; prenum in R is: " << T.get_preorder_number() << endl;
 			//cout << "v: " << v.str_subtree() << "; prenum in R is: " << v.get_preorder_number() << endl;
-			//cout << "Q: " << Q->str_subtree() << "; prenum in R is: " << Q->get_preorder_number() << "\n" << endl;
+			cout << "Q: " << Q->str_subtree() << "; prenum in R is: " << Q->get_preorder_number() << "\n" << endl;
 
 
 			compute_lca_mapping_S_R(*source_trees_array[i], *restricted_suptree);  //No need for R here, T will do the work
@@ -709,6 +709,7 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* 
 			restricted_suptree->delete_tree();
 
 		} else { //normal case
+			cout << "....normal case: v is not the child of root" << endl;
 			Node* R = new Node();
 			R->add_child(&T);
 			Q = &T;
@@ -720,10 +721,6 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* 
 			Node* R_for_restricted_st = new Node();
 			R_for_restricted_st->add_child(restricted_suptree);
 			Q_in_restricted_st = restricted_suptree;
-
-
-
-
 
 
 			//cunstructing R which is SPR(v,rt(T))
@@ -755,7 +752,7 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* 
 			//cout << "In preprocessing step, the algorithm, initializes alpha, beta, cluster size, lca_mapping, and also constructs R from T as discussed in paper: " << endl;
 			//cout << "R: " << R->str_subtree() << "; prenum in R is: " << R->get_preorder_number() << endl;
 			//cout << "v: " << v.str_subtree() << "; prenum in R is: " << v.get_preorder_number() << endl;
-			//cout << "Q: " << T.str_subtree() << "; prenum in R is: " << T.get_preorder_number() << "\n" << endl;
+			cout << "Q: " << Q->str_subtree() << "; prenum in R is: " << Q->get_preorder_number() << "\n" << endl;
 
 			compute_lca_mapping_S_R(*source_trees_array[i], *R_for_restricted_st);
 			set_cluster_size_in_supertree(R_for_restricted_st);
@@ -787,17 +784,11 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* 
 			//cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
 			//preorder_traversal(T);
 
-			int max_alpha_minus_beta = INT_MIN;
-			find_best_regraft_place(T, best_regraft_place, max_alpha_minus_beta);  //NOTE here T is actually root of Q in papper's notation
-
-			//cout << "Q (or T) in R 1: " << T.str_subtree() << endl;
 
 
 			v.spr(old_sibling, which_sibling);  // Note T has been changed here, and it should be retrieved to its original form
-			//cout << "Q (or T) in R 2: " << T.str_subtree() << endl;
 			T.cut_parent(); // after finding best place to regraft and make the corresponding SPR move, R is a node with only one child T, we don't need R anymore.
 			//(v.get_p()) -> cut_parent(); // NOTE v is not a descendant of T anymore, they are SEPARATE trees
-			//cout << "Q (or T) in R 3: " << T.str_subtree() << endl;
 			R->delete_tree();
 			//cout << "Q (or T) in R 4: " << T.str_subtree() << endl;
 			S_prime->delete_tree();
