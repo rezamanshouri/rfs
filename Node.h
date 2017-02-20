@@ -109,6 +109,7 @@ public:
 		/////reza
 		this->alpha = 0;
 		this->beta = 0;
+		this->int_label = -1;
 		this->lca_mapping = 0;
 		this->lca_hlpr = 0;
 		this->b_in_lemma12 = 0;
@@ -321,6 +322,7 @@ public:
 		//beta = n.beta;
 		int_label = n.int_label;
 		lca_mapping = n.lca_mapping;
+		pre_num = n.pre_num;
 		//lca_hlpr = n.lca_hlpr;
 		//b_in_lemma12 = b_in_lemma12;
 		cluster = n.cluster;	//by default it's a deep copy
@@ -341,8 +343,13 @@ public:
 	//jsut to copy some fields from S to S' so that I don't have to calculate them again
 	void copy_fields_for_supertree(Node &n) {
 
+		//cout  << "\ncopy from: " << n.str_subtree()  << ", with prenum: " << n.pre_num << endl;
+		//cout  << "  copy to: " << str_subtree()  << ", with prenum: " << pre_num << endl;
+
+
 		//alpha = n.alpha;
 		//beta = n.beta;
+		pre_num = n.pre_num;
 		if(is_leaf()) {
 			int_label = n.int_label;
 		}	
@@ -356,7 +363,7 @@ public:
 		c2 = n.get_children().begin();
 
 		while (c != get_children().end())  {
-			(*c)->copy_fields_for_source_tree(**c2);
+			(*c)->copy_fields_for_supertree(**c2);
 			c2++;
 			c++;
 		}

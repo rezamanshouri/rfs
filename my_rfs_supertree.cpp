@@ -68,7 +68,7 @@ void restrict_supertree(Node& supertree, set<string>& non_shared_taxon_set);
 void find_node_to_be_removed(Node& tree, string taxon, Node* & taxan_to_be_removed);
 std::string ReplaceAll(std::string str, const std::string& from, const std::string& to);
 static unsigned int NUMBER_OF_SOURCE_TREES_ZZ;
-
+static unsigned int NUMBER_OF_TAXA;
 
 ////////////////RFS implementation//////////////////////
 #include <unordered_map>
@@ -199,6 +199,7 @@ int main(int argc, char** argv) {
 	unordered_map<string, int> int_label_map;
 	int starting_label = 1;
 	find_int_labels_for_leaves_in_supertree(supertree, starting_label, int_label_map);  //finding int labels for all taxa in supertree
+	::NUMBER_OF_TAXA = starting_label;
 	// set int labels for taxa in source trees
 	for (int i = 0; i < number_of_source_trees; i++) {
 		set_int_labels_for_leaves_in_source_tree(source_trees_root[i], int_label_map);
@@ -330,8 +331,8 @@ int main(int argc, char** argv) {
 	float seconds = diff / CLOCKS_PER_SEC;
 	//cout << "The #of clock ticks of this iteration: " << diff << endl;
 	//cout << "\n" << source_trees_root[0]->str_subtree() << endl;
-	cout << "\n" << init_supertree << endl;
-	cout << "\n" << the_best_supertree_seen << endl;
+	cout << "init_supertree:\n" << init_supertree << endl;
+	cout << "The best tree found:\n" << the_best_supertree_seen << endl;
 
 	cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 	cout << "The best SuperTree found after " << number_of_ratchet_iterations << " number of ratchet iterations is: " << endl;
@@ -623,178 +624,166 @@ void find_best_regraft_place(Node& T, Node*& best_regraft_place, int& max) {
 //Returns best place to regraft
 Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
 
+	//cout << "--------------v to be pruned: " << v.str_subtree() << " --------------\n";
 	Node* best_regraft_place = NULL;
 	Node* Q = NULL;
 	Node* Q_in_restricted_st = NULL;
+	Node* v_in_restricted_st = NULL;
+	Node* old_sibling = NULL;
+	Node* R = NULL;
 
-	for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+	//1- preprocessing step:
+	////////////////////////////////////////////////////////
+	//we make tree R = SPR(v,rt(T)) from T with the following steps:
+	//1- create a new node, R, and make rt(T) to be its child
+	//2- Make the spr move as v->spr(rt(T),0), i.e. prune p(v) from tree and regraft it between rt(T) and R
+	//depending on whether parent of v is T, preprocessin step (and hence step 2 of alg) should be implemented a little different
 
-		//if the induced subtree at v, doesn't have any taxa in a source tree, S, then pruning and regrafting
-		//v (at any place) will not change the RF distance, i.e.  RF_dist(T,S) = RF_dist(T',S)
-		if (v.is_leaf()) {	//define a function taking two vector of (sorted) ints and tells if first one contais and element from second one
-			vector<int> cluster = source_trees_array[i]->get_cluster();
-			if (! binary_search(cluster.begin(), cluster.end(), v.get_int_label())) {
+	//2- Calculating alpha and beta in Q:
+	///////////////////////////////////////////////////////////
+	//The algorithm traverses through S, and updates alpha and beta values in Q (which is the parameter T).
+	//Note I pass T (rather than R) to the following function, since T repreents Q in the paper's notation, and we only care about alpha&beta vaues in Q.
+
+
+	//BUT if v's parent is T (root), then handle it separately
+	if (v.get_p() == &T) {
+		//cout << "---v is child of T, and should be handled differently---" << endl;
+		Q = v.get_sibling();
+
+		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+			//cout << "current source tree:" << source_trees_array[i]->str_subtree() << endl;
+
+			//There are two cases where SPR move won'y change RF distance between current ST and source_trees_array[i],
+			//and thus we should ignore them:
+			//////////////////////////case 1:
+			//if the induced subtree at v, doesn't have any taxa in a source tree, S, then pruning and regrafting
+			//v (at any place) will not change the RF distance, i.e.  RF_dist(T,S) = RF_dist(T',S)
+			//////////////////////////case 2:
+			//if the induced subtree at v contains all the taxa in source_trees_array[i].
+			//since the clusters are sorted we can use std:include()
+
+			vector<int> v_cluster = v.find_cluster_int_labels();
+			vector<int> current_source_trre_root_cluster = source_trees_array[i]->get_cluster();
+			vector<int> intersection;
+			set_intersection(v_cluster.begin(), v_cluster.end(), current_source_trre_root_cluster.begin(), current_source_trre_root_cluster.end(), back_inserter(intersection));
+
+			//case 1
+			if (intersection.size() == 0 ) {
+				//cout << "the induced subtree at v does not include any taxa in current source tree, thus we ignore it.\n";
 				continue;
 			}
-		}
 
-		//find restricted supertrees to current source tree
-		Node* restricted_suptree = build_tree(T.str_subtree());
-		adjustTree(restricted_suptree);
-		restricted_suptree->copy_fields_for_supertree(T);
-		restrict_supertree(*restricted_suptree, non_shared_taxon_arr[i]);
-		//set_cluster_and_cluster_size(restricted_suptree);
-
-		Node* v_in_restricted_st = restricted_suptree->find_by_prenum(v.get_preorder_number());//corresponding node in restricted_st
-
-		cout << "----------------------\n";
-		cout << "---------v is: " << v.str_subtree() << endl;
-		cout << "source   tree: " << source_trees_array[i]->str_subtree() << endl;
-		cout << "restricted_st: " << restricted_suptree->str_subtree() <<  endl;
-		cout << "supertree    : " << T.str_subtree() << endl;
-		cout << "node  v  is: " << v.str_subtree() << endl;
+			//case 2
+			if (intersection.size() == current_source_trre_root_cluster.size()) {
+				//cout << "the induced subtree at v includes all taxa in current source tree, thus we ignore it.\n";
+				continue;
+			}
+			// In other words, if root of current source tree's LCA is v or a descendant of it.
+			//Overlooking above case will cause 'double free' error when you try delete S_prime since S_prime is going to be a singletone node
+			//which has already been free'ed once in suppress_nodes_with_mapping_in_Rv()
 
 
-		//1- preprocessing step:
-		////////////////////////////////////////////////////////
-		//we make tree R = SPR(v,rt(T)) from T with the following steps:
-		//1- create a new node, R, and make rt(T) to be its child
-		//2- Make the spr move as v->spr(rt(T),0), i.e. prune p(v) from tree and regraft it between rt(T) and R
-		//depending on whether parent of v is T, preprocessin step (and hence step 2 of alg) should be implemented a little different
+			//find restricted supertrees to current source tree
+			Node* restricted_suptree = build_tree(T.str_subtree());
+			restricted_suptree->copy_fields_for_supertree(T);	//prenum is also copied so no adjustTree() needed
+			restrict_supertree(*restricted_suptree, non_shared_taxon_arr[i]);
 
-		//2- Calculating alpha and beta in Q:
-		///////////////////////////////////////////////////////////
-		//The algorithm traverses through S, and updates alpha and beta values in Q (which is the parameter T).
-		//Note I pass T (rather than R) to the following function, since T repreents Q in the paper's notation, and we only care about alpha&beta vaues in Q.
+			v_in_restricted_st = restricted_suptree->find_by_prenum(v.get_preorder_number());//corresponding node in restricted_st
 
-
-		//BUT if v's parent is T (root), then handle it separately
-		if (v.get_p() == &T) {
-			cout << "....v is child of T, and should be handled differently.." << endl;
-
-			Q =  v.get_sibling();
-			Q_in_restricted_st = v_in_restricted_st->get_sibling();
-
-			//cout << "In preprocessing step, the algorithm, initializes alpha, beta, cluster size, lca_mapping, and also constructs R from T as discussed in paper: " << endl;
-			//cout << "R: " << T.str_subtree() << "; prenum in R is: " << T.get_preorder_number() << endl;
-			//cout << "v: " << v.str_subtree() << "; prenum in R is: " << v.get_preorder_number() << endl;
-			cout << "Q: " << Q->str_subtree() << "; prenum in R is: " << Q->get_preorder_number() << "\n" << endl;
-
+			//if sibling is a leaf not present in current source tree,  then there is no valid place to regraft it, thus ignore
+			if (! (Q_in_restricted_st =  v_in_restricted_st->get_sibling()) ) {
+				continue;
+			}
 
 			compute_lca_mapping_S_R(*source_trees_array[i], *restricted_suptree);  //No need for R here, T will do the work
 			set_cluster_size_in_supertree(restricted_suptree);
 
-
 			//Find S' in lemma 12:
 			Node* S_prime = build_tree(source_trees_array[i]->str_subtree() + ";"); //make a copy of S (not the best way to mak ea copy, I know, should be fixed)
-			adjustTree(S_prime);
 			S_prime->copy_fields_for_source_tree(*source_trees_array[i]);
-
-
-
-
-			//cout << "-------------------S' before: " << S_prime->str_subtree() << endl;
 			suppress_nodes_with_mapping_in_Rv(*S_prime, *v_in_restricted_st);  //S' in lemma 12 is now  constructed from S
-			//cout << "-------------------S' after : " << S_prime->str_subtree() << endl;
-
 
 			traverse_S_and_update_alpha_beta_in_Q(*Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
-
-
-			//cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
-			//preorder_traversal(*Q);
-
 
 			S_prime->delete_tree();  //prevent memory leak
 			restricted_suptree->delete_tree();
 
-		} else { //normal case
-			cout << "....normal case: v is not the child of root" << endl;
-			Node* R = new Node();
-			R->add_child(&T);
-			Q = &T;
-			//adjustTree(R); //because .. prenum of nodes in T has been changed (actually +1'ed)
-			//cout << "==========++++++++++++++++++R before : \n";
-			//cout << R->str_subtree();
-			//preorder_traversal(*R);
+		}//end of for-loop
 
-			Node* R_for_restricted_st = new Node();
-			R_for_restricted_st->add_child(restricted_suptree);
-			Q_in_restricted_st = restricted_suptree;
+	} else { //normal case
+		//cout << "---normal case: i.e. v is not the child of root---" << endl;
+
+		Q = &T; //here Q is going to be T
+		R = new Node();
+		R->add_child(&T);
+		//cunstructing R which is SPR(v,rt(T))
+		int which_sibling = 0;
+		old_sibling = v.spr(&T, which_sibling);
+		adjustTree(R);//DON'T FORGET THIS!!!
+
+		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+
+			//There are two cases where SPR move won'y change RF distance between current ST and source_trees_array[i],
+			//and thus we should ignore them:
+			//////////////////////////case 1:
+			//if the induced subtree at v, doesn't have any taxa in a source tree, S, then pruning and regrafting
+			//v (at any place) will not change the RF distance, i.e.  RF_dist(T,S) = RF_dist(T',S)
+			//////////////////////////case 2:
+			//if the induced subtree at v contains all the taxa in source_trees_array[i].
+			//since the clusters are sorted we can use std:include()
+
+			vector<int> v_cluster = v.find_cluster_int_labels();
+			vector<int> current_source_trre_root_cluster = source_trees_array[i]->get_cluster();
+			vector<int> intersection;
+			set_intersection(v_cluster.begin(), v_cluster.end(), current_source_trre_root_cluster.begin(), current_source_trre_root_cluster.end(), back_inserter(intersection));
+
+			//case 1
+			if (intersection.size() == 0 ) {
+				//cout << "the induced subtree at v does not include any taxa in current source tree, thus we ignore it.\n";
+				continue;
+			}
+
+			//case 2
+			if (intersection.size() == current_source_trre_root_cluster.size()) {
+				//cout << "the induced subtree at v includes all taxa in current source tree, thus we ignore it.\n";
+				continue;
+			}
+			// In other words, if root of current source tree's LCA is v or a descendant of it.
+			//Overlooking above case will cause 'double free' error when you try delete S_prime since S_prime is going to be a singletone node
+			//which has already been free'ed once in suppress_nodes_with_mapping_in_Rv()
 
 
-			//cunstructing R which is SPR(v,rt(T))
-			int which_sibling = 0;
-			Node* old_sibling = v.spr(&T, which_sibling);
-			adjustTree(R);//DON'T FORGET THIS!!!
+			//find restricted supertrees to current source tree
+			Node * temp = build_tree(R->str_subtree());
+			///I need the following line cuz:
+			//build_tree() ignores extra parenthesis which here represent Node R with one child
+			Node * R_for_restricted_supertree = new Node();
+			R_for_restricted_supertree->add_child(temp);
+			R_for_restricted_supertree->copy_fields_for_supertree(*R);	//prenum is also copied so no adjustTree() needed
+			restrict_supertree(*R_for_restricted_supertree, non_shared_taxon_arr[i]);
+
+			//corresponding nodes in restricted R
+			v_in_restricted_st = R_for_restricted_supertree->find_by_prenum(v.get_preorder_number());
+			Q_in_restricted_st = R_for_restricted_supertree->find_by_prenum(T.get_preorder_number());
 
 
-			//cout << "++++++++++++++++++R after spr: \n";
-			//cout << R->str_subtree() << endl;
-			//preorder_traversal(*R);
-
-			//cout << "==========+++++++++++++++++R for restricted: \n";
-			//cout << R_for_restricted_st->str_subtree() << endl;
-			//preorder_traversal(*R_for_restricted_st);
-
-
-			//cunstructing R for restricted ST as well
-			which_sibling = 0;
-			Node* old_sibling_in_restricted_st = v_in_restricted_st->spr(restricted_suptree, which_sibling);
-			adjustTree(R_for_restricted_st);//DON'T FORGET THIS!!!
-
-			//cout << "v for restricted: " << v_in_restricted_st->str_subtree() << endl;
-			//cout << "+++++++++++++++++R for restricted after spr move: \n";
-			//preorder_traversal(*R_for_restricted_st);
-
-
-
-			//cout << "In preprocessing step, the algorithm, initializes alpha, beta, cluster size, lca_mapping, and also constructs R from T as discussed in paper: " << endl;
-			//cout << "R: " << R->str_subtree() << "; prenum in R is: " << R->get_preorder_number() << endl;
-			//cout << "v: " << v.str_subtree() << "; prenum in R is: " << v.get_preorder_number() << endl;
-			cout << "Q: " << Q->str_subtree() << "; prenum in R is: " << Q->get_preorder_number() << "\n" << endl;
-
-			compute_lca_mapping_S_R(*source_trees_array[i], *R_for_restricted_st);
-			set_cluster_size_in_supertree(R_for_restricted_st);
+			compute_lca_mapping_S_R(*source_trees_array[i], *R_for_restricted_supertree);
+			set_cluster_size_in_supertree(R_for_restricted_supertree);
 
 			//Find S' in lemma 12:
 			Node* S_prime = build_tree(source_trees_array[i]->str_subtree() + ";"); //make a copy of S (not the best way to mak ea copy, I know, should be fixed)
-			adjustTree(S_prime);
 			S_prime->copy_fields_for_source_tree(*source_trees_array[i]);
-
-
-			//cout << "-------------------S' before: " << S_prime->str_subtree() << endl;
 			suppress_nodes_with_mapping_in_Rv(*S_prime, *v_in_restricted_st);  //S' in lemma 12 is now  constructed from S
-			//cout << "-------------------S' after : " << S_prime->str_subtree() << endl;
-
-
-
-
-			//cout << "-----R after SPR(v,T): " << R->str_subtree() << endl;
-			//cout << "-----node Q is : " << Q->str_subtree() << endl;
-			//preorder_traversal(*Q);
-			//cout << "------Q in restricted st: " << Q_in_restricted_st-> str_subtree() <<  endl;
-			//preorder_traversal(*Q_in_restricted_st);
-			//cout << "------v in restricted st: " << v_in_restricted_st->str_subtree() << endl;
-
-
 
 			traverse_S_and_update_alpha_beta_in_Q(*Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
 
-			//cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
-			//preorder_traversal(T);
-
-
-
-			v.spr(old_sibling, which_sibling);  // Note T has been changed here, and it should be retrieved to its original form
-			T.cut_parent(); // after finding best place to regraft and make the corresponding SPR move, R is a node with only one child T, we don't need R anymore.
-			//(v.get_p()) -> cut_parent(); // NOTE v is not a descendant of T anymore, they are SEPARATE trees
-			R->delete_tree();
-			//cout << "Q (or T) in R 4: " << T.str_subtree() << endl;
 			S_prime->delete_tree();
-			R_for_restricted_st->delete_tree();	//this will delete "restricted_st" as well
-		}
-	}//end of for-loop
+			R_for_restricted_supertree->delete_tree();	//this will delete "restricted_st" as well
+
+			//R clean up at the end since I will need to call find_best_regraft_place() on Q before restoring T
+		}//end of for-loop
+
+	}
 
 	//cout << "\nQ is: " << Q->str_subtree()  << endl;
 	//cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
@@ -802,14 +791,24 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* 
 	int max_alpha_minus_beta = INT_MIN;
 	find_best_regraft_place(*Q, best_regraft_place, max_alpha_minus_beta);  //NOTE Q should be passed
 
+	//restore T and prevent mem-leack
+	if (v.get_p() != &T) {
+		int which_sibling = 0;
+		v.spr(old_sibling, which_sibling);  // Note T has been changed here, and it should be retrieved to its original form
+		T.cut_parent(); // after finding best place to regraft and make the corresponding SPR move, R is a node with only one child T, we don't need R anymore.
+		//(v.get_p()) -> cut_parent(); // NOTE v is not a descendant of T anymore, they are SEPARATE trees
+		R->delete_tree();
+	}
+
+
 	return best_regraft_place;
 }
 
 
 //Given the way R is constructed, lca_mapping of any node in S, is either in T_v OR in T_T. (NOTE this is a recursive function and S plays the role of u in the alg in paper)
 //The way I implemented here, avoids some duplicate work (in compare to when I pass R as parameter instead of T and v).
-void traverse_S_and_update_alpha_beta_in_Q(Node& Q, Node& Q_in_restricted_st, Node& v_in_restricted_st,
-        Node& S, Node& S_prime, bool weighted) { //note S here is u in paper's notation
+void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, Node & v_in_restricted_st,
+        Node & S, Node & S_prime, bool weighted) { //note S here is u in paper's notation
 
 	//only for internal nodes, i.e. non-root and non-leaf
 	if (S.is_leaf()) {  //if leaf
@@ -900,7 +899,7 @@ void traverse_S_and_update_alpha_beta_in_Q(Node& Q, Node& Q_in_restricted_st, No
 
 //pre-orderly traverses tree S, and suppresses all nodes in it for which lca_mapping is in T_v
 void suppress_nodes_with_mapping_in_Rv(Node & S, Node & v) {
-	if (v.find_by_prenum(S.get_lca_mapping()  -> get_preorder_number() )) {
+	if (v.find_by_prenum(S.get_lca_mapping()  -> get_preorder_number())) {
 		//cout << "removed node : " << S.str_subtree() << endl;
 		Node* p = S.get_p();
 		//cout << "parent before deletion: " << p->str_subtree() << endl;
@@ -1297,7 +1296,7 @@ void total_number_of_nodes(Node * node, int& total_nodes) {
 /////////////////////////////Added for restrict_st()/////////////////////////
 //for each "taxon" in "non_shared_taxon_set", traverse the tree and find leaf whose name is "taxon", remove it.
 //if parent is left with one child, then contract parent.
-void restrict_supertree(Node& supertree, set<string>& non_shared_taxon_set) {
+void restrict_supertree(Node & supertree, set<string>& non_shared_taxon_set) {
 	Node* n;  //this willl be the node whose "name" is "taxon"
 	Node* p;  //this will be the parent of "n"
 
@@ -1323,7 +1322,7 @@ void restrict_supertree(Node& supertree, set<string>& non_shared_taxon_set) {
 	//cout << "final restricted ST: " << supertree.str_subtree() << endl;
 }
 
-void find_node_to_be_removed(Node& root, string taxon, Node* & taxan_to_be_removed) {
+void find_node_to_be_removed(Node & root, string taxon, Node* & taxan_to_be_removed) {
 
 	if (taxan_to_be_removed) {	//to save some time, BUT NOTE THAT "taxan_to_be_removed" should be initialized to 0 before it's passed.
 		return;
@@ -1343,7 +1342,7 @@ void find_node_to_be_removed(Node& root, string taxon, Node* & taxan_to_be_remov
 
 
 
-set<string> find_non_common_taxa_set(const string &supertree, const string &source_tree) {
+set<string> find_non_common_taxa_set(const string & supertree, const string & source_tree) {
 	set<string> supertree_taxon_set;
 	set<string> source_tree_taxon_set;
 	set<string> non_shared_taxon_set;
@@ -1377,7 +1376,7 @@ set<string> find_non_common_taxa_set(const string &supertree, const string &sour
 
 
 
-void split(const string &s, char delim, vector<string> &elems) {
+void split(const string & s, char delim, vector<string> &elems) {
 	stringstream ss;
 	ss.str(s);
 	string item;
@@ -1387,7 +1386,7 @@ void split(const string &s, char delim, vector<string> &elems) {
 }
 
 
-vector<string> split(const string &s, char delim) {
+vector<string> split(const string & s, char delim) {
 	vector<string> elems;
 	split(s, delim, elems);
 	return elems;
