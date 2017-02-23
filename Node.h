@@ -263,14 +263,22 @@ public:
 	}
 
 	int number_of_leaves_hlpr(int& count) {
-		if (is_leaf()){
+		//The below line WON"T WORK HERE:
+		//if (is_leaf()){
+		//because the tree on which this method is called is the restricted supertree which may
+		//contain "internal" nodes with no children (both children were supressed). In this case,
+		//this internal node will be evaluated as "leaf" by is_leaf() method since this method returns
+		//true if this node doesn't have any children
+
+
+		if (int_label != -1) {
 			count ++;
-		}else {
+		} else {
 			list<Node *> children = get_children();
 			list<Node *>::iterator c;
-			for (c = children.begin(); c != children.end(); c++){
+			for (c = children.begin(); c != children.end(); c++) {
 				(*c)->number_of_leaves_hlpr(count);
-			}	
+			}
 		}
 
 	}
@@ -279,10 +287,15 @@ public:
 
 	//increments alpha value in all descendants of this
 	void increment_alpha_in_all_descendants(int weight) {
-		list<Node *>::iterator c;
-		list<Node *> children = get_children();
-		for (c = children.begin(); c != children.end(); c++)  {
-			(*c)->increment_alpha_in_all_descendants_hlpr(weight);
+		//if (is_leaf()) {	//this case was ignored in their algorithm, and is a bug if if ignored
+		if (int_label != -1) {	//remember is_leaf() won't work here since after restricting ST, we may have "internal" nodes with no children
+			alpha += weight;
+		} else {
+			list<Node *>::iterator c;
+			list<Node *> children = get_children();
+			for (c = children.begin(); c != children.end(); c++)  {
+				(*c)->increment_alpha_in_all_descendants_hlpr(weight);
+			}
 		}
 	}
 
@@ -298,10 +311,15 @@ public:
 
 	//increments beta value in all descendants of this
 	void increment_beta_in_all_descendants(int weight) {
-		list<Node *>::iterator c;
-		list<Node *> children = get_children();
-		for (c = children.begin(); c != children.end(); c++)  {
-			(*c)->increment_beta_in_all_descendants_hlpr(weight);
+		//if (is_leaf()) {		//this case was ignored in their algorithm, and is a bug if if ignored
+		if (int_label != -1) {	//remember is_leaf() won't work here since after restricting ST, we may have "internal" nodes with no children
+			beta += weight;
+		} else {
+			list<Node *>::iterator c;
+			list<Node *> children = get_children();
+			for (c = children.begin(); c != children.end(); c++)  {
+				(*c)->increment_beta_in_all_descendants_hlpr(weight);
+			}
 		}
 	}
 
@@ -350,9 +368,9 @@ public:
 		//alpha = n.alpha;
 		//beta = n.beta;
 		pre_num = n.pre_num;
-		if(is_leaf()) {
+		if (is_leaf()) {
 			int_label = n.int_label;
-		}	
+		}
 		//lca_mapping = n.lca_mapping;
 		//lca_hlpr = n.lca_hlpr;
 		//b_in_lemma12 = b_in_lemma12;

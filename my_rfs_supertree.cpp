@@ -89,7 +89,7 @@ void suppress_nodes_with_mapping_in_Rv(Node& S_prime, Node& v);
 void find_best_regraft_place(Node& n, Node*& best_regraft_place, int& max);
 void preorder_traversal(Node& n);
 int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_set[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted);
-void find_F_T(Node& S, Node& T, int& best);
+void find_F_T(Node& S, Node& T, int& num_clusters_not_in_T_prime);
 void find_weighted_rf_dist(Node& S, Node& T_prime, int& dist);
 void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
@@ -167,13 +167,13 @@ int main(int argc, char** argv) {
 	int cntr0 = 0;
 	ifstream myfile2(argv[1]);
 	string l1;  //hopefully size of trees are not larger than str.max_size()
-	cout << "Source Trees:\n" ;
+	//cout << "Source Trees:\n" ;
 	while (std::getline(myfile2, l1))
 	{
 		source_trees_newick[cntr0] = l1;
 		source_trees_root[cntr0] = build_tree(l1);
 		adjustTree(source_trees_root[cntr0]);
-		cout << source_trees_root[cntr0]->str_subtree() << endl;
+		//cout << source_trees_root[cntr0]->str_subtree() << endl;
 		cntr0 ++;
 	}
 	myfile2.close();
@@ -192,8 +192,8 @@ int main(int argc, char** argv) {
 	///////////setting int labels for leaves, i.e. mapping names to integers from 1 to n
 	Node* supertree = build_tree(init_supertree);
 	adjustTree(supertree);
-	cout << "\n\nInitial Supertree:\n" ;
-	cout << supertree->str_subtree() << endl;
+	//cout << "\n\nInitial Supertree:\n" ;
+	//cout << supertree->str_subtree() << endl;
 	set_cluster_and_cluster_size(supertree);
 
 	unordered_map<string, int> int_label_map;
@@ -239,6 +239,7 @@ int main(int argc, char** argv) {
 				//cout << source_trees_root[i]->str_subtree() << endl;
 			}
 			//print_weighted_tree(*source_trees_root[0]);
+			//cout <<  "\n\n";
 		}
 
 
@@ -258,6 +259,9 @@ int main(int argc, char** argv) {
 			Node* best_node_to_regraft;
 			//cout << "\ninit  ST: " << supertree->str_subtree() << "\n";
 			int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_root, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet);
+			//cout << "T: " << supertree->str_subtree() << endl;
+			//cout << "best node to  prune: " << best_node_to_prune->str_subtree() << endl;
+			//cout << "best node to regrft: " << best_node_to_regraft->str_subtree() << endl;
 
 			if (current_score < best_score_of_current_hill) {
 
@@ -276,8 +280,8 @@ int main(int argc, char** argv) {
 				float diff ((float)finish_time_iter - (float)start_time_iter);
 				float iter_time = diff / CLOCKS_PER_SEC;
 				cout << "Iter: " << iteration << ", num_spr_neighbours: " <<
-				     NUM_SPR_NGHBRS << ", RF_dist: " << current_score << ", time(sec) : " << iter_time << endl;
-				//cout << "final ST: " << supertree->str_subtree() << "\n";
+				     NUM_SPR_NGHBRS << ", RF_dist: " << current_score << ", time(sec) : " << iter_time << "\n";
+				//cout << "\n" << supertree->str_subtree() << "\n\n\n";
 
 			}
 			else { // local optimum
@@ -297,28 +301,29 @@ int main(int argc, char** argv) {
 
 
 				if (!ratchet) { //we are at the end of one ratchet iteration
-
-					cout << "=======================================end of " << ratchet_counter << "-th ratchet iter=========================================" << endl;
-					cout << "========================================================================================================" << endl;
-
 					if (best_score_of_current_hill < the_best_rf_distance_seen) { //keep track of best supertree seen so far
+						cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
 						the_best_rf_distance_seen = best_score_of_current_hill;
 						the_best_supertree_seen = best_supertree_of_current_hill;
 					}
 
+					cout << "=======================================end of " << ratchet_counter << "-th ratchet iter=========================================" << endl;
+					cout << "========================================================================================================" << endl;
+
 					break;  //end of second phase of ONE ratchet iteration
 
 				} else { //now perform a regular branch swapping
-					best_score_of_current_hill = INT_MAX;  //this line so necessary!!
-					//Because we are about to start a completely new hill climbing with new objective function.
-					//without this line, after 2nd ratchet iter, no improvement will be made since the weighted
-					//distance is always larger than un-weighted and the init ST from previous step is local opt
-					//already.
 
 					ratchet = false;
 					iteration = 0;
 				}
 
+				
+				best_score_of_current_hill = INT_MAX;	//this line so necessary!!
+				//Because we are about to start a completely new hill climbing with new objective function.
+				//without this line, after 2nd ratchet iter, no improvement will be made since the weighted
+				//distance is always larger than un-weighted and the init ST from previous step is local opt
+				//already.
 			}
 
 		}//end of one branch swapping search loop
@@ -331,13 +336,13 @@ int main(int argc, char** argv) {
 	float seconds = diff / CLOCKS_PER_SEC;
 	//cout << "The #of clock ticks of this iteration: " << diff << endl;
 	//cout << "\n" << source_trees_root[0]->str_subtree() << endl;
-	cout << "init_supertree:\n" << init_supertree << endl;
-	cout << "The best tree found:\n" << the_best_supertree_seen << endl;
+	//cout << "init_supertree:\n" << init_supertree << endl;
+	//cout << "The best tree found:\n" << the_best_supertree_seen << endl;
 
 	cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 	cout << "The best SuperTree found after " << number_of_ratchet_iterations << " number of ratchet iterations is: " << endl;
-	//cout << "And its RF distance is " << the_best_rf_distance_seen << endl;
-	cout << "the running time is: " << seconds << " sec." << endl;
+	cout << "And its RF distance is " << the_best_rf_distance_seen << endl;
+	cout << "the running time is: " << seconds << " sec." << "\n\n";
 	cout << the_best_supertree_seen << endl;
 	cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 
@@ -371,11 +376,12 @@ void preorder_traversal(Node& n) {
 
 //tetsting
 void print_weighted_tree(Node& n) {
-	cout << n.str_subtree() << endl;
+	//cout << n.str_subtree() << endl;
 	//cout << " prenum is : " << n.get_preorder_number() << endl;
 	//cout << "lca mapping node is: " << n.get_lca_mapping().str_subtree() << "\n" << endl;
 	//cout << n.get_alpha() << "-" << n.get_beta() << "= " << n.get_alpha() - n.get_beta() << "\n" << endl;
-	cout << n.get_edge_weight() << "\n" << endl;
+	//cout << n.get_edge_weight() << "\n" << endl;
+	cout << n.str_subtree() << ": " << n.get_edge_weight() << "  ,";
 
 	//just for testing:
 	list<Node *>::iterator c;
@@ -394,9 +400,7 @@ void print_weighted_tree(Node& n) {
 int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
 
 	int min_F = INT_MAX;
-	Node* best_prune;
-	Node* best_regraft;
-
+	//cout << "T: " << T.str_subtree() << endl;
 	vector<Node*> internal_nodes;
 	put_all_nodes_in_vector(T, internal_nodes);
 	vector<Node*>::iterator iter, end;
@@ -407,36 +411,36 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_tre
 			continue;
 		}
 
-		//cout << "\n-------------------------------------------------------" << endl;
+		//cout << "---------------------------------" << endl;
 
-		Node* best_regraft_place = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, source_trees_array, non_shared_taxon_arr, weighted);
+		Node* best_regraft_place_for_current_v = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, source_trees_array, non_shared_taxon_arr, weighted);
 
 		//cout << "\n------T before: " << T.str_subtree() << endl;
 		//cout << "-----spr_on(v): " << (*iter)->str_subtree() << endl;
-		//cout << "--best regraft: " << best_regraft_place->str_subtree() << endl;
+		//cout << "--best regraft: " << best_regraft_place_for_current_v->str_subtree() << endl;
 
 		int which_sibling = 0;
-		Node* old_sibling = (*iter)->spr(best_regraft_place, which_sibling);
+		Node* old_sibling = (*iter)->spr(best_regraft_place_for_current_v, which_sibling);
 		adjustTree(&T);
-		//cout << "------T after : " << T.str_subtree() << endl;
+		//cout << "------T after : \n" << T.str_subtree() << endl;
 		//cout << "\n-----------------------------------------------------\n" ;
 
 
 		//Now that we know for "v" to be pruned, what's the best regraft place,
 		//we have a best SPR neighbour, T'. We need to know how good is this neighbour,
-		//to ompare it to other best neighbours for different v's. Note, T is now T'
+		//to ompare it to other best neighbours for different v's. Note, T is now T' (after spr move)
 		//Thus, we have to restrict it again.
 		vector<Node*> restricted_T_primes;
 		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
 			Node* current_sup_tree = build_tree(T.str_subtree()); //note spr() has been applied to T, and now T is actually T'
 			adjustTree(current_sup_tree);
-			current_sup_tree->copy_fields_for_source_tree(T);	//DON"T forget this!!
+			current_sup_tree->copy_fields_for_supertree(T);	//DON"T forget this!!
 			restrict_supertree(*current_sup_tree, non_shared_taxon_arr[i]);
 			restricted_T_primes.push_back(current_sup_tree);
-			//cout << current_sup_tree->str_subtree();
+			//cout << "\n" << current_sup_tree->str_subtree() << endl;
 		}
 
-		int current_F = 0 ;
+		int current_F = 0 ; //which (for unweighted case) is "num_clusters_not_in_T_prime", i.e. RF distance
 		if (weighted) {
 			for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
 				find_weighted_rf_dist(*source_trees_array[i], *restricted_T_primes[i], current_F);
@@ -448,27 +452,33 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_tre
 		}
 
 		//cout << "best F: " << min_F << ", and curent F: " << current_F << endl;
+
 		if (current_F < min_F) {
-			//cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F << endl;
-			//cout << "--best regraft: " << best_regraft_place->str_subtree() <<  endl;
+			//cout << "\n\nbest F was : " << min_F << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_F << endl;
+			//cout << "------T after : \n" << T.str_subtree() << endl;
+			//cout << "\n" << T.str_subtree() << "\n\n";
+			//cout << "--best regraft: " << best_regraft_place_for_current_v->str_subtree() <<  endl;
 
 			min_F = current_F;
-			best_prune = *iter;
-			best_regraft = best_regraft_place;
+			best_node_to_prune = *iter;
+			best_node_to_regraft = best_regraft_place_for_current_v;
 		}
 		//restore tree to consider next node to be pruned
+		if (best_regraft_place_for_current_v == old_sibling) {
+			cout << "-------------------OOOOOOOOOOOOOOOOOOOpsssssssss\n";
+		}
+		//else {
 		(*iter)->spr(old_sibling, which_sibling);
 		//reset_alpha_beta(T);
 		adjustTree(&T);
+		//}
+
 
 		//prevent mem leak
 		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
 			restricted_T_primes[i]->delete_tree();
 		}
 	}
-
-	best_node_to_prune = best_prune;
-	best_node_to_regraft = best_regraft;
 
 	return min_F;
 
@@ -505,10 +515,9 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes) {
 }
 
 
-//Actually finds RF distance!!
-//assuming S has correct values for lca_mapping, finds the number of internal nodes whose corresponding lca does not exist in T
+//Actually finds RF distance: finds the number of internal nodes whose corresponding lca does not exist in T
 //Note the way I implemented find_best_node_to_prune_and_its_best_regraft_place(), I don't want to change T so that I have to do calculations (lca_mapping, ...) for each v to be pruned
-//The node T being passed to this function is T', i.e. best neghibour for given v to be pruned.
+//The node T_prime being passed to this function is best neghibour for current v to be pruned.
 //THUS the lca_mappings are NOT valid anymore, and that's why I compute it again here
 void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime) {
 	//if S curresponds to a trivial bipartition, i.e. bipartition with one leaf on one side, DO NOT count it. There are 2 cases:
@@ -536,10 +545,10 @@ void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime) {
 			bool f = false;
 			compute_lca_mapping_helper_2(cluster, &T_prime, lca_mapping_in_T_prime, f);
 
-			//cout << ".....................Node u is: " << S.str_subtree() << endl;
-			//cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
-
 			if ( (cluster.size()) != (lca_mapping_in_T_prime->number_of_leaves()) ) { //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz it will return cluster size of "this" in T not T'
+				//cout << "..........cluster corrsponding to the following does not exist in T': " << S.str_subtree() << endl;
+				//cout << ".........................................cluster corrsponding to lca: " << lca_mapping_in_T_prime-> str_subtree() << endl;
+
 				num_clusters_not_in_T_prime ++;
 			}
 		}
@@ -598,6 +607,7 @@ void find_weighted_rf_dist(Node& S, Node& T_prime, int& dist) {
 void find_best_regraft_place(Node& T, Node*& best_regraft_place, int& max) {
 	NUM_SPR_NGHBRS++;
 	int best = T.get_alpha() - T.get_beta();
+	//cout << "....alpha-beta....for: " << T.str_subtree() << ": " <<  T.get_alpha() << "-" << T.get_beta() << " = " << best << endl;
 	if (best > max) {
 		//cout << "is better: " << T.str_subtree() << endl;
 		max = best;
@@ -867,6 +877,7 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 			bool f = false;
 			compute_lca_mapping_helper_2(cluster, Q_in_restricted_st.get_p(), lca_mapping_lemma12, f);
 			Node* b_in_lemma12 = (Q_in_restricted_st.get_p())->find_by_prenum(lca_mapping_lemma12  -> get_preorder_number() );
+
 
 
 			if ( ((b_in_lemma12->find_leaves()).size()) + ((v_in_restricted_st.find_leaves()).size()) == (S.get_cluster_size()) ) { //|L(R_b)|+|L(R_v)|=?|L(S_u)|
