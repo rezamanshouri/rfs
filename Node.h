@@ -314,6 +314,7 @@ public:
 		//if (is_leaf()) {		//this case was ignored in their algorithm, and is a bug if if ignored
 		if (int_label != -1) {	//remember is_leaf() won't work here since after restricting ST, we may have "internal" nodes with no children
 			beta += weight;
+			cout << "?????????????????????????????????????????????\n";
 		} else {
 			list<Node *>::iterator c;
 			list<Node *> children = get_children();
@@ -368,9 +369,9 @@ public:
 		//alpha = n.alpha;
 		//beta = n.beta;
 		pre_num = n.pre_num;
-		if (is_leaf()) {
-			int_label = n.int_label;
-		}
+		//if (is_leaf()) {
+		int_label = n.int_label;
+		//}
 		//lca_mapping = n.lca_mapping;
 		//lca_hlpr = n.lca_hlpr;
 		//b_in_lemma12 = b_in_lemma12;
@@ -2171,11 +2172,15 @@ public:
 	Node *spr(Node *new_sibling, int &which_child) {
 		Node *reverse;
 		int prev_child_loc = 0;
-		if (p == NULL || new_sibling == NULL)
+		if (p == NULL || new_sibling == NULL) {
+			cout << "p == NULL || new_sibling == NULL\n";
 			return NULL;
+		}
 		Node *old_sibling = get_sibling();
-		if (old_sibling == new_sibling)
+		if (old_sibling == new_sibling) {
+			cout << "old_sibling == new_sibling\n";
 			return NULL;
+		}
 		Node *grandparent = p->p;
 		if (p->lchild() == this)
 			prev_child_loc = 1;
@@ -2201,8 +2206,10 @@ public:
 			reverse = old_sibling;
 		}
 		else {
-			if (old_sibling->is_leaf())
+			if (old_sibling->is_leaf()) {
+				cout << "old_sibling->is_leaf()\n";
 				return NULL;
+			}
 			Node *root = p;
 			bool leftc = false;
 			if (root->lchild() == this)
