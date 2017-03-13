@@ -287,7 +287,7 @@ public:
 
 	//increments alpha value in all descendants of this
 	void increment_alpha_in_all_descendants(int weight) {
-		//if (is_leaf()) {	//this case was ignored in their algorithm, and is a bug if if ignored
+		//if (is_leaf()) {	//this case was ignored in their algorithm, and is a bug if if ignored (note this won't happen for beta)
 		if (int_label != -1) {	//remember is_leaf() won't work here since after restricting ST, we may have "internal" nodes with no children
 			alpha += weight;
 		} else {
@@ -311,17 +311,13 @@ public:
 
 	//increments beta value in all descendants of this
 	void increment_beta_in_all_descendants(int weight) {
-		//if (is_leaf()) {		//this case was ignored in their algorithm, and is a bug if if ignored
-		if (int_label != -1) {	//remember is_leaf() won't work here since after restricting ST, we may have "internal" nodes with no children
-			beta += weight;
-			cout << "?????????????????????????????????????????????\n";
-		} else {
-			list<Node *>::iterator c;
-			list<Node *> children = get_children();
-			for (c = children.begin(); c != children.end(); c++)  {
-				(*c)->increment_beta_in_all_descendants_hlpr(weight);
-			}
+
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c)->increment_beta_in_all_descendants_hlpr(weight);
 		}
+
 	}
 
 	void increment_beta_in_all_descendants_hlpr(int weight) {
@@ -441,6 +437,100 @@ public:
 			(*c)->find_preordernum_of_internal_nodes(nodes);
 		}
 	}
+
+
+
+
+	//count #of internal nodes (for RF dist calculation)
+	void count_num_internal_nodes_for_source_tree(int& count) {
+		if (p == NULL) { //if root, not count
+			//not count
+		} else if (children.empty()) {	//if leaf, not count
+			//not count
+		} else {
+			count++;
+		}
+
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c)->count_num_internal_nodes_for_source_tree(count);
+		}
+	}
+
+
+	/*
+		//count #of internal nodes (for RF dist calculation)
+		//NOTE this will be called on restricted ST whose "degree 2 nodes" and "nodes with no taxa descendant" are not deleted
+		bool count_num_internal_nodes_for_supertree(int& count) {
+
+			int num_children_that_has_leaves = 0;
+			list<Node *>::iterator c;
+			list<Node *> children = get_children();
+			for (c = children.begin(); c != children.end(); c++)  {
+				bool child_is_internal = (*c)->count_num_internal_nodes_for_supertree(count);
+				if (child_is_internal) {
+					num_children_that_has_leaves++;
+				}
+			}
+
+			if (int_label != -1) { //if leaf, i.e. taxa
+				return true;
+			} else {	//maybe internal
+				if (num_children_that_has_leaves > 1) {
+					count++;
+					return true;
+				} else if (num_children_that_has_leaves == 1) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+		}
+	*/
+
+
+
+	string str_subtree_weighted() {
+		string s = "";
+		str_subtree_weighted_hlpr(&s);
+		s += ";";
+		return s;
+	}
+
+	void str_subtree_weighted_hlpr(string *s) {
+		str_hlpr(s);
+		if (!is_leaf()) {
+			*s += "(";
+			list<Node *>::iterator c;
+			for (c = children.begin(); c != children.end(); c++) {
+				if (c != children.begin())
+					*s += ",";
+				(*c)->str_subtree_weighted_hlpr(s);
+				if ((*c)->parent() != this)
+					cout << "#";
+			}
+			*s += "):";	//colon added by REZA
+			*s += to_string(get_edge_weight());	//this line added by REZA
+		}
+#ifdef DEBUG_DEPTHS
+		*s += ":";
+		stringstream ss;
+		string a;
+		ss << depth;
+		a = ss.str();
+		*s += a;
+#endif
+#ifdef DEBUG_PROTECTED
+		if (edge_protected)
+			*s += DEBUG_PROTECTED;
+#endif
+	}
+
+
+
+
 
 
 
