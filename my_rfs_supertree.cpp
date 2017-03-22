@@ -50,6 +50,8 @@ string change_branch_lengths(const string &tree, int percentage_to_be_reweighted
 void write_line_to_File(string s, const char* file_name);
 int calculate_RF_distance(Node& S, Node& T);
 int calculate_weighted_RF_distance(Node& S, Node& T);
+int calculate_rf_score(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted);
+
 
 
 
@@ -90,7 +92,7 @@ void suppress_nodes_with_mapping_in_Rv(Node& S_prime, Node& v);
 void find_best_regraft_place(Node& n, Node*& best_regraft_place, int& max);
 void preorder_traversal(Node& n);
 int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_set[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted);
-void find_F_T(Node& S, Node& T, int& num_clusters_not_in_T_prime);
+void find_number_of_clusters_in_common(Node& S, Node& T, int& num_clusters_not_in_T_prime);
 void weighted_RF_dist_hlpr(Node& S, Node& T_prime, int& the_portion_RF_dist_by_S, int& number_of_clades_shared_between_S_and_T);
 void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
@@ -117,6 +119,191 @@ set<string> find_non_common_taxa_set(const string &supertree, const string &sour
 
 
 
+void find_node_to_be_removed_2(Node & root, int int_label, Node* & taxan_to_be_removed) {
+
+	if (taxan_to_be_removed) {	//to save some time, BUT NOTE THAT "taxan_to_be_removed" should be initialized to 0 before it's passed.
+		return;
+	}
+
+	if (root.is_leaf()) {
+		if (root.get_int_label() == int_label) {
+			taxan_to_be_removed = &root;
+		}
+	} else {
+		for (auto child : root.get_children()) {
+			find_node_to_be_removed_2(*child, int_label, taxan_to_be_removed);
+		}
+	}
+}
+
+
+
+void restrict_supertree_2(Node & supertree, vector<int>& non_shared_taxon_set) {
+	Node* n;  //this willl be the node whose "name" is "taxon"
+	Node* p;  //this will be the parent of "n"
+
+	for (auto taxon : non_shared_taxon_set) {
+
+		n = 0;
+		find_node_to_be_removed_2(supertree, taxon, n);
+		//cout << n->get_name() << endl;
+		p = n->get_p();
+		//cout << "parent before deletion---------" << p->str_subtree() << endl;
+		p -> delete_child(n);
+		delete n;
+		//cout << "parent after delete_child()----" << p->str_subtree() << endl;
+		if (p -> get_children().size() == 1) {
+			Node* pp = p->get_p();
+			//cout << "grand-pa before contrac--------" << pp -> str_subtree() << endl;
+			p -> contract_node();
+			//cout << "grand-pa after contract_node()-" << pp -> str_subtree() << endl;
+		}
+
+	}
+	//cout << "final restricted ST: " << supertree.str_subtree() << endl;
+
+	//if root has only one child after above taxon-deletion process
+	if (supertree.get_children().size() == 1) {
+		Node* child = supertree.get_children().front();
+		child->contract_node();
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int find_rf_dist_between_two_heterogenous_trees(Node& t1, Node& t2, unordered_map<string, int>& int_label_map) {
+	int dist = 0;
+
+	string t1_newick = t1.str_subtree();
+	string t2_newick = t2.str_subtree();
+	//set<string> non_common_t1_and_t2 = find_non_common_taxa_set(t1_newick, t2_newick);	//assumes t1 is supertree
+	//set<string> non_common_t2_and_t1 = find_non_common_taxa_set(t2_newick, t1_newick);	//assumes t2 is supertree
+
+	vector<int> t1_cluster = t1.find_cluster_int_labels();
+	vector<int> t2_cluster = t2.find_cluster_int_labels();
+	vector<int> t1_but_not_t2;
+	set_difference (t1_cluster.begin(), t1_cluster.end(), t2_cluster.begin(), t2_cluster.end(), back_inserter(t1_but_not_t2));
+	vector<int> t2_but_not_t1;
+	set_difference (t2_cluster.begin(), t2_cluster.end(), t1_cluster.begin(), t1_cluster.end(), back_inserter(t2_but_not_t1));
+
+
+
+
+	Node* t1_copy = build_tree(t1_newick);
+	Node* t2_copy = build_tree(t2_newick);
+	t1_copy->copy_fields_for_source_tree(t1);
+	t2_copy->copy_fields_for_source_tree(t2);
+
+	//restrict t1 to t2 if needed
+	//if ( non_common_t1_and_t2.size() > 0 ) {
+	if ( t1_but_not_t2.size() > 0 ) {
+		//restrict_supertree(*t1_copy, non_common_t1_and_t2);
+		restrict_supertree_2(*t1_copy, t1_but_not_t2);
+		t1_copy->preorder_number();
+	}
+
+	//restrict t2 to t1 if needed
+	//if ( non_common_t2_and_t1.size() > 0 ) {
+	if ( t2_but_not_t1.size() > 0 ) {
+		//restrict_supertree(*t2_copy, non_common_t2_and_t1);
+		restrict_supertree_2(*t2_copy, t2_but_not_t1);
+		t2_copy->preorder_number();
+	}
+
+	//cout << t1.str_subtree() << endl;
+	//cout << t2.str_subtree() << "\n\n";
+
+	//cout << t1_copy->str_subtree() << endl;
+	//cout << t2_copy->str_subtree() << endl;
+
+	set_cluster_and_cluster_size(t1_copy);
+	//set_cluster_and_cluster_size(t2_copy);
+
+	dist = calculate_RF_distance(*t1_copy, *t2_copy);
+
+	//cout << dist << endl;
+
+	t1_copy->delete_tree();
+	t2_copy->delete_tree();
+
+	return dist;
+}
+
+//adds the new "taxon" to the current (super)tree to the place where has minimum RF score
+void add_taxon_to_the_tree(Node& root, string taxon, int int_label, Node* source_trees_array[], unordered_map<string, int>& int_label_map) {
+	vector<Node*> nodes;
+	put_all_nodes_in_vector(root, nodes);
+
+	Node* p = new Node();
+	Node* t = new Node();
+	t->set_name(taxon);
+	t->set_int_label(int_label);
+	p->add_child(t);
+
+	Node* rc = root.rchild();
+	rc->cut_parent();
+	p->add_child(rc);
+	root.add_child(p);
+
+	int lowest_rf_score = INT_MAX;
+	Node* best_new_sibling = NULL;
+	for (auto new_sibling : nodes) {
+		t->spr(new_sibling);
+		int score = 0;
+		for (int i = 0; i < NUMBER_OF_SOURCE_TREES_ZZ; ++i) {
+			score += find_rf_dist_between_two_heterogenous_trees(root, *source_trees_array[i], int_label_map);
+		}
+
+		if (score < lowest_rf_score) {
+			lowest_rf_score = score;
+			best_new_sibling = new_sibling;
+		}
+	}
+
+	t->spr(best_new_sibling);
+
+}
+
+
+string build_init_st_with_taxon_addition(unordered_map<string, int>& int_label_map, Node* source_trees_array[]) {
+	Node* root = new Node();
+
+	int cntr = 0;
+	for (auto const& elem : int_label_map) {
+		//cout << "\n_________root: " << root->str_subtree() << endl;
+		cntr++;
+		if (cntr == 1 || cntr == 2) {	//make a tree with two leaf children
+			Node* ch = new Node();
+			ch->set_name(elem.first);
+			ch->set_int_label(elem.second);
+			root->add_child(ch);
+		} else {
+			add_taxon_to_the_tree(*root, elem.first, elem.second, source_trees_array, int_label_map);
+		}
+
+	}
+
+
+
+
+	string tree = root->str_subtree();
+	//cout << "\n\n" << tree << "\n\n";
+	root->delete_tree();
+	return tree;
+}
+
+
 /////////////////////////////     main()     /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 int NUM_SPR_NGHBRS = 0;
@@ -133,7 +320,7 @@ int main(int argc, char** argv) {
 	int percentage_of_clades_to_be_reweighted ;
 	cin >> percentage_of_clades_to_be_reweighted;
 
-	cout << "Please enter the new weight to which clades be re-weighted in Ratchet search (between 0 and 10): " << endl;
+	cout << "Please enter the new weight to which clades be re-weighted in Ratchet search (an integer): " << endl;
 	int ratchet_weight;
 	cin >> ratchet_weight;
 
@@ -209,11 +396,28 @@ int main(int argc, char** argv) {
 	}
 
 
+	bool wghtd = false;
+	int initial_suptrees_rf_score = calculate_rf_score(*supertree, source_trees_root, non_shared_taxa_arr, wghtd);
+	cout << "initial_suptrees_rf_score: " << initial_suptrees_rf_score << endl;
 
 
 	cout << "\nsource trees and supertree has been read, let's start running edge-ratchet algorithm using RFS" << endl;
 	cout << "********************************************************************" << endl;
 
+
+	
+	string taxon_addition_init_st = build_init_st_with_taxon_addition(int_label_map, source_trees_root);
+	cout << taxon_addition_init_st << endl;
+	
+	Node* rat = build_tree(taxon_addition_init_st);
+	rat->preorder_number();
+	set_cluster_and_cluster_size(rat);
+	set_int_labels_for_leaves_in_source_tree(rat, int_label_map);
+	int score = calculate_rf_score(*rat, source_trees_root, non_shared_taxa_arr, wghtd);
+	cout << "\n----------------\nrandom addition init st score is: " << score << endl;
+	
+	return 0;
+	
 
 
 	//running time
@@ -233,7 +437,16 @@ int main(int argc, char** argv) {
 	//ratchet search loop
 	for (int ratchet_counter = 1; ratchet_counter < number_of_ratchet_iterations + 1; ratchet_counter++) {
 
-		bool ratchet = true; //when true, use re-weighted input trees; when false, use unweighted trees.
+		bool ratchet;
+		if (number_of_ratchet_iterations == 1) {	//in this case, only perform a regular unweighted hill-climbing search
+			ratchet = false;
+		} else if (ratchet_counter == 1) {
+			ratchet = false;
+		} else {
+			ratchet = true; //when true, use re-weighted input trees; when false, use unweighted trees.
+
+		}
+
 		if (ratchet) {
 			for (int i = 0; i < number_of_source_trees; ++i) {
 				source_trees_root[i]->reweight_edges_in_source_tree(percentage_of_clades_to_be_reweighted, ratchet_weight);
@@ -282,6 +495,7 @@ int main(int argc, char** argv) {
 				cout << "Iter: " << iteration << ", num_spr_neighbours: " <<
 				     NUM_SPR_NGHBRS << ", RF_dist: " << current_score << ", time(sec) : " << iter_time << "\n";
 				//cout << "\n" << supertree->str_subtree() << "\n\n\n";
+
 
 			}
 			else { // local optimum
@@ -340,8 +554,9 @@ int main(int argc, char** argv) {
 	//cout << "The best tree found:\n" << the_best_supertree_seen << endl;
 
 	cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
-	cout << "The best SuperTree found after " << number_of_ratchet_iterations << " number of ratchet iterations is: " << endl;
-	cout << "And its RF distance is " << the_best_rf_distance_seen << endl;
+	cout << "The initial   ST's score was: " << initial_suptrees_rf_score << endl;
+	cout << "The best-found ST's score is: " << the_best_rf_distance_seen << endl;
+	cout << "And it was found after " << number_of_ratchet_iterations << " number of ratchet iterations is: " << endl;
 	cout << "the running time is: " << seconds << " sec." << "\n\n";
 	cout << the_best_supertree_seen << endl;
 	cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
@@ -363,8 +578,8 @@ void preorder_traversal(Node& n) {
 
 	//cout << n.str_subtree() << endl;
 	cout << "prenum is : " << n.get_preorder_number() << endl;
-	//cout << "lca mapping node is: " << n.get_lca_mapping().str_subtree() << "\n" << endl;
-	cout << n.get_alpha() << "-" << n.get_beta() << "= " << n.get_alpha() - n.get_beta() << endl;
+	cout << "clade: " << n.str_subtree() << "\n" << endl;
+	//cout << n.get_alpha() << "-" << n.get_beta() << "= " << n.get_alpha() - n.get_beta() << endl;
 	//cout << "(edge to parent) weight: " << n.get_edge_weight() << "\n" << endl;
 
 	//just for testing:
@@ -437,32 +652,13 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_tre
 			//Now that we know for "v" to be pruned, what's the best regraft place,
 			//we have a best SPR neighbour, T'. We need to know how good is this neighbour,
 			//to ompare it to other best neighbours for different v's. Note, T is now T' (after spr move)
-			//Thus, we have to restrict it again.
-			vector<Node*> restricted_T_primes;
-			for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
-				Node* current_sup_tree = build_tree(T.str_subtree()); //note spr() has been applied to T, and now T is actually T'
-				adjustTree(current_sup_tree);
-				current_sup_tree->copy_fields_for_supertree(T);	//DON"T forget this!!
-				restrict_supertree(*current_sup_tree, non_shared_taxon_arr[i]);
-				restricted_T_primes.push_back(current_sup_tree);
-				//cout << "\n" << current_sup_tree->str_subtree() << endl;
-			}
+			//Thus, we have to restrict it again inside calculate_rf_score() method.
 
 			int current_RF_dist = 0 ; //which (for unweighted case) is "num_clusters_not_in_T_prime", i.e. RF distance
-			if (weighted) {
-				for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
-					current_RF_dist += calculate_weighted_RF_distance(*source_trees_array[i], *restricted_T_primes[i]);
-				}
-			} else {
-				for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
-					int dist_to_current_source_tree = calculate_RF_distance(*source_trees_array[i], *restricted_T_primes[i]);
-					//cout << "=====RF dist to this source tree: " << dist_to_current_source_tree << endl;;
-					current_RF_dist += dist_to_current_source_tree;
-				}
-			}
+			current_RF_dist = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted);
+
 
 			//cout << "best_seen_RF_dist: " << min_RF_dist_seen << ", and curent_RF_dist: " << current_RF_dist << endl;
-
 			if (current_RF_dist < min_RF_dist_seen) {
 				//cout << "\n\nbest F was : " << min_RF_dist_seen << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_RF_dist << endl;
 				//cout << "------T after : \n" << T.str_subtree() << endl;
@@ -479,9 +675,10 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_tre
 			//reset_alpha_beta(T);
 
 
-			//prevent mem leak
-			for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
-				restricted_T_primes[i]->delete_tree();
+			///temppppp
+			if (current_RF_dist < min_RF_dist_seen) {
+				cout << "eeeeeeeeeeeeeeeearly stopping!!!\n"; //sadsajhdasbd
+				break;
 			}
 		}
 
@@ -525,19 +722,21 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes) {
 
 //RF_dist(S,T) = |I(T)| - |I(S)| + 2|F_T|
 int calculate_RF_distance(Node& S, Node& T) {
-	int F_T = 0;
-	find_F_T(S, T, F_T);
+	int num_clusters_in_cpmmon = 0;
+	find_number_of_clusters_in_common(S, T, num_clusters_in_cpmmon);
 	int internal_nodes_of_S = 0;
 	S.count_num_internal_nodes_for_source_tree(internal_nodes_of_S);
 	int internal_nodes_of_T = 0;
 	T.count_num_internal_nodes_for_source_tree(internal_nodes_of_T);
 
-	//cout << "\n=================" << S.str_subtree() << endl;
-	//cout << "==num_internal===" << internal_nodes_of_S << endl;
-	//cout << "=================" << T.str_subtree() << endl;
-	//cout << "==num_internal===" << internal_nodes_of_T << endl;
-	//cout << "========F_T======" << F_T << endl;
-	int rf_dist = internal_nodes_of_T + internal_nodes_of_S - 2 * F_T;
+	/*
+	cout << "\n=========================" << S.str_subtree() << endl;
+	cout << "==========num_internal===" << internal_nodes_of_S << endl;
+	cout << "=========================" << T.str_subtree() << endl;
+	cout << "==========num_internal===" << internal_nodes_of_T << endl;
+	cout << "=num_clusters_in_cpmmon==" << num_clusters_in_cpmmon << endl;
+	*/
+	int rf_dist = internal_nodes_of_T + internal_nodes_of_S - 2 * num_clusters_in_cpmmon;
 	return rf_dist;
 }
 
@@ -546,7 +745,7 @@ int calculate_RF_distance(Node& S, Node& T) {
 //Note the way I implemented find_best_node_to_prune_and_its_best_regraft_place(), I don't want to change T so that I have to do calculations (lca_mapping, ...) for each v to be pruned
 //The node T_prime being passed to this function is best neghibour for current v to be pruned.
 //THUS the lca_mappings are NOT valid anymore, and that's why I compute it again here
-void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime) {
+void find_number_of_clusters_in_common(Node& S, Node& T_prime, int& num_clusters_in_common) {
 	//if S curresponds to a trivial bipartition, i.e. bipartition with one leaf on one side, DO NOT count it. There are 2 cases:
 	//1- it is a leaf
 	//2- it is child of root, and it's sibling is a leaf
@@ -559,14 +758,14 @@ void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime) {
 		list<Node *>::iterator c;
 		list<Node *> children = S.get_children();
 		for (c = children.begin(); c != children.end(); c++) {
-			find_F_T(**c, T_prime, num_clusters_not_in_T_prime);
+			find_number_of_clusters_in_common(**c, T_prime, num_clusters_in_common);
 		}
 
 		if (S.get_p() == NULL) { //root
 			//do not count
 			//} else if (S.get_p()->get_p() == NULL && S.get_sibling()->is_leaf()) {	//child of root with it's sibling to be a leaf
 			//do not count
-		} else {  //a non-trivial bipartition
+		} else {  //an internal node
 			vector<int> cluster = S.get_cluster();
 			Node* lca_mapping_in_T_prime;
 			bool f = false;
@@ -574,16 +773,69 @@ void find_F_T(Node& S, Node& T_prime, int& num_clusters_not_in_T_prime) {
 
 			//cout << "\n........cluster in S: " << S.str_subtree() << endl;
 			//cout << "........cluster of LCA: " << lca_mapping_in_T_prime-> str_subtree() << endl;
-			if ( (cluster.size()) == (lca_mapping_in_T_prime->number_of_leaves()) ) { //f(u)=0 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz cluster was not calculated for T_prime passed to this function
-				//cout << "_________________corrsponding bipartition does not exist in T'____________\n" ;
-
-				num_clusters_not_in_T_prime ++;
+			if ( (cluster.size()) == (lca_mapping_in_T_prime->number_of_leaves()) ) { //f(u)=1 , here S is actually u --->NOTE you CAN'T use get_cluster_size() cuz cluster was not calculated for T_prime passed to this function
+				//cout << "_________________corrsponding does exist in T'____________\n" ;
+				num_clusters_in_common ++;
 			}
 		}
 	}
 
 }
 
+
+//calculates cumulative RF distance between given supertree and a set of source trees
+//Note the T passed here is T' after spr move, thus we need to restrict it again to sourcte trees
+int calculate_rf_score(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
+	int rf_score = 0 ;
+
+	vector<Node*> restricted_T_primes;
+	for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+		Node* current_sup_tree = build_tree(T.str_subtree()); //note spr() has been applied to T, and now T is actually T'
+		adjustTree(current_sup_tree);
+		current_sup_tree->copy_fields_for_supertree(T);	//DON"T forget this!!
+		restrict_supertree(*current_sup_tree, non_shared_taxon_arr[i]);
+		restricted_T_primes.push_back(current_sup_tree);
+		//cout << "\n" << current_sup_tree->str_subtree() << endl;
+	}
+
+
+	if (weighted) {
+		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+			rf_score += calculate_weighted_RF_distance(*source_trees_array[i], *restricted_T_primes[i]);
+		}
+	} else {
+		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+			int dist_to_current_source_tree = calculate_RF_distance(*source_trees_array[i], *restricted_T_primes[i]);
+			//cout << "=====RF dist to this source tree: " << dist_to_current_source_tree << endl;;
+			rf_score += dist_to_current_source_tree;
+		}
+	}
+	//prevent mem leak
+	for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+		restricted_T_primes[i]->delete_tree();
+	}
+
+
+	return rf_score;
+}
+
+
+//based on your notes, weighted_RF_dist(T,S)= [(sum of edge weights of bipartitions in S not in T) + (sum of (edge weights-2) of bipartitions in T) + (#of bipartitions in T)]
+int calculate_weighted_RF_distance(Node& S, Node& T) {
+	int the_portion_RF_dist_by_S = 0;
+	int number_of_clades_shared_between_S_and_T = 0;
+	weighted_RF_dist_hlpr(S, T, the_portion_RF_dist_by_S, number_of_clades_shared_between_S_and_T);
+	int internal_nodes_of_T = 0;
+	T.count_num_internal_nodes_for_source_tree(internal_nodes_of_T);
+
+	int weighted_rf_dist = the_portion_RF_dist_by_S + (internal_nodes_of_T - number_of_clades_shared_between_S_and_T);
+	//cout << "\n-------\nthe_portion_RF_dist_by_S + (internal_nodes_of_T - number_of_clades_shared_between_S_and_T);\n" <<
+	// the_portion_RF_dist_by_S << "       +      " << internal_nodes_of_T << "   -    " << number_of_clades_shared_between_S_and_T << endl;
+	//cout << S.str_subtree_weighted();
+	//cout << T.str_subtree();
+
+	return weighted_rf_dist;
+}
 
 //see your notes for more details.
 //calculates: [(sum of edge weights of bipartitions in S not in T)+(sum of (edge weights-2) of bipartitions in T)]
@@ -615,9 +867,11 @@ void weighted_RF_dist_hlpr(Node& S, Node& T_prime, int& the_portion_RF_dist_by_S
 			//cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
 
 			if ( (cluster.size()) == (lca_mapping_in_T_prime->number_of_leaves()) ) { //if u corresponds to a clade existing in T
-				//cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
-				the_portion_RF_dist_by_S += (S.get_edge_weight() - 1);
 				number_of_clades_shared_between_S_and_T ++;
+				if (S.get_edge_weight() != 0) {	//if weight is ZERO, then don't count like it doesn't even exist
+					//cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
+					the_portion_RF_dist_by_S += (S.get_edge_weight() - 1);	//assuming edge-weight is >1
+				}
 			} else {  //if u corrsponds to a clade not existing in T
 				the_portion_RF_dist_by_S += S.get_edge_weight();
 			}
@@ -625,20 +879,6 @@ void weighted_RF_dist_hlpr(Node& S, Node& T_prime, int& the_portion_RF_dist_by_S
 	}
 
 }
-
-
-//based on your notes, weighted_RF_dist(T,S)= [(sum of edge weights of bipartitions in S not in T) + (sum of (edge weights-2) of bipartitions in T) + (#of bipartitions in T)]
-int calculate_weighted_RF_distance(Node& S, Node& T) {
-	int the_portion_RF_dist_by_S = 0;
-	int number_of_clades_shared_between_S_and_T = 0;
-	weighted_RF_dist_hlpr(S, T, the_portion_RF_dist_by_S, number_of_clades_shared_between_S_and_T);
-	int internal_nodes_of_T = 0;
-	T.count_num_internal_nodes_for_source_tree(internal_nodes_of_T);
-
-	int weighted_rf_dist = the_portion_RF_dist_by_S + (internal_nodes_of_T - number_of_clades_shared_between_S_and_T);
-	return weighted_rf_dist;
-}
-
 
 
 //finds node for which "alpha - beta" is maximized

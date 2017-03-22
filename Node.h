@@ -529,6 +529,42 @@ public:
 	}
 
 
+	//this is the copy of "regraft" part of an spr() which I will be using to construct a random addition of taxon initial supertree
+	void regraft_this_to(Node *new_sibling) {
+
+		Node *grandparent;
+
+		if (new_sibling->p != NULL) {	//if new_sibling is NOT root
+			grandparent = new_sibling->p;
+//		grandparent->delete_child(new_sibling);
+			bool leftc = false;
+			if (new_sibling == grandparent->lchild())
+				leftc = true;
+			if (leftc && !grandparent->is_leaf()) {
+				Node *new_sibling = grandparent->children.front();
+				grandparent->insert_child(new_sibling, p);
+			}
+			else {
+				grandparent->add_child(p);
+			}
+
+			Node *ns = p->children.front();
+			p->insert_child(ns, new_sibling);
+
+		}
+		else {	//if new_sibling is root
+			Node *root = new_sibling;
+			new_sibling = p;
+			// TODO: still broken
+			Node *lc = root->lchild();
+			Node *rc = root->rchild();
+			p->add_child(lc);
+			p->add_child(rc);
+		}
+
+	}
+
+
 
 
 
@@ -537,6 +573,18 @@ public:
 //////////////////<<<<<<<<<<<<<<<<<<<<<<</////////////////////
 /////////////added by REZA ///////////////////////////////////
 //////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2268,7 +2316,7 @@ public:
 		}
 		Node *old_sibling = get_sibling();
 		if (old_sibling == new_sibling) {
-			cout << "old_sibling == new_sibling\n";
+			//cout << "old_sibling == new_sibling\n";
 			return NULL;
 		}
 		Node *grandparent = p->p;
@@ -2276,8 +2324,10 @@ public:
 			prev_child_loc = 1;
 		else
 			prev_child_loc = 2;
+
+
 		// Prune
-		if (grandparent != NULL) {
+		if (grandparent != NULL) {	//if spr_on (i.e. this) is not a child of root
 			bool leftc = false;
 			if (old_sibling->parent() == grandparent->lchild())
 				leftc = true;
@@ -2295,9 +2345,9 @@ public:
 
 			reverse = old_sibling;
 		}
-		else {
+		else {	//if spr_on (i.e. this) is a child of root
 			if (old_sibling->is_leaf()) {
-				cout << "old_sibling->is_leaf()\n";
+				cout << "old_sibling->is_leaf() is true and return null(i.e. do nothing)\n";
 				return NULL;
 			}
 			Node *root = p;
