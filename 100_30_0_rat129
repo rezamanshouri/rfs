@@ -1,0 +1,1039 @@
+Please enter the pre-specified number of 'ratchet' iterations: 
+Please enter the percentage of clades to be re-weighted in Ratchet search (between 0 and 100): 
+Please enter the new weight to which clades be re-weighted in Ratchet search (an integer): 
+********************************************************************
+initial_suptrees_rf_score: 129
+
+source trees and supertree has been read, let's start running edge-ratchet algorithm using RFS
+********************************************************************
+Iter: 1, num_spr_neighbours: 52806, RF_dist: 119, time(sec) : 1.20149
+Iter: 2, num_spr_neighbours: 52848, RF_dist: 115, time(sec) : 1.14267
+Iter: 3, num_spr_neighbours: 52846, RF_dist: 113, time(sec) : 1.16496
+Iter: 4, num_spr_neighbours: 54642, RF_dist: 111, time(sec) : 1.14531
+Iter: 5, num_spr_neighbours: 54654, RF_dist: 109, time(sec) : 1.13869
+Iter: 6, num_spr_neighbours: 54814, RF_dist: 107, time(sec) : 1.12707
+Iter: 7, num_spr_neighbours: 54820, RF_dist: 105, time(sec) : 1.11791
+Iter: 8, num_spr_neighbours: 54810, RF_dist: 103, time(sec) : 1.11791
+Iter: 9, num_spr_neighbours: 54798, RF_dist: 101, time(sec) : 1.10589
+Iter: 10, num_spr_neighbours: 54816, RF_dist: 99, time(sec) : 1.10329
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 1-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54832, RF_dist: 86, time(sec) : 1.20004
+Iter: 2, num_spr_neighbours: 54872, RF_dist: 85, time(sec) : 1.18579
+Iter: 3, num_spr_neighbours: 54870, RF_dist: 83, time(sec) : 1.17611
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54868, RF_dist: 97, time(sec) : 1.08426
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 2-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54888, RF_dist: 86, time(sec) : 1.17087
+Iter: 2, num_spr_neighbours: 54900, RF_dist: 85, time(sec) : 1.16341
+Iter: 3, num_spr_neighbours: 54900, RF_dist: 84, time(sec) : 1.16433
+Iter: 4, num_spr_neighbours: 54894, RF_dist: 82, time(sec) : 1.15745
+Iter: 5, num_spr_neighbours: 54886, RF_dist: 81, time(sec) : 1.14181
+Iter: 6, num_spr_neighbours: 54886, RF_dist: 80, time(sec) : 1.14857
+Iter: 7, num_spr_neighbours: 54872, RF_dist: 78, time(sec) : 1.14959
+Iter: 8, num_spr_neighbours: 54822, RF_dist: 77, time(sec) : 1.16448
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54822, RF_dist: 85, time(sec) : 1.05652
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 3-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54820, RF_dist: 71, time(sec) : 1.18408
+Iter: 2, num_spr_neighbours: 54876, RF_dist: 70, time(sec) : 1.14478
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54868, RF_dist: 83, time(sec) : 1.09988
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 4-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54866, RF_dist: 70, time(sec) : 1.14617
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54872, RF_dist: 83, time(sec) : 1.04335
+
+regular local opt (original weights) reached. ###
+=======================================end of 5-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54866, RF_dist: 75, time(sec) : 1.19047
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54702, RF_dist: 83, time(sec) : 1.03093
+
+regular local opt (original weights) reached. ###
+=======================================end of 6-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54920, RF_dist: 74, time(sec) : 1.12304
+Iter: 2, num_spr_neighbours: 54922, RF_dist: 72, time(sec) : 1.11448
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54924, RF_dist: 81, time(sec) : 1.02196
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 7-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54926, RF_dist: 73, time(sec) : 1.18737
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54936, RF_dist: 81, time(sec) : 1.03905
+
+regular local opt (original weights) reached. ###
+=======================================end of 8-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54934, RF_dist: 73, time(sec) : 1.16388
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54934, RF_dist: 81, time(sec) : 1.04882
+
+regular local opt (original weights) reached. ###
+=======================================end of 9-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54936, RF_dist: 73, time(sec) : 1.19838
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54934, RF_dist: 81, time(sec) : 1.05516
+
+regular local opt (original weights) reached. ###
+=======================================end of 10-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54936, RF_dist: 71, time(sec) : 1.14125
+Iter: 2, num_spr_neighbours: 54974, RF_dist: 70, time(sec) : 1.1445
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55008, RF_dist: 77, time(sec) : 1.03857
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 11-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 69, time(sec) : 1.14334
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.02117
+
+regular local opt (original weights) reached. ###
+=======================================end of 12-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 65, time(sec) : 1.15898
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54972, RF_dist: 77, time(sec) : 1.03898
+
+regular local opt (original weights) reached. ###
+=======================================end of 13-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 69, time(sec) : 1.11628
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55012, RF_dist: 77, time(sec) : 1.03786
+
+regular local opt (original weights) reached. ###
+=======================================end of 14-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 66, time(sec) : 1.15257
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.02748
+
+regular local opt (original weights) reached. ###
+=======================================end of 15-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 67, time(sec) : 1.10821
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.01975
+
+regular local opt (original weights) reached. ###
+=======================================end of 16-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 67, time(sec) : 1.14753
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01642
+
+regular local opt (original weights) reached. ###
+=======================================end of 17-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 69, time(sec) : 1.14597
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.022
+
+regular local opt (original weights) reached. ###
+=======================================end of 18-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 71, time(sec) : 1.14597
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01566
+
+regular local opt (original weights) reached. ###
+=======================================end of 19-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 67, time(sec) : 1.1157
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01837
+
+regular local opt (original weights) reached. ###
+=======================================end of 20-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 70, time(sec) : 1.1551
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.02468
+
+regular local opt (original weights) reached. ###
+=======================================end of 21-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 70, time(sec) : 1.11584
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.02017
+
+regular local opt (original weights) reached. ###
+=======================================end of 22-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 70, time(sec) : 1.14322
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01582
+
+regular local opt (original weights) reached. ###
+=======================================end of 23-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 71, time(sec) : 1.11869
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01682
+
+regular local opt (original weights) reached. ###
+=======================================end of 24-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 66, time(sec) : 1.11523
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.02563
+
+regular local opt (original weights) reached. ###
+=======================================end of 25-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 65, time(sec) : 1.11645
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55012, RF_dist: 77, time(sec) : 1.02758
+
+regular local opt (original weights) reached. ###
+=======================================end of 26-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 68, time(sec) : 1.10968
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 77, time(sec) : 1.02486
+
+regular local opt (original weights) reached. ###
+=======================================end of 27-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 66, time(sec) : 1.10925
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 77, time(sec) : 1.0273
+
+regular local opt (original weights) reached. ###
+=======================================end of 28-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 70, time(sec) : 1.1771
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.03778
+
+regular local opt (original weights) reached. ###
+=======================================end of 29-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 71, time(sec) : 1.18566
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.02622
+
+regular local opt (original weights) reached. ###
+=======================================end of 30-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 68, time(sec) : 1.11194
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01627
+
+regular local opt (original weights) reached. ###
+=======================================end of 31-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 66, time(sec) : 1.14493
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.0235
+
+regular local opt (original weights) reached. ###
+=======================================end of 32-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 67, time(sec) : 1.14838
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.02686
+
+regular local opt (original weights) reached. ###
+=======================================end of 33-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 66, time(sec) : 1.11254
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.02395
+
+regular local opt (original weights) reached. ###
+=======================================end of 34-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 67, time(sec) : 1.15854
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.03056
+
+regular local opt (original weights) reached. ###
+=======================================end of 35-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 70, time(sec) : 1.13554
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.02619
+
+regular local opt (original weights) reached. ###
+=======================================end of 36-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 66, time(sec) : 1.1528
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 77, time(sec) : 1.02373
+
+regular local opt (original weights) reached. ###
+=======================================end of 37-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 68, time(sec) : 1.15005
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 77, time(sec) : 1.0275
+
+regular local opt (original weights) reached. ###
+=======================================end of 38-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 66, time(sec) : 1.12808
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.02589
+
+regular local opt (original weights) reached. ###
+=======================================end of 39-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 68, time(sec) : 1.18002
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.02845
+
+regular local opt (original weights) reached. ###
+=======================================end of 40-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 69, time(sec) : 1.1055
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.03731
+
+regular local opt (original weights) reached. ###
+=======================================end of 41-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 67, time(sec) : 1.14662
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.04208
+
+regular local opt (original weights) reached. ###
+=======================================end of 42-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 70, time(sec) : 1.17107
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55012, RF_dist: 77, time(sec) : 1.04766
+
+regular local opt (original weights) reached. ###
+=======================================end of 43-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 67, time(sec) : 1.1403
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.04034
+
+regular local opt (original weights) reached. ###
+=======================================end of 44-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 70, time(sec) : 1.15658
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.03859
+
+regular local opt (original weights) reached. ###
+=======================================end of 45-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 65, time(sec) : 1.14704
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.03458
+
+regular local opt (original weights) reached. ###
+=======================================end of 46-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 72, time(sec) : 1.16778
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.03622
+
+regular local opt (original weights) reached. ###
+=======================================end of 47-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 69, time(sec) : 1.13872
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.03174
+
+regular local opt (original weights) reached. ###
+=======================================end of 48-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 65, time(sec) : 1.14608
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 77, time(sec) : 1.03602
+
+regular local opt (original weights) reached. ###
+=======================================end of 49-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 65, time(sec) : 1.13979
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 77, time(sec) : 1.03478
+
+regular local opt (original weights) reached. ###
+=======================================end of 50-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 68, time(sec) : 1.15451
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.03014
+
+regular local opt (original weights) reached. ###
+=======================================end of 51-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 68, time(sec) : 1.15733
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.03998
+
+regular local opt (original weights) reached. ###
+=======================================end of 52-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 66, time(sec) : 1.11552
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.03136
+
+regular local opt (original weights) reached. ###
+=======================================end of 53-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 69, time(sec) : 1.13837
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.02086
+
+regular local opt (original weights) reached. ###
+=======================================end of 54-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 69, time(sec) : 1.10442
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.02018
+
+regular local opt (original weights) reached. ###
+=======================================end of 55-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 69, time(sec) : 1.15376
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01859
+
+regular local opt (original weights) reached. ###
+=======================================end of 56-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 70, time(sec) : 1.1519
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.0191
+
+regular local opt (original weights) reached. ###
+=======================================end of 57-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 66, time(sec) : 1.08528
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.01907
+
+regular local opt (original weights) reached. ###
+=======================================end of 58-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 68, time(sec) : 1.13302
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.0217
+
+regular local opt (original weights) reached. ###
+=======================================end of 59-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 66, time(sec) : 1.11654
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01994
+
+regular local opt (original weights) reached. ###
+=======================================end of 60-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 65, time(sec) : 1.15392
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.01859
+
+regular local opt (original weights) reached. ###
+=======================================end of 61-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 67, time(sec) : 1.12989
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.02486
+
+regular local opt (original weights) reached. ###
+=======================================end of 62-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 71, time(sec) : 1.14496
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 77, time(sec) : 1.02694
+
+regular local opt (original weights) reached. ###
+=======================================end of 63-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 73, time(sec) : 1.14096
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55012, RF_dist: 77, time(sec) : 1.03498
+
+regular local opt (original weights) reached. ###
+=======================================end of 64-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55004, RF_dist: 67, time(sec) : 1.12
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 77, time(sec) : 1.03152
+
+regular local opt (original weights) reached. ###
+=======================================end of 65-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 67, time(sec) : 1.1656
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 77, time(sec) : 1.0328
+
+regular local opt (original weights) reached. ###
+=======================================end of 66-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 66, time(sec) : 1.13782
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 77, time(sec) : 1.03421
+
+regular local opt (original weights) reached. ###
+=======================================end of 67-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 66, time(sec) : 1.16477
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54994, RF_dist: 77, time(sec) : 1.03107
+
+regular local opt (original weights) reached. ###
+=======================================end of 68-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 69, time(sec) : 1.1633
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03117
+
+regular local opt (original weights) reached. ###
+=======================================end of 69-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 67, time(sec) : 1.14438
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03805
+
+regular local opt (original weights) reached. ###
+=======================================end of 70-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 68, time(sec) : 1.14365
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.0367
+
+regular local opt (original weights) reached. ###
+=======================================end of 71-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 65, time(sec) : 1.12848
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03562
+
+regular local opt (original weights) reached. ###
+=======================================end of 72-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 69, time(sec) : 1.14979
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03757
+
+regular local opt (original weights) reached. ###
+=======================================end of 73-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 69, time(sec) : 1.16474
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03322
+
+regular local opt (original weights) reached. ###
+=======================================end of 74-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 67, time(sec) : 1.13536
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03827
+
+regular local opt (original weights) reached. ###
+=======================================end of 75-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 68, time(sec) : 1.15248
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03725
+
+regular local opt (original weights) reached. ###
+=======================================end of 76-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 70, time(sec) : 1.15498
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03747
+
+regular local opt (original weights) reached. ###
+=======================================end of 77-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 70, time(sec) : 1.16064
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03571
+
+regular local opt (original weights) reached. ###
+=======================================end of 78-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 68, time(sec) : 1.15645
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.04
+
+regular local opt (original weights) reached. ###
+=======================================end of 79-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 62, time(sec) : 1.14384
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03555
+
+regular local opt (original weights) reached. ###
+=======================================end of 80-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 69, time(sec) : 1.1392
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03933
+
+regular local opt (original weights) reached. ###
+=======================================end of 81-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 67, time(sec) : 1.14496
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54996, RF_dist: 77, time(sec) : 1.04438
+
+regular local opt (original weights) reached. ###
+=======================================end of 82-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54998, RF_dist: 69, time(sec) : 1.13152
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55008, RF_dist: 77, time(sec) : 1.04842
+
+regular local opt (original weights) reached. ###
+=======================================end of 83-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 69, time(sec) : 1.15619
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 77, time(sec) : 1.04653
+
+regular local opt (original weights) reached. ###
+=======================================end of 84-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 68, time(sec) : 1.15142
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 77, time(sec) : 1.04774
+
+regular local opt (original weights) reached. ###
+=======================================end of 85-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 69, time(sec) : 1.16925
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 77, time(sec) : 1.04586
+
+regular local opt (original weights) reached. ###
+=======================================end of 86-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 66, time(sec) : 1.14947
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.04442
+
+regular local opt (original weights) reached. ###
+=======================================end of 87-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 69, time(sec) : 1.18109
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03184
+
+regular local opt (original weights) reached. ###
+=======================================end of 88-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 70, time(sec) : 1.14467
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.03078
+
+regular local opt (original weights) reached. ###
+=======================================end of 89-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 68, time(sec) : 1.13411
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54990, RF_dist: 77, time(sec) : 1.0256
+
+regular local opt (original weights) reached. ###
+=======================================end of 90-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54992, RF_dist: 63, time(sec) : 1.16422
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54990, RF_dist: 77, time(sec) : 1.02045
+
+regular local opt (original weights) reached. ###
+=======================================end of 91-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 54992, RF_dist: 68, time(sec) : 1.12502
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.02323
+
+regular local opt (original weights) reached. ###
+=======================================end of 92-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 67, time(sec) : 1.12874
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 77, time(sec) : 1.02624
+
+regular local opt (original weights) reached. ###
+=======================================end of 93-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 71, time(sec) : 1.13021
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55000, RF_dist: 77, time(sec) : 1.02582
+
+regular local opt (original weights) reached. ###
+=======================================end of 94-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55002, RF_dist: 66, time(sec) : 1.11517
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55008, RF_dist: 77, time(sec) : 1.02614
+
+regular local opt (original weights) reached. ###
+=======================================end of 95-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 73, time(sec) : 1.14611
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55008, RF_dist: 77, time(sec) : 1.0296
+
+regular local opt (original weights) reached. ###
+=======================================end of 96-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 71, time(sec) : 1.16013
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55008, RF_dist: 77, time(sec) : 1.02931
+
+regular local opt (original weights) reached. ###
+=======================================end of 97-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 64, time(sec) : 1.15354
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 54972, RF_dist: 77, time(sec) : 1.0473
+
+regular local opt (original weights) reached. ###
+=======================================end of 98-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 72, time(sec) : 1.17155
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55008, RF_dist: 77, time(sec) : 1.02803
+
+regular local opt (original weights) reached. ###
+=======================================end of 99-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 55006, RF_dist: 67, time(sec) : 1.14483
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 55008, RF_dist: 77, time(sec) : 1.02506
+
+regular local opt (original weights) reached. ###
+=======================================end of 100-th ratchet iter=========================================
+========================================================================================================
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+The initial   ST's score was: 129
+The best-found ST's score is: 77
+And it was found after 100 number of ratchet iterations is: 
+the running time is: 457.055 sec.
+
+(((((((((((((((((((Pterodromaphaeopygia,Pterodromasandwichensis),Pterodromaheraldica),Pterodromaexterna),Pterodromainexpectata),Pterodromaneglecta),(((((((Pterodromamacroptera,Pterodromalessonii),Pterodromaincerta),Pterodromamagentae),((Pterodromacahow,Pterodromahasitata),(Pterodromamadeira,Pterodromafeae))),Pterodromamollis),Pterodromasolandri),Pterodromaultima)),(((Pterodromabrevipes,((Pterodromacookii,Pterodromadefilippiana),Pterodromaleucoptera)),(Pterodromalongirostris,Pterodromapycrofti)),Pterodromahypoleuca)),((Pterodromanigripennis,Pterodromacervicalis),Pterodromaaxillaris)),(Pterodromaarminjoniana,Pterodromabaraui)),Lugensabrevirostris),((((Calonectrisdiomedea,Calonectrisleucomelas),(Puffinusnativitatis,(((Puffinushuttoni,Puffinusgavia),Puffinusauricularis),((Puffinusopisthomelas,(Puffinuslherminieri,Puffinusassimilis)),(Puffinuspuffinus,(Puffinusyelkouan,Puffinusmauretanicus)))))),(((Puffinusbulleri,Puffinuspacificus),(((Puffinuscarneipes,Puffinuscreatopus),Puffinusgriseus),Puffinusgravis)),Puffinustenuirostris)),(Pseudobulweriaaterrima,Pseudobulweriarostrata))),(((Bulweriabulwerii,Procellariacinerea),((Procellariaparkinsoni,Procellariaaequinoctialis),Procellariawestlandica)),((((Pachyptilasalvini,Pachyptiladesolata),Pachyptilavittata),Pachyptilaturtur),Halobaenacaerulea))),(((((Fulmarusglacialis,Fulmarusglacialoides),(Macronectesgiganteus,Macronecteshalli)),Daptioncapense),Thalassoicaantarctica),Pagodromanivea)),(((Pelecanoidesmagellani,Pelecanoidesgeorgicus),Pelecanoidesurinatrix),Pelecanoidesgarnotii)),((((((Thalassarchecauta,(Thalassarcheeremita,Thalassarchesalvini)),Thalassarchebulleri),(Thalassarchechrysostoma,(Thalassarcheimpavida,Thalassarchemelanophris))),(Thalassarchebassi,Thalassarchechlororhynchus)),(Phoebetriapalpebrata,Phoebetriafusca)),(((((Diomedeaantipodensis,Diomedeagibsoni),(Diomedeaamsterdamensis,Diomedeaexulans)),Diomedeadabbenena),(Diomedeasanfordi,Diomedeaepomophora)),(((Phoebastriaimmutabilis,Phoebastrianigripes),Phoebastriaalbatrus),Phoebastriairrorata)))),(Oceanitesoceanicus,((Fregettagrallaria,Fregettatropica),(Garrodianereis,Pelagodromamarina)))),((((Oceanodromaleucorhoa,Oceanodromatristrami),(Oceanodromafurcata,(Hydrobatespelagicus,Oceanodromacastro))),(Oceanodromamelania,(Halocyptenamicrosoma,Oceanodromatethys))),Oceanodromahornbyi)),(Gaviaimmer,Gaviastellata)),(((((Pygoscelisantarctica,Pygoscelispapua),((Megadyptesantipodes,Eudyptespachyrhynchus),(Eudyptulaminor,Spheniscusdemersus))),(Aptenodytespatagonicus,(Eudypteschrysocome,Eudypteschrysolophus))),Pygoscelisadeliae),Pterodromaalba))
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

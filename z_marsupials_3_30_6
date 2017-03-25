@@ -1,0 +1,105 @@
+Please enter the pre-specified number of 'ratchet' iterations: 
+Please enter the percentage of clades to be re-weighted in Ratchet search (between 0 and 100): 
+Please enter the new weight to which clades be re-weighted in Ratchet search (between 0 and 10): 
+********************************************************************
+
+source trees and supertree has been read, let's start running edge-ratchet algorithm using RFS
+********************************************************************
+Iter: 1, num_spr_neighbours: 273922, RF_dist: 5103, time(sec) : 89.4448
+Iter: 2, num_spr_neighbours: 276740, RF_dist: 5067, time(sec) : 89.188
+Iter: 3, num_spr_neighbours: 276856, RF_dist: 5041, time(sec) : 85.8132
+Iter: 4, num_spr_neighbours: 277598, RF_dist: 5027, time(sec) : 84.6053
+Iter: 5, num_spr_neighbours: 277372, RF_dist: 5021, time(sec) : 85.33
+Iter: 6, num_spr_neighbours: 277372, RF_dist: 5015, time(sec) : 85.4061
+Iter: 7, num_spr_neighbours: 277374, RF_dist: 5007, time(sec) : 87.9973
+Iter: 8, num_spr_neighbours: 277372, RF_dist: 5001, time(sec) : 88.2408
+Iter: 9, num_spr_neighbours: 277370, RF_dist: 4995, time(sec) : 85.5395
+Iter: 10, num_spr_neighbours: 277368, RF_dist: 4991, time(sec) : 85.197
+Iter: 11, num_spr_neighbours: 277366, RF_dist: 4987, time(sec) : 84.9558
+Iter: 12, num_spr_neighbours: 277368, RF_dist: 4983, time(sec) : 84.4531
+Iter: 13, num_spr_neighbours: 277368, RF_dist: 4979, time(sec) : 83.3651
+Iter: 14, num_spr_neighbours: 277370, RF_dist: 4975, time(sec) : 82.9279
+Iter: 15, num_spr_neighbours: 277366, RF_dist: 4971, time(sec) : 83.1619
+Iter: 16, num_spr_neighbours: 277366, RF_dist: 4967, time(sec) : 82.766
+Iter: 17, num_spr_neighbours: 277364, RF_dist: 4963, time(sec) : 82.6171
+Iter: 18, num_spr_neighbours: 277364, RF_dist: 4959, time(sec) : 82.3671
+Iter: 19, num_spr_neighbours: 277360, RF_dist: 4955, time(sec) : 82.0859
+Iter: 20, num_spr_neighbours: 277360, RF_dist: 4951, time(sec) : 81.4218
+Iter: 21, num_spr_neighbours: 277364, RF_dist: 4947, time(sec) : 81.4038
+Iter: 22, num_spr_neighbours: 277364, RF_dist: 4945, time(sec) : 80.8993
+Iter: 23, num_spr_neighbours: 277362, RF_dist: 4943, time(sec) : 80.8628
+Iter: 24, num_spr_neighbours: 277368, RF_dist: 4941, time(sec) : 80.5988
+Iter: 25, num_spr_neighbours: 277370, RF_dist: 4939, time(sec) : 80.4113
+Iter: 26, num_spr_neighbours: 277372, RF_dist: 4937, time(sec) : 79.9156
+Iter: 27, num_spr_neighbours: 277370, RF_dist: 4935, time(sec) : 79.8943
+Iter: 28, num_spr_neighbours: 277370, RF_dist: 4933, time(sec) : 79.957
+Iter: 29, num_spr_neighbours: 277368, RF_dist: 4931, time(sec) : 80.0276
+Iter: 30, num_spr_neighbours: 277362, RF_dist: 4929, time(sec) : 79.7381
+Iter: 31, num_spr_neighbours: 277362, RF_dist: 4927, time(sec) : 79.7146
+Iter: 32, num_spr_neighbours: 277366, RF_dist: 4923, time(sec) : 79.5041
+Iter: 33, num_spr_neighbours: 277360, RF_dist: 4921, time(sec) : 79.2013
+Iter: 34, num_spr_neighbours: 277360, RF_dist: 4919, time(sec) : 79.0636
+Iter: 35, num_spr_neighbours: 277364, RF_dist: 4917, time(sec) : 78.87
+Iter: 36, num_spr_neighbours: 277364, RF_dist: 4915, time(sec) : 79.0889
+Iter: 37, num_spr_neighbours: 277370, RF_dist: 4913, time(sec) : 79.0735
+Iter: 38, num_spr_neighbours: 277370, RF_dist: 4911, time(sec) : 78.5695
+Iter: 39, num_spr_neighbours: 277370, RF_dist: 4909, time(sec) : 78.3173
+Iter: 40, num_spr_neighbours: 277370, RF_dist: 4907, time(sec) : 77.9789
+Iter: 41, num_spr_neighbours: 277386, RF_dist: 4901, time(sec) : 78.3137
+Iter: 42, num_spr_neighbours: 277390, RF_dist: 4899, time(sec) : 77.9873
+Iter: 43, num_spr_neighbours: 277392, RF_dist: 4897, time(sec) : 78.37
+Iter: 44, num_spr_neighbours: 277392, RF_dist: 4895, time(sec) : 78.1207
+Iter: 45, num_spr_neighbours: 277490, RF_dist: 4891, time(sec) : 77.8199
+Iter: 46, num_spr_neighbours: 277602, RF_dist: 4889, time(sec) : 77.8135
+Iter: 47, num_spr_neighbours: 277602, RF_dist: 4887, time(sec) : 77.5252
+Iter: 48, num_spr_neighbours: 277602, RF_dist: 4885, time(sec) : 77.3448
+Iter: 49, num_spr_neighbours: 277604, RF_dist: 4883, time(sec) : 76.6428
+Iter: 50, num_spr_neighbours: 277604, RF_dist: 4881, time(sec) : 76.1923
+Iter: 51, num_spr_neighbours: 277604, RF_dist: 4879, time(sec) : 76.3356
+Iter: 52, num_spr_neighbours: 277606, RF_dist: 4877, time(sec) : 76.3405
+Iter: 53, num_spr_neighbours: 277600, RF_dist: 4875, time(sec) : 76.1592
+Iter: 54, num_spr_neighbours: 277602, RF_dist: 4873, time(sec) : 75.8779
+Iter: 55, num_spr_neighbours: 277602, RF_dist: 4871, time(sec) : 75.5681
+Iter: 56, num_spr_neighbours: 277600, RF_dist: 4869, time(sec) : 75.4545
+Iter: 57, num_spr_neighbours: 277602, RF_dist: 4867, time(sec) : 75.4765
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 277602, RF_dist: 940, time(sec) : 73.7787
+Iter: 2, num_spr_neighbours: 277326, RF_dist: 939, time(sec) : 80.6108
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 1-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 277328, RF_dist: 4855, time(sec) : 82.2042
+Iter: 2, num_spr_neighbours: 277286, RF_dist: 4853, time(sec) : 82.8544
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 277292, RF_dist: 936, time(sec) : 81.4587
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 2-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 277294, RF_dist: 4808, time(sec) : 85.2593
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 277294, RF_dist: 936, time(sec) : 80.7465
+
+regular local opt (original weights) reached. ###
+=======================================end of 3-th ratchet iter=========================================
+========================================================================================================
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+The best SuperTree found after 3 number of ratchet iterations is: 
+And its RF distance is 936
+the running time is: 5649.85 sec.
+
+((((((((Marmo_tivagus,Marmo_anus),((((Marmo_avidus,Marmo_catus),(Marmo_dleyi,(Marmo_cens,Marmo_ictus))),Marmo_videns),Marmo_othea)),((Gracilin_lis,Gracilin_ica),((Gracilin_ramarcae,Gracilin_rotarsus),(Gracilin_as,Gracilin_liae)))),(Lestodel_li,((Thyl_rura,Thyl_illa),(Thyl_lidior,Thyl_gans)))),(Metach_icaudatus,(Chirone_imus,(Lutreo_ssicaudata,((Didel_giniana,(Didel_iventris,(Didel_supialis,Didel_ita))),(Phila_ssum,Phila_ersoni)))))),((((Monodel_vicaudata,Monodel_striata),((Monodel_resa,(Monodel_estica,Monodel_oodi)),(Monodel_si,Monodel_ringi))),(((Monodel_ex,Monodel_liae),((Monodel_lops,Monodel_ricana),(Monodel_idiata,Monodel_axina))),(Monodel_sta,Monodel_ida))),(((Mar_ina,Mar_ida),(Mar_icana,((Mar_escens,Mar_insoni),((Mar_ersoni,(Mar_eriana,Mar_ra)),Mar_ophila)))),((Micou_toni,Micou_erarae),(Micou_stantiae,Micou_ina))))),(Glir_usta,(Caluromys_upta,(Calur_bianus,(Calur_lander,Calur_atus))))),(((Rhynchole_hanurus,Lest_a),((Caenole_iginosus,Caenole_velatus),Caenole_iventer)),((((((((Echymi_ra,Echymi_ubu),Echymi_inista),(Echymi_escens,Echymi_idi)),(Microperory_gicauda,(Microperory_uensis,Microperory_ina))),(Rhynchom_ttorum,(Perory_frayana,Perory_adbenti))),((Peram_gainville,(Peram_uta,Peram_nii)),(Iso_rourus,(Iso_sulus,Iso_atus)))),(Chaer_udatus,(Macr_otis,Macr_cura))),((Dromic_roides,((Thylac_ocephalus,(Myrmeco_ciatus,((((((Parantech_arni,((Sarcoph_iarius,(Dasy_lucatus,(Dasy_ulatus,(Dasy_errinus,(Dasy_opunctatus,(Dasy_rtacus,Dasy_ffroii)))))),(Neophasco_entzi,(Phascolos_salis,Phascolos_iae)))),(Dasyka_amondae,Parantech_calis)),((Dasyce_sticauda,(Pseudantech_donnellensis,Pseudantech_lleyae)),Dasyce_nei)),(Myoi_as,Pseudantech_gbing)),(((((Antech_artii,(Antech_,(Antech_lus,Antech_vipes))),Antech_mani),(Antech_insonii,(Antech_imus,Antech_helmina))),((Mur_gicaudata,(Antech_anurus,Antech_o)),Mur_hschildi)),(Phasco_oatafa,Phasco_ura))),((Smintho_iger,((((Smintho_nulipes,(Smintho_gicaudata,((Smintho_heri,((Smintho_ina,Smintho_copus),(Smintho_ichura,Smintho_berti))),(Smintho_tipes,(Smintho_mmophila,(Smintho_dea,Smintho_ngsoni)))))),(Smintho_seoventer,Smintho_keni)),(Smintho_ssicaudata,(Smintho_roura,(Smintho_giniae,(Smintho_glasi,Smintho_leri))))),(Nin_ealeyi,(Nin_nnae,Nin_ei)))),((Plani_uirostris,((Plani_esi,Plani_aeguineae),Plani_rami)),Plani_ulata))))),(Notory_hlops,Notory_rinus))),(((Phascolar_ereus,(Vomb_inus,(Lasiorh_ifrons,Lasiorh_fftii))),(((((Gymnobeli_dbeateri,((Dactylop_virgata,Dactylop_alura),(Dactylop_pator,Dactylop_ei))),((Peta_di,((Peta_folcensis,Peta_viceps),Peta_cilis)),Peta_tralis)),(Tars_tratus,(Acrob_maeus,Distoech_natus))),(((Petropse_li,(Pseudochi_innae,(Pseudochi_ertisii,(Pseudochi_reus,Pseudochi_heri)))),(Petauro_ans,Hemibeli_uroides)),(Pseudoche_egrinus,((Pseudoche_eri,(Pseudoche_besi,(Pseudoche_bertensis,Pseudoche_oli))),Pseudoche_escens)))),(((Ailu_inus,(((Strigocu_notis,Strigocu_ebensis),((Phala_engensis,(Phala_lulae,(Phala_iceus,(Phala_entalis,(Phala_melitae,Phala_titus))))),(Phala_anim,Phala_atus))),(Spilocu_ulatus,Spilocu_oniger))),(Wy_amicaudata,(Trichos_inus,(Trichos_pecula,Trichos_hemensis)))),(Burr_vus,(Cercart_datus,((Cercart_us,Cercart_idus),Cercart_cinnus)))))),(((Lagorche_sutus,(Lagorche_orides,Lagorche_matus)),Lagorche_spicillatus),((((Lagostro_ciatus,(Hypsiprymn_chatus,(((Aepypry_escens,Calopry_pestris),(Betto_mardi,(Betto_icillata,Betto_ueur))),((Poto_dactylus,Poto_gipes),Poto_tyops)))),((Dorco_lleri,((Dorco_eni,Dorco_tuosa),Dorco_ata)),(Dorcops_leayi,Dorcops_heurni))),(((((Petro_eralis,(Thylo_lardierii,((Thylo_gmatica,Thylo_tis),Thylo_nii))),((Petro_rnata,Petro_icillata),(Petro_imilis,Petro_mani))),Petro_hschildi),((Petro_thopus,(Dendrol_nettianus,(Dendrol_holtzi,(Dendrol_stus,((Dendrol_inus,(Dendrol_dix,Dendrol_schiei)),(Dendrol_dfellowi,(Dendrol_ianus,Dendrol_ttae))))))),Petro_sephone)),(Petro_chyotis,(Petro_cinna,Petro_bidgei)))),(Set_chyurus,((Wall_olor,((((Macr_ma,Macr_salis),(Macr_yi,Macr_a)),((Macr_ogriseus,(Macr_enii,Macr_lis)),Macr_ryi)),((Macr_nardus,(Macr_ustus,(Macr_ilopinus,Macr_us))),(Macr_anteus,Macr_iginosus)))),(Onychog_uifera,(Onychog_enata,Onychog_ata)))))))))))
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

@@ -97,7 +97,7 @@ void weighted_RF_dist_hlpr(Node& S, Node& T_prime, int& the_portion_RF_dist_by_S
 void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void find_f_u_with_regard_to_R(vector<int>& cluster, vector<int>& source_tree_leaf_set, Node * R, Node*& lca, bool & found, int& f_u);
-
+void find_taxa_frequencies(Node* source_trees_array[], unordered_map<string, int>& taxa_frequencies);
 
 
 void print_weighted_tree(Node& n);
@@ -116,192 +116,21 @@ vector<string> split(const string &s, char delim);
 void split(const string &s, char delim, vector<string> &elems);
 set<string> find_non_common_taxa_set(const string &supertree, const string &source_tree);
 
+//////////random addition of taxa
+void find_node_to_be_removed_2(Node & root, int int_label, Node* & taxan_to_be_removed);
+void restrict_supertree_2(Node & supertree, vector<int>& non_shared_taxon_set);
+int find_rf_dist_between_two_heterogenous_trees(Node& t1, Node& t2);
+void add_taxon_to_the_tree(Node& root, string taxon, int int_label, Node* source_trees_array[]);
+string build_init_st_with_taxon_addition(Node* source_trees_array[], unordered_map<string, int>& map, vector<pair<string, int> > taxa_freq);
+void find_int_labels_and_frequencies(Node * root, int& current_label, unordered_map<string, int>& map, unordered_map<string, int>& frequencies);
 
-
-
-void find_node_to_be_removed_2(Node & root, int int_label, Node* & taxan_to_be_removed) {
-
-	if (taxan_to_be_removed) {	//to save some time, BUT NOTE THAT "taxan_to_be_removed" should be initialized to 0 before it's passed.
-		return;
+template <typename T1, typename T2>
+struct grater_second {
+	typedef pair<T1, T2> type;
+	bool operator ()(type const& a, type const& b) const {
+		return a.second > b.second;
 	}
-
-	if (root.is_leaf()) {
-		if (root.get_int_label() == int_label) {
-			taxan_to_be_removed = &root;
-		}
-	} else {
-		for (auto child : root.get_children()) {
-			find_node_to_be_removed_2(*child, int_label, taxan_to_be_removed);
-		}
-	}
-}
-
-
-
-void restrict_supertree_2(Node & supertree, vector<int>& non_shared_taxon_set) {
-	Node* n;  //this willl be the node whose "name" is "taxon"
-	Node* p;  //this will be the parent of "n"
-
-	for (auto taxon : non_shared_taxon_set) {
-
-		n = 0;
-		find_node_to_be_removed_2(supertree, taxon, n);
-		//cout << n->get_name() << endl;
-		p = n->get_p();
-		//cout << "parent before deletion---------" << p->str_subtree() << endl;
-		p -> delete_child(n);
-		delete n;
-		//cout << "parent after delete_child()----" << p->str_subtree() << endl;
-		if (p -> get_children().size() == 1) {
-			Node* pp = p->get_p();
-			//cout << "grand-pa before contrac--------" << pp -> str_subtree() << endl;
-			p -> contract_node();
-			//cout << "grand-pa after contract_node()-" << pp -> str_subtree() << endl;
-		}
-
-	}
-	//cout << "final restricted ST: " << supertree.str_subtree() << endl;
-
-	//if root has only one child after above taxon-deletion process
-	if (supertree.get_children().size() == 1) {
-		Node* child = supertree.get_children().front();
-		child->contract_node();
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-int find_rf_dist_between_two_heterogenous_trees(Node& t1, Node& t2, unordered_map<string, int>& int_label_map) {
-	int dist = 0;
-
-	string t1_newick = t1.str_subtree();
-	string t2_newick = t2.str_subtree();
-	//set<string> non_common_t1_and_t2 = find_non_common_taxa_set(t1_newick, t2_newick);	//assumes t1 is supertree
-	//set<string> non_common_t2_and_t1 = find_non_common_taxa_set(t2_newick, t1_newick);	//assumes t2 is supertree
-
-	vector<int> t1_cluster = t1.find_cluster_int_labels();
-	vector<int> t2_cluster = t2.find_cluster_int_labels();
-	vector<int> t1_but_not_t2;
-	set_difference (t1_cluster.begin(), t1_cluster.end(), t2_cluster.begin(), t2_cluster.end(), back_inserter(t1_but_not_t2));
-	vector<int> t2_but_not_t1;
-	set_difference (t2_cluster.begin(), t2_cluster.end(), t1_cluster.begin(), t1_cluster.end(), back_inserter(t2_but_not_t1));
-
-
-
-
-	Node* t1_copy = build_tree(t1_newick);
-	Node* t2_copy = build_tree(t2_newick);
-	t1_copy->copy_fields_for_source_tree(t1);
-	t2_copy->copy_fields_for_source_tree(t2);
-
-	//restrict t1 to t2 if needed
-	//if ( non_common_t1_and_t2.size() > 0 ) {
-	if ( t1_but_not_t2.size() > 0 ) {
-		//restrict_supertree(*t1_copy, non_common_t1_and_t2);
-		restrict_supertree_2(*t1_copy, t1_but_not_t2);
-		t1_copy->preorder_number();
-	}
-
-	//restrict t2 to t1 if needed
-	//if ( non_common_t2_and_t1.size() > 0 ) {
-	if ( t2_but_not_t1.size() > 0 ) {
-		//restrict_supertree(*t2_copy, non_common_t2_and_t1);
-		restrict_supertree_2(*t2_copy, t2_but_not_t1);
-		t2_copy->preorder_number();
-	}
-
-	//cout << t1.str_subtree() << endl;
-	//cout << t2.str_subtree() << "\n\n";
-
-	//cout << t1_copy->str_subtree() << endl;
-	//cout << t2_copy->str_subtree() << endl;
-
-	set_cluster_and_cluster_size(t1_copy);
-	//set_cluster_and_cluster_size(t2_copy);
-
-	dist = calculate_RF_distance(*t1_copy, *t2_copy);
-
-	//cout << dist << endl;
-
-	t1_copy->delete_tree();
-	t2_copy->delete_tree();
-
-	return dist;
-}
-
-//adds the new "taxon" to the current (super)tree to the place where has minimum RF score
-void add_taxon_to_the_tree(Node& root, string taxon, int int_label, Node* source_trees_array[], unordered_map<string, int>& int_label_map) {
-	vector<Node*> nodes;
-	put_all_nodes_in_vector(root, nodes);
-
-	Node* p = new Node();
-	Node* t = new Node();
-	t->set_name(taxon);
-	t->set_int_label(int_label);
-	p->add_child(t);
-
-	Node* rc = root.rchild();
-	rc->cut_parent();
-	p->add_child(rc);
-	root.add_child(p);
-
-	int lowest_rf_score = INT_MAX;
-	Node* best_new_sibling = NULL;
-	for (auto new_sibling : nodes) {
-		t->spr(new_sibling);
-		int score = 0;
-		for (int i = 0; i < NUMBER_OF_SOURCE_TREES_ZZ; ++i) {
-			score += find_rf_dist_between_two_heterogenous_trees(root, *source_trees_array[i], int_label_map);
-		}
-
-		if (score < lowest_rf_score) {
-			lowest_rf_score = score;
-			best_new_sibling = new_sibling;
-		}
-	}
-
-	t->spr(best_new_sibling);
-
-}
-
-
-string build_init_st_with_taxon_addition(unordered_map<string, int>& int_label_map, Node* source_trees_array[]) {
-	Node* root = new Node();
-
-	int cntr = 0;
-	for (auto const& elem : int_label_map) {
-		//cout << "\n_________root: " << root->str_subtree() << endl;
-		cntr++;
-		if (cntr == 1 || cntr == 2) {	//make a tree with two leaf children
-			Node* ch = new Node();
-			ch->set_name(elem.first);
-			ch->set_int_label(elem.second);
-			root->add_child(ch);
-		} else {
-			add_taxon_to_the_tree(*root, elem.first, elem.second, source_trees_array, int_label_map);
-		}
-
-	}
-
-
-
-
-	string tree = root->str_subtree();
-	//cout << "\n\n" << tree << "\n\n";
-	root->delete_tree();
-	return tree;
-}
+};
 
 
 /////////////////////////////     main()     /////////////////////////////////////
@@ -351,7 +180,7 @@ int main(int argc, char** argv) {
 	::NUMBER_OF_SOURCE_TREES_ZZ = number_of_source_trees;
 
 	string source_trees_newick[number_of_source_trees];
-	Node* source_trees_root[number_of_source_trees];
+	Node* source_trees_array[number_of_source_trees];
 	int cntr0 = 0;
 	ifstream myfile2(argv[1]);
 	string l1;  //hopefully size of trees are not larger than str.max_size()
@@ -359,9 +188,9 @@ int main(int argc, char** argv) {
 	while (std::getline(myfile2, l1))
 	{
 		source_trees_newick[cntr0] = l1;
-		source_trees_root[cntr0] = build_tree(l1);
-		adjustTree(source_trees_root[cntr0]);
-		//cout << source_trees_root[cntr0]->str_subtree() << endl;
+		source_trees_array[cntr0] = build_tree(l1);
+		adjustTree(source_trees_array[cntr0]);
+		//cout << source_trees_array[cntr0]->str_subtree() << endl;
 		cntr0 ++;
 	}
 	myfile2.close();
@@ -377,47 +206,63 @@ int main(int argc, char** argv) {
 	}
 
 
-	///////////setting int labels for leaves, i.e. mapping names to integers from 1 to n
+	unordered_map<string, int> int_label_map;
+	unordered_map<string, int> frequencies;
+	int starting_label = 1;
+
+	// set int labels for taxa in source trees and also find frequencies
+	for (int i = 0; i < number_of_source_trees; i++) {
+		find_int_labels_and_frequencies(source_trees_array[i], starting_label, int_label_map, frequencies);
+		//also, since source trees won't change, for each node in each source tree, lets find clusters only ones, and store it in DS
+		set_cluster_and_cluster_size(source_trees_array[i]);
+	}
+	::NUMBER_OF_TAXA = starting_label;
+
+	//if initial supertree is given
 	Node* supertree = build_tree(init_supertree);
 	adjustTree(supertree);
-	//cout << "\n\nInitial Supertree:\n" ;
-	//cout << supertree->str_subtree() << "\n------------------------\n" <<  endl;
 	set_cluster_and_cluster_size(supertree);
-
-	unordered_map<string, int> int_label_map;
-	int starting_label = 1;
-	find_int_labels_for_leaves_in_supertree(supertree, starting_label, int_label_map);  //finding int labels for all taxa in supertree
-	::NUMBER_OF_TAXA = starting_label;
-	// set int labels for taxa in source trees
-	for (int i = 0; i < number_of_source_trees; i++) {
-		set_int_labels_for_leaves_in_source_tree(source_trees_root[i], int_label_map);
-		//also, since source trees won't change, for each node in each source tree, lets find clusters only ones, and store it in DS
-		set_cluster_and_cluster_size(source_trees_root[i]);
-	}
-
+	set_int_labels_for_leaves_in_source_tree(supertree, int_label_map);  //finding int labels for all taxa in supertree
 
 	bool wghtd = false;
-	int initial_suptrees_rf_score = calculate_rf_score(*supertree, source_trees_root, non_shared_taxa_arr, wghtd);
+	int initial_suptrees_rf_score = calculate_rf_score(*supertree, source_trees_array, non_shared_taxa_arr, wghtd);
 	cout << "initial_suptrees_rf_score: " << initial_suptrees_rf_score << endl;
-
 
 	cout << "\nsource trees and supertree has been read, let's start running edge-ratchet algorithm using RFS" << endl;
 	cout << "********************************************************************" << endl;
 
 
-	
-	string taxon_addition_init_st = build_init_st_with_taxon_addition(int_label_map, source_trees_root);
+
+
+	////////////************ Generating a taxa addition initial supertree**************////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*
+	//sort taxa based on their frequencies: the order by which they will be added to the tree
+	//I turn set to vector to be able to use "random_shuffle" and "sort" methods
+	vector<pair<string, int> > taxa_frequencies_vector(frequencies.begin(), frequencies.end());
+	sort(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end(), grater_second<string, int>());
+	//if you want to add taxa randomly un-comment next line
+	//random_shuffle(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end());	
+
+	//for( auto const& i : taxa_frequencies_vector ) {
+	//	cout << i.first << " : " << i.second << endl;
+	//}
+
+
+	string taxon_addition_init_st = build_init_st_with_taxon_addition(source_trees_array, int_label_map, taxa_frequencies_vector);
 	cout << taxon_addition_init_st << endl;
-	
+
 	Node* rat = build_tree(taxon_addition_init_st);
 	rat->preorder_number();
 	set_cluster_and_cluster_size(rat);
 	set_int_labels_for_leaves_in_source_tree(rat, int_label_map);
-	int score = calculate_rf_score(*rat, source_trees_root, non_shared_taxa_arr, wghtd);
+	int score = calculate_rf_score(*rat, source_trees_array, non_shared_taxa_arr, wghtd);
 	cout << "\n----------------\nrandom addition init st score is: " << score << endl;
-	
+
 	return 0;
-	
+*/
 
 
 	//running time
@@ -449,8 +294,8 @@ int main(int argc, char** argv) {
 
 		if (ratchet) {
 			for (int i = 0; i < number_of_source_trees; ++i) {
-				source_trees_root[i]->reweight_edges_in_source_tree(percentage_of_clades_to_be_reweighted, ratchet_weight);
-				//cout << source_trees_root[i]->str_subtree_weighted() << endl;
+				source_trees_array[i]->reweight_edges_in_source_tree(percentage_of_clades_to_be_reweighted, ratchet_weight);
+				//cout << source_trees_array[i]->str_subtree_weighted() << endl;
 			}
 			//print_weighted_tree(*source_treee_trees_root[0]);
 			//cout <<  "\n\n";
@@ -471,7 +316,7 @@ int main(int argc, char** argv) {
 			Node* best_node_to_prune;
 			Node* best_node_to_regraft;
 			//cout << "\ninit  ST: " << supertree->str_subtree() << "\n";
-			int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_root, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet);
+			int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet);
 			//cout << "T: " << supertree->str_subtree() << endl;
 			//cout << "best node to  prune: " << best_node_to_prune->str_subtree() << endl;
 			//cout << "best node to regrft: " << best_node_to_regraft->str_subtree() << endl;
@@ -549,7 +394,7 @@ int main(int argc, char** argv) {
 	float diff ((float)finish_time_total - (float)start_time_total);
 	float seconds = diff / CLOCKS_PER_SEC;
 	//cout << "The #of clock ticks of this iteration: " << diff << endl;
-	//cout << "\n" << source_trees_root[0]->str_subtree() << endl;
+	//cout << "\n" << source_trees_array[0]->str_subtree() << endl;
 	//cout << "init_supertree:\n" << init_supertree << endl;
 	//cout << "The best tree found:\n" << the_best_supertree_seen << endl;
 
@@ -566,7 +411,7 @@ int main(int argc, char** argv) {
 	//don't forget to free memory!!
 	supertree->delete_tree();
 	for (int i = 0; i < number_of_source_trees; ++i) {
-		source_trees_root[i]->delete_tree();
+		source_trees_array[i]->delete_tree();
 	}
 
 	return 0;
@@ -574,7 +419,7 @@ int main(int argc, char** argv) {
 
 
 //tetsting
-void preorder_traversal(Node& n) {
+void preorder_traversal(Node & n) {
 
 	//cout << n.str_subtree() << endl;
 	cout << "prenum is : " << n.get_preorder_number() << endl;
@@ -591,7 +436,7 @@ void preorder_traversal(Node& n) {
 }
 
 //tetsting
-void print_weighted_tree(Node& n) {
+void print_weighted_tree(Node & n) {
 	//cout << n.str_subtree() << endl;
 	//cout << " prenum is : " << n.get_preorder_number() << endl;
 	//cout << "lca mapping node is: " << n.get_lca_mapping().str_subtree() << "\n" << endl;
@@ -613,7 +458,7 @@ void print_weighted_tree(Node& n) {
 //the neighbour with smaller |F_T| is better:
 //because RF_dist(S,T)=|I(T)| + |I(S)| - 2|F_T|
 //returns min_RF_dist_seen found
-int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
+int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
 
 	int min_RF_dist_seen = INT_MAX;
 	//cout << "T: " << T.str_subtree() << endl;
@@ -691,7 +536,7 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node& T, Node* source_tre
 
 
 //preorderly
-void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes) {
+void put_internal_nodes_in_vector(Node & n, vector<Node*>& nodes) {
 	if (n.is_leaf()) {
 		//not internal node
 	} else {
@@ -707,7 +552,7 @@ void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes) {
 
 
 //preorderly
-void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes) {
+void put_all_nodes_in_vector(Node & n, vector<Node*>& nodes) {
 
 	nodes.push_back(&n);
 
@@ -721,7 +566,7 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes) {
 
 
 //RF_dist(S,T) = |I(T)| - |I(S)| + 2|F_T|
-int calculate_RF_distance(Node& S, Node& T) {
+int calculate_RF_distance(Node & S, Node & T) {
 	int num_clusters_in_cpmmon = 0;
 	find_number_of_clusters_in_common(S, T, num_clusters_in_cpmmon);
 	int internal_nodes_of_S = 0;
@@ -745,7 +590,7 @@ int calculate_RF_distance(Node& S, Node& T) {
 //Note the way I implemented find_best_node_to_prune_and_its_best_regraft_place(), I don't want to change T so that I have to do calculations (lca_mapping, ...) for each v to be pruned
 //The node T_prime being passed to this function is best neghibour for current v to be pruned.
 //THUS the lca_mappings are NOT valid anymore, and that's why I compute it again here
-void find_number_of_clusters_in_common(Node& S, Node& T_prime, int& num_clusters_in_common) {
+void find_number_of_clusters_in_common(Node & S, Node & T_prime, int& num_clusters_in_common) {
 	//if S curresponds to a trivial bipartition, i.e. bipartition with one leaf on one side, DO NOT count it. There are 2 cases:
 	//1- it is a leaf
 	//2- it is child of root, and it's sibling is a leaf
@@ -785,7 +630,7 @@ void find_number_of_clusters_in_common(Node& S, Node& T_prime, int& num_clusters
 
 //calculates cumulative RF distance between given supertree and a set of source trees
 //Note the T passed here is T' after spr move, thus we need to restrict it again to sourcte trees
-int calculate_rf_score(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
+int calculate_rf_score(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
 	int rf_score = 0 ;
 
 	vector<Node*> restricted_T_primes;
@@ -821,7 +666,7 @@ int calculate_rf_score(Node& T, Node* source_trees_array[], set<string> non_shar
 
 
 //based on your notes, weighted_RF_dist(T,S)= [(sum of edge weights of bipartitions in S not in T) + (sum of (edge weights-2) of bipartitions in T) + (#of bipartitions in T)]
-int calculate_weighted_RF_distance(Node& S, Node& T) {
+int calculate_weighted_RF_distance(Node & S, Node & T) {
 	int the_portion_RF_dist_by_S = 0;
 	int number_of_clades_shared_between_S_and_T = 0;
 	weighted_RF_dist_hlpr(S, T, the_portion_RF_dist_by_S, number_of_clades_shared_between_S_and_T);
@@ -839,7 +684,7 @@ int calculate_weighted_RF_distance(Node& S, Node& T) {
 
 //see your notes for more details.
 //calculates: [(sum of edge weights of bipartitions in S not in T)+(sum of (edge weights-2) of bipartitions in T)]
-void weighted_RF_dist_hlpr(Node& S, Node& T_prime, int& the_portion_RF_dist_by_S, int& number_of_clades_shared_between_S_and_T) {
+void weighted_RF_dist_hlpr(Node & S, Node & T_prime, int& the_portion_RF_dist_by_S, int& number_of_clades_shared_between_S_and_T) {
 	//if S curresponds to a trivial bipartition, i.e. bipartition with one leaf on one side, DO NOT count it. There are 2 cases:
 	//1- it is a leaf
 	//2- it is child of root, and it's sibling is a leaf
@@ -883,7 +728,7 @@ void weighted_RF_dist_hlpr(Node& S, Node& T_prime, int& the_portion_RF_dist_by_S
 
 //finds node for which "alpha - beta" is maximized
 //ASSUMES T is the root of Q, i.e. only containing VALID regraft places for v under examination
-void find_best_regraft_place(Node& T, Node*& best_regraft_place, int& max) {
+void find_best_regraft_place(Node & T, Node*& best_regraft_place, int& max) {
 	NUM_SPR_NGHBRS++;
 	int best = T.get_alpha() - T.get_beta();
 	//cout << "....alpha-beta....for: " << T.str_subtree() << ": " <<  T.get_alpha() << "-" << T.get_beta() << " = " << best << endl;
@@ -911,7 +756,7 @@ void find_best_regraft_place(Node& T, Node*& best_regraft_place, int& max) {
 //i.e. it solves SPR(v) for T (and S as source tree)
 //it changes the T to its best SPR neighbor, too.
 //Returns best place to regraft
-Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& v, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
+Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node * source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
 
 	//cout << "--------------v to be pruned: " << v.str_subtree() << " --------------\n";
 	Node* best_regraft_place = NULL;
@@ -1760,4 +1605,223 @@ vector<string> split(const string & s, char delim) {
 	vector<string> elems;
 	split(s, delim, elems);
 	return elems;
+}
+
+
+void find_taxa_frequencies(Node * source_trees_array[], unordered_map<string, int>& taxa_frequencies) {
+	for (int i = 0; i < NUMBER_OF_SOURCE_TREES_ZZ; ++i)	{
+
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+////////////////////random addition of taxa////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+
+
+void traverse_tree_and_update_frequencies(Node * root, unordered_map<string, int>& taxa_frequencies) {
+	if (root->is_leaf()) {
+		taxa_frequencies[root->get_name()] ++;
+	} else {
+		for (auto child : root->get_children()) {
+			traverse_tree_and_update_frequencies(child, taxa_frequencies);
+		}
+	}
+}
+
+
+void find_node_to_be_removed_2(Node & root, int int_label, Node* & taxan_to_be_removed) {
+
+	if (taxan_to_be_removed) {	//to save some time, BUT NOTE THAT "taxan_to_be_removed" should be initialized to 0 before it's passed.
+		return;
+	}
+
+	if (root.is_leaf()) {
+		if (root.get_int_label() == int_label) {
+			taxan_to_be_removed = &root;
+		}
+	} else {
+		for (auto child : root.get_children()) {
+			find_node_to_be_removed_2(*child, int_label, taxan_to_be_removed);
+		}
+	}
+}
+
+
+void restrict_supertree_2(Node & supertree, vector<int>& non_shared_taxon_set) {
+	Node* n;  //this willl be the node whose "name" is "taxon"
+	Node* p;  //this will be the parent of "n"
+
+	for (auto taxon : non_shared_taxon_set) {
+
+		n = 0;
+		find_node_to_be_removed_2(supertree, taxon, n);
+		//cout << n->get_name() << endl;
+		p = n->get_p();
+		//cout << "parent before deletion---------" << p->str_subtree() << endl;
+		p -> delete_child(n);
+		delete n;
+		//cout << "parent after delete_child()----" << p->str_subtree() << endl;
+		if (p -> get_children().size() == 1) {
+			Node* pp = p->get_p();
+			//cout << "grand-pa before contrac--------" << pp -> str_subtree() << endl;
+			p -> contract_node();
+			//cout << "grand-pa after contract_node()-" << pp -> str_subtree() << endl;
+		}
+
+	}
+	//cout << "final restricted ST: " << supertree.str_subtree() << endl;
+
+	//if root has only one child after above taxon-deletion process
+	if (supertree.get_children().size() == 1) {
+		Node* child = supertree.get_children().front();
+		child->contract_node();
+	}
+}
+
+
+int find_rf_dist_between_two_heterogenous_trees(Node& t1, Node& t2) {
+	int dist = 0;
+
+	string t1_newick = t1.str_subtree();
+	string t2_newick = t2.str_subtree();
+	//set<string> non_common_t1_and_t2 = find_non_common_taxa_set(t1_newick, t2_newick);	//assumes t1 is supertree
+	//set<string> non_common_t2_and_t1 = find_non_common_taxa_set(t2_newick, t1_newick);	//assumes t2 is supertree
+
+	vector<int> t1_cluster = t1.find_cluster_int_labels();
+	vector<int> t2_cluster = t2.find_cluster_int_labels();
+	vector<int> t1_but_not_t2;
+	set_difference (t1_cluster.begin(), t1_cluster.end(), t2_cluster.begin(), t2_cluster.end(), back_inserter(t1_but_not_t2));
+	vector<int> t2_but_not_t1;
+	set_difference (t2_cluster.begin(), t2_cluster.end(), t1_cluster.begin(), t1_cluster.end(), back_inserter(t2_but_not_t1));
+
+	Node* t1_copy = build_tree(t1_newick);
+	Node* t2_copy = build_tree(t2_newick);
+	t1_copy->copy_fields_for_source_tree(t1);
+	t2_copy->copy_fields_for_source_tree(t2);
+
+	//restrict t1 to t2 if needed
+	//if ( non_common_t1_and_t2.size() > 0 ) {
+	if ( t1_but_not_t2.size() > 0 ) {
+		//restrict_supertree(*t1_copy, non_common_t1_and_t2);
+		restrict_supertree_2(*t1_copy, t1_but_not_t2);
+		t1_copy->preorder_number();
+	}
+
+	//restrict t2 to t1 if needed
+	//if ( non_common_t2_and_t1.size() > 0 ) {
+	if ( t2_but_not_t1.size() > 0 ) {
+		//restrict_supertree(*t2_copy, non_common_t2_and_t1);
+		restrict_supertree_2(*t2_copy, t2_but_not_t1);
+		t2_copy->preorder_number();
+	}
+
+	//cout << t1.str_subtree() << endl;
+	//cout << t2.str_subtree() << "\n\n";
+
+	//cout << t1_copy->str_subtree() << endl;
+	//cout << t2_copy->str_subtree() << endl;
+
+	set_cluster_and_cluster_size(t1_copy);
+	//set_cluster_and_cluster_size(t2_copy);
+
+	dist = calculate_RF_distance(*t1_copy, *t2_copy);
+
+	//cout << dist << endl;
+
+	t1_copy->delete_tree();
+	t2_copy->delete_tree();
+
+	return dist;
+}
+
+//adds the new "taxon" to the current (super)tree to the place where has minimum RF score
+void add_taxon_to_the_tree(Node& root, string taxon, int int_label, Node* source_trees_array[]) {
+	vector<Node*> nodes;
+	put_all_nodes_in_vector(root, nodes);
+
+	Node* p = new Node();
+	Node* t = new Node();
+	t->set_name(taxon);
+	t->set_int_label(int_label);
+	p->add_child(t);
+
+	Node* rc = root.rchild();
+	rc->cut_parent();
+	p->add_child(rc);
+	root.add_child(p);
+
+	int lowest_rf_score = INT_MAX;
+	Node* best_new_sibling = NULL;
+	for (auto new_sibling : nodes) {
+		t->spr(new_sibling);
+		//cout << root.str_subtree() << endl;
+		int score = 0;
+		for (int i = 0; i < NUMBER_OF_SOURCE_TREES_ZZ; ++i) {
+			score += find_rf_dist_between_two_heterogenous_trees(root, *source_trees_array[i]);
+		}
+
+		//cout << " === " << score << "\n";
+		if (score < lowest_rf_score) {
+			lowest_rf_score = score;
+			best_new_sibling = new_sibling;
+		}
+	}
+	//cout << "--------------------best new sibling : " << best_new_sibling->str_subtree() << endl;
+	t->spr(best_new_sibling);
+
+}
+
+//assumes taxa_frequencies is sorted based on frequencies
+//"taxa_frequencies" is used for the order by which taxa are added
+//I need "map" for int_labels
+string build_init_st_with_taxon_addition(Node* source_trees_array[], unordered_map<string, int>& map, vector<pair<string, int> > taxa_frequencies) {
+	Node* root = new Node();
+
+	int cntr = 0;
+	for (auto const& elem : taxa_frequencies) {
+		string name = elem.first; //cout << "name: " << name << endl;
+		int int_label = map.find(elem.first)->second; //cout << "int_label: " << int_label << endl;
+
+		//cout << "\n_________root: " << root->str_subtree() << endl;
+		cntr++;
+		if (cntr == 1 || cntr == 2) {	//make a tree with two leaf children
+			Node* ch = new Node();
+			ch->set_name(name);
+			ch->set_int_label(int_label);
+			root->add_child(ch);
+			//cout << "-----" << elem.first << endl;
+		} else {
+			add_taxon_to_the_tree(*root, name, int_label, source_trees_array);
+		}
+
+	}
+
+	string tree = root->str_subtree();
+	//cout << "\n\n" << tree << "\n\n";
+	root->delete_tree();
+	return tree;
+}
+
+
+void find_int_labels_and_frequencies(Node * root, int& current_label, unordered_map<string, int>& map, unordered_map<string, int>& frequencies) {
+	if (root->is_leaf()) {
+
+		if (map.find(root->get_name()) == map.end()) { /* Not found */
+			map.insert(pair<string, int>(root->get_name(), current_label));
+			frequencies.insert(pair<string, int>(root->get_name(), 1));
+			root->set_int_label(current_label);
+			current_label++;
+		} else { //already added to map
+			root->set_int_label(map.find(root->get_name())->second);
+			frequencies[root->get_name()]++;
+		}
+
+	} else {
+		for (auto child : root->get_children()) {
+			find_int_labels_and_frequencies(child, current_label, map, frequencies);
+		}
+	}
 }

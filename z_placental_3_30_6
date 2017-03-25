@@ -1,0 +1,55 @@
+Please enter the pre-specified number of 'ratchet' iterations: 
+Please enter the percentage of clades to be re-weighted in Ratchet search (between 0 and 100): 
+Please enter the new weight to which clades be re-weighted in Ratchet search (between 0 and 10): 
+********************************************************************
+
+source trees and supertree has been read, let's start running edge-ratchet algorithm using RFS
+********************************************************************
+Iter: 1, num_spr_neighbours: 50596, RF_dist: 16525, time(sec) : 49.7356
+Iter: 2, num_spr_neighbours: 50598, RF_dist: 16521, time(sec) : 49.8945
+Iter: 3, num_spr_neighbours: 50604, RF_dist: 16517, time(sec) : 49.7128
+Iter: 4, num_spr_neighbours: 50606, RF_dist: 16515, time(sec) : 49.4998
+Iter: 5, num_spr_neighbours: 50816, RF_dist: 16513, time(sec) : 49.6647
+Iter: 6, num_spr_neighbours: 50820, RF_dist: 16511, time(sec) : 49.5621
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 50818, RF_dist: 3315, time(sec) : 48.9283
+Iter: 2, num_spr_neighbours: 50608, RF_dist: 3311, time(sec) : 48.9422
+Iter: 3, num_spr_neighbours: 50598, RF_dist: 3309, time(sec) : 47.9422
+Iter: 4, num_spr_neighbours: 50588, RF_dist: 3307, time(sec) : 48.0503
+Iter: 5, num_spr_neighbours: 50588, RF_dist: 3306, time(sec) : 48.6577
+
+regular local opt (original weights) reached. ###
+##############Whoooooooop!! Better supertree seen####################
+=======================================end of 1-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 50594, RF_dist: 16540, time(sec) : 50.279
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 50804, RF_dist: 3306, time(sec) : 48.3827
+
+regular local opt (original weights) reached. ###
+=======================================end of 2-th ratchet iter=========================================
+========================================================================================================
+Iter: 1, num_spr_neighbours: 50594, RF_dist: 16480, time(sec) : 48.3162
+
+ratchet local opt (re-weighted) reached.
+---------------------------------------------------
+
+Iter: 1, num_spr_neighbours: 50804, RF_dist: 3306, time(sec) : 48.0091
+
+regular local opt (original weights) reached. ###
+=======================================end of 3-th ratchet iter=========================================
+========================================================================================================
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+The best SuperTree found after 3 number of ratchet iterations is: 
+And its RF distance is 3306
+the running time is: 1029.25 sec.
+
+(Real_OG,((((((((Camelidae,(((Hippopotamidae,((Physeteridae,(Ziphiidae,(Platanistidae,(Phocoenidae,(Delphinidae,Monodontidae))))),((Balaenopteridae,Eschrichtiidae),(Balaenidae,Neobalaenidae)))),(Tragulidae,((Bovidae,Moschidae),(Cervidae,(Antilocapridae,Giraffidae))))),(Suidae,Tayassuidae))),(Equidae,(Rhinocerotidae,Tapiridae))),(Manidae,(((Ursidae,(Phocidae,(Otariidae,Odobenidae))),(Canidae,(Mustelidae,Procyonidae))),(Felidae,(Viverridae,(Hyaenidae,Herpestidae)))))),(((((Vespertilionidae,Molossidae),(Myzopodidae,(Thyropteridae,(Natalidae,Furipteridae)))),(Mystacinidae,(Noctilionidae,(Phyllostomidae,Mormoopidae)))),(Nycteridae,(Emballonuridae,Craseonycteridae))),(Pteropodidae,(Rhinopomatidae,(Megadermatidae,Rhinolophidae))))),((Talpidae,(Erinaceidae,Soricidae)),(Solenodontidae,Nesophontidae))),(((((Ctenodactylidae,((((((((Octodontidae,Ctenomyidae),Abrocomidae),(Echimyidae,Myocastoridae)),Capromyidae),((Caviidae,Hydrochaeridae),(Dasyproctidae,Agoutidae))),(Erethizontidae,(Chinchillidae,Dinomyidae))),(Bathyergidae,(Thryonomyidae,Petromuridae))),Hystricidae)),(((Muridae,Dipodidae),(Anomaluridae,Pedetidae)),(Castoridae,(Heteromyidae,Geomyidae)))),(Myoxidae,(Sciuridae,Aplodontidae))),(Leporidae,Ochotonidae)),(Tupaiidae,(Cynocephalidae,(((Daubentoniidae,(Lemuridae,(Indridae,(Cheirogaleidae,Megaladapidae)))),(Loridae,Galagonidae)),(Tarsiidae,((Cercopithecidae,(Hominidae,Hylobatidae)),(Callitrichidae,Cebidae)))))))),(Dasypodidae,(Myrmecophagidae,(Bradypodidae,Megalonychidae)))),(((Macroscelididae,(Tenrecidae,Chrysochloridae)),(Orycteropodidae,Plesiorycteropodidae)),(Elephantidae,(Procaviidae,(Trichechidae,Dugongidae))))))
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

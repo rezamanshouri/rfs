@@ -1,0 +1,66 @@
+This is XeTeX, Version 3.1415926-2.5-0.9999.3 (TeX Live 2013/Debian) (format=xelatex 2016.12.4)  13 JAN 2017 00:09
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**simple.tex
+(./simple.tex
+LaTeX2e <2011/06/27>
+Babel <3.9h> and hyphenation patterns for 4 languages loaded.
+(/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+(/usr/share/texlive/texmf-dist/tex/latex/base/size12.clo
+File: size12.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count80
+\c@section=\count81
+\c@subsection=\count82
+\c@subsubsection=\count83
+\c@paragraph=\count84
+\c@subparagraph=\count85
+\c@figure=\count86
+\c@table=\count87
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+) (./simple.aux)
+\openout1 = `simple.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <14.4> on input line 11.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 11.
+
+[1
+
+]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 25.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 25.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 25.
+ [2] [3] [4]
+No file simple.bbl.
+[5] (./simple.aux) ) 
+Here is how much of TeX's memory you used:
+ 234 strings out of 495615
+ 2450 string characters out of 6186810
+ 51363 words of memory out of 5000000
+ 3512 multiletter control sequences out of 15000+600000
+ 8802 words of font info for 31 fonts, out of 8000000 for 9000
+ 36 hyphenation exceptions out of 8191
+ 22i,6n,19p,1123b,199s stack positions out of 5000i,500n,10000p,200000b,80000s
+
+Output written on simple.pdf (5 pages).
