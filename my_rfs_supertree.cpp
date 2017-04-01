@@ -238,31 +238,31 @@ int main(int argc, char** argv) {
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-/*
-	//sort taxa based on their frequencies: the order by which they will be added to the tree
-	//I turn set to vector to be able to use "random_shuffle" and "sort" methods
-	vector<pair<string, int> > taxa_frequencies_vector(frequencies.begin(), frequencies.end());
-	sort(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end(), grater_second<string, int>());
-	//if you want to add taxa randomly un-comment next line
-	//random_shuffle(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end());	
+	/*
+		//sort taxa based on their frequencies: the order by which they will be added to the tree
+		//I turn set to vector to be able to use "random_shuffle" and "sort" methods
+		vector<pair<string, int> > taxa_frequencies_vector(frequencies.begin(), frequencies.end());
+		sort(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end(), grater_second<string, int>());
+		//if you want to add taxa randomly un-comment next lines
+		//random_shuffle(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end());
 
-	//for( auto const& i : taxa_frequencies_vector ) {
-	//	cout << i.first << " : " << i.second << endl;
-	//}
+		//for( auto const& i : taxa_frequencies_vector ) {
+		//	cout << i.first << " : " << i.second << endl;
+		//}
 
 
-	string taxon_addition_init_st = build_init_st_with_taxon_addition(source_trees_array, int_label_map, taxa_frequencies_vector);
-	cout << taxon_addition_init_st << endl;
+		string taxon_addition_init_st = build_init_st_with_taxon_addition(source_trees_array, int_label_map, taxa_frequencies_vector);
+		cout << taxon_addition_init_st << endl;
 
-	Node* rat = build_tree(taxon_addition_init_st);
-	rat->preorder_number();
-	set_cluster_and_cluster_size(rat);
-	set_int_labels_for_leaves_in_source_tree(rat, int_label_map);
-	int score = calculate_rf_score(*rat, source_trees_array, non_shared_taxa_arr, wghtd);
-	cout << "\n----------------\nrandom addition init st score is: " << score << endl;
+		Node* rat = build_tree(taxon_addition_init_st);
+		rat->preorder_number();
+		set_cluster_and_cluster_size(rat);
+		set_int_labels_for_leaves_in_source_tree(rat, int_label_map);
+		int score = calculate_rf_score(*rat, source_trees_array, non_shared_taxa_arr, wghtd);
+		cout << "\n----------------\nrandom addition init st score is: " << score << endl;
 
-	return 0;
-*/
+		return 0;
+	*/
 
 
 	//running time
@@ -272,7 +272,7 @@ int main(int argc, char** argv) {
 
 	//just to keep track of best ST seen throughout the algorithm
 	string the_best_supertree_seen = init_supertree;
-	int the_best_rf_distance_seen = INT_MAX;
+	int the_best_rf_distance_seen = initial_suptrees_rf_score;
 
 
 	////////////////////////////////////////////////
@@ -361,6 +361,8 @@ int main(int argc, char** argv) {
 
 				if (!ratchet) { //we are at the end of one ratchet iteration
 					if (best_score_of_current_hill < the_best_rf_distance_seen) { //keep track of best supertree seen so far
+						cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
+						cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
 						cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
 						the_best_rf_distance_seen = best_score_of_current_hill;
 						the_best_supertree_seen = best_supertree_of_current_hill;
@@ -460,7 +462,9 @@ void print_weighted_tree(Node & n) {
 //returns min_RF_dist_seen found
 int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
 
-	int min_RF_dist_seen = INT_MAX;
+	int min_RF_dist_seen = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted); //for early stopping
+	best_node_to_prune = &T;	// I added this line because of above line: Note if we are at local iptimum, then "best_node_to_prune" will be null
+
 	//cout << "T: " << T.str_subtree() << endl;
 	vector<Node*> internal_nodes;
 	put_all_nodes_in_vector(T, internal_nodes); 	//just to avoid dealing with recursive calls :D
@@ -504,30 +508,31 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 
 
 			//cout << "best_seen_RF_dist: " << min_RF_dist_seen << ", and curent_RF_dist: " << current_RF_dist << endl;
+			int previous_min_score = min_RF_dist_seen;
 			if (current_RF_dist < min_RF_dist_seen) {
 				//cout << "\n\nbest F was : " << min_RF_dist_seen << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_RF_dist << endl;
 				//cout << "------T after : \n" << T.str_subtree() << endl;
 				//cout << "\n" << T.str_subtree() << "\n\n";
-				//cout << "--best regraft: " << best_regraft_place_for_current_v->str_subtree() <<  endl;
+				//cout << "-----best node to prun: " << (*iter)->str_subtree() <<  endl;
+				//cout << "--best node to regraft: " << best_regraft_place_for_current_v->str_subtree() <<  endl;
 
 				min_RF_dist_seen = current_RF_dist;
 				best_node_to_prune = *iter;
 				best_node_to_regraft = best_regraft_place_for_current_v;
+
+				//earlyyyyyyyyyyyyyyyyyy stippppping!
+				which_sibling = 0;
+				(*iter)->spr(old_sibling, which_sibling);
+				//cout << "eeeeeeeeeeeeeeeearly stopping!!!\n";
+				return min_RF_dist_seen;
+
 			}
 
 			//restore tree to consider next node to be pruned
 			(*iter)->spr(old_sibling, which_sibling);
 			//reset_alpha_beta(T);
 
-
-			///temppppp
-			if (current_RF_dist < min_RF_dist_seen) {
-				cout << "eeeeeeeeeeeeeeeearly stopping!!!\n"; //sadsajhdasbd
-				break;
-			}
 		}
-
-
 	}
 
 	return min_RF_dist_seen;
@@ -674,11 +679,12 @@ int calculate_weighted_RF_distance(Node & S, Node & T) {
 	T.count_num_internal_nodes_for_source_tree(internal_nodes_of_T);
 
 	int weighted_rf_dist = the_portion_RF_dist_by_S + (internal_nodes_of_T - number_of_clades_shared_between_S_and_T);
-	//cout << "\n-------\nthe_portion_RF_dist_by_S + (internal_nodes_of_T - number_of_clades_shared_between_S_and_T);\n" <<
-	// the_portion_RF_dist_by_S << "       +      " << internal_nodes_of_T << "   -    " << number_of_clades_shared_between_S_and_T << endl;
-	//cout << S.str_subtree_weighted();
-	//cout << T.str_subtree();
-
+	/*
+	cout << "\n-------\nthe_portion_RF_dist_by_S + (internal_nodes_of_T - number_of_clades_shared_between_S_and_T);\n" <<
+	the_portion_RF_dist_by_S << "       +      " << internal_nodes_of_T << "   -    " << number_of_clades_shared_between_S_and_T << endl;
+	cout << S.str_subtree_weighted() << endl;
+	cout << T.str_subtree() << endl;
+	*/
 	return weighted_rf_dist;
 }
 
@@ -711,15 +717,17 @@ void weighted_RF_dist_hlpr(Node & S, Node & T_prime, int& the_portion_RF_dist_by
 			//cout << ".....................Node u is: " << S.str_subtree() << endl;
 			//cout << "a, i.e. lca_mapping_in_T_prime: " << lca_mapping_in_T_prime->str_subtree() << endl;
 
-			if ( (cluster.size()) == (lca_mapping_in_T_prime->number_of_leaves()) ) { //if u corresponds to a clade existing in T
-				number_of_clades_shared_between_S_and_T ++;
-				if (S.get_edge_weight() != 0) {	//if weight is ZERO, then don't count like it doesn't even exist
-					//cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
+			if (S.get_edge_weight() != 0) {	//if weight is ZERO, then don't count, like it doesn't even exist
+
+				if ( (cluster.size()) == (lca_mapping_in_T_prime->number_of_leaves()) ) { //if u corresponds to a clade existing in T
+					number_of_clades_shared_between_S_and_T ++;
 					the_portion_RF_dist_by_S += (S.get_edge_weight() - 1);	//assuming edge-weight is >1
+					//cout << "weight of this bipartition: " << S.get_edge_weight() << endl;
+				} else {  //if u corrsponds to a clade not existing in T
+					the_portion_RF_dist_by_S += S.get_edge_weight();
 				}
-			} else {  //if u corrsponds to a clade not existing in T
-				the_portion_RF_dist_by_S += S.get_edge_weight();
 			}
+
 		}
 	}
 
@@ -1682,7 +1690,7 @@ void restrict_supertree_2(Node & supertree, vector<int>& non_shared_taxon_set) {
 }
 
 
-int find_rf_dist_between_two_heterogenous_trees(Node& t1, Node& t2) {
+int find_rf_dist_between_two_heterogenous_trees(Node & t1, Node & t2) {
 	int dist = 0;
 
 	string t1_newick = t1.str_subtree();
@@ -1738,7 +1746,7 @@ int find_rf_dist_between_two_heterogenous_trees(Node& t1, Node& t2) {
 }
 
 //adds the new "taxon" to the current (super)tree to the place where has minimum RF score
-void add_taxon_to_the_tree(Node& root, string taxon, int int_label, Node* source_trees_array[]) {
+void add_taxon_to_the_tree(Node & root, string taxon, int int_label, Node * source_trees_array[]) {
 	vector<Node*> nodes;
 	put_all_nodes_in_vector(root, nodes);
 
@@ -1777,7 +1785,7 @@ void add_taxon_to_the_tree(Node& root, string taxon, int int_label, Node* source
 //assumes taxa_frequencies is sorted based on frequencies
 //"taxa_frequencies" is used for the order by which taxa are added
 //I need "map" for int_labels
-string build_init_st_with_taxon_addition(Node* source_trees_array[], unordered_map<string, int>& map, vector<pair<string, int> > taxa_frequencies) {
+string build_init_st_with_taxon_addition(Node * source_trees_array[], unordered_map<string, int>& map, vector<pair<string, int> > taxa_frequencies) {
 	Node* root = new Node();
 
 	int cntr = 0;

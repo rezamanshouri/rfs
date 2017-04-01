@@ -2311,7 +2311,7 @@ public:
 		Node *reverse;
 		int prev_child_loc = 0;
 		if (p == NULL || new_sibling == NULL) {
-			cout << "p == NULL || new_sibling == NULL\n";
+			//cout << ">>>>>from Node.h spr() method: p == NULL || new_sibling == NULL\n";
 			return NULL;
 		}
 		Node *old_sibling = get_sibling();
