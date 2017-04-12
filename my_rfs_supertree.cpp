@@ -98,7 +98,7 @@ void put_internal_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void find_f_u_with_regard_to_R(vector<int>& cluster, vector<int>& source_tree_leaf_set, Node * R, Node*& lca, bool & found, int& f_u);
 void find_taxa_frequencies(Node* source_trees_array[], unordered_map<string, int>& taxa_frequencies);
-
+void reweight_a_portion_of_all_edges_at_once(Node* source_trees_array[], int percentage_to_be_reweighted, int new_weight);
 
 void print_weighted_tree(Node& n);
 
@@ -133,6 +133,7 @@ struct grater_second {
 };
 
 
+
 /////////////////////////////     main()     /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 int NUM_SPR_NGHBRS = 0;
@@ -140,21 +141,22 @@ int NUM_SPR_NGHBRS = 0;
 int main(int argc, char** argv) {
 	srand((unsigned)time(NULL));
 
-	cout << "Please enter the pre-specified number of 'ratchet' iterations: " << endl;
+	//cout << "Please enter the pre-specified number of 'ratchet' iterations: " << endl;
 	//pre-specified number of iterations if it didn't stop after this number of iterations
-	int number_of_ratchet_iterations;
-	cin >> number_of_ratchet_iterations;
+	int number_of_ratchet_iterations = 50;
+	//cin >> number_of_ratchet_iterations;
 
-	cout << "Please enter the percentage of clades to be re-weighted in Ratchet search (between 0 and 100): " << endl;
-	int percentage_of_clades_to_be_reweighted ;
-	cin >> percentage_of_clades_to_be_reweighted;
+	//cout << "Please enter the percentage of clades to be re-weighted in Ratchet search (between 0 and 100): " << endl;
+	int percentage_of_clades_to_be_reweighted = 30;
+	//cin >> percentage_of_clades_to_be_reweighted;
 
-	cout << "Please enter the new weight to which clades be re-weighted in Ratchet search (an integer): " << endl;
-	int ratchet_weight;
-	cin >> ratchet_weight;
+	//cout << "Please enter the new weight to which clades be re-weighted in Ratchet search (an integer): " << endl;
+	int ratchet_weight = 0;
+	//cin >> ratchet_weight;
 
 	cout << "********************************************************************" << endl;
-
+	cout << "***Configuration: " << number_of_ratchet_iterations << "_" << percentage_of_clades_to_be_reweighted
+	     << "_" << ratchet_weight << "  ***" << endl;
 
 	string init_supertree;
 	ifstream init_sup("initial_supertree");
@@ -293,12 +295,24 @@ int main(int argc, char** argv) {
 		}
 
 		if (ratchet) {
+			//TWO ways to reweight edges:
+
+			//1- reweight X% of edges in each tree to new weighte
 			for (int i = 0; i < number_of_source_trees; ++i) {
 				source_trees_array[i]->reweight_edges_in_source_tree(percentage_of_clades_to_be_reweighted, ratchet_weight);
 				//cout << source_trees_array[i]->str_subtree_weighted() << endl;
 			}
-			//print_weighted_tree(*source_treee_trees_root[0]);
-			//cout <<  "\n\n";
+			
+
+			//2- consider all internal edges in one pool, and reweight X% of them at ones
+			//reweight_a_portion_of_all_edges_at_once(source_trees_array, percentage_of_clades_to_be_reweighted, ratchet_weight);
+
+			//print weighted trees
+			/*
+			for (int i = 0; i < number_of_source_trees; ++i) {
+				cout << source_trees_array[i]->str_subtree_weighted() << endl;
+			}
+			*/
 		}
 
 		int best_score_of_current_hill = INT_MAX;
@@ -321,7 +335,8 @@ int main(int argc, char** argv) {
 			//cout << "best node to  prune: " << best_node_to_prune->str_subtree() << endl;
 			//cout << "best node to regrft: " << best_node_to_regraft->str_subtree() << endl;
 
-			if (current_score < best_score_of_current_hill) {
+			//if weightde phase, then stop after 3 iterations, don't continue intill reaching local optimum
+			if (current_score < best_score_of_current_hill && !(!ratchet && iteration==2)) {
 
 				int which_sibling = 0;
 				Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
@@ -361,9 +376,10 @@ int main(int argc, char** argv) {
 
 				if (!ratchet) { //we are at the end of one ratchet iteration
 					if (best_score_of_current_hill < the_best_rf_distance_seen) { //keep track of best supertree seen so far
+						cout << "##############Whoooooooop!! Better supertree seen####################" << best_score_of_current_hill << endl;
 						cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
 						cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
-						cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
+						cout << best_supertree_of_current_hill << endl;
 						the_best_rf_distance_seen = best_score_of_current_hill;
 						the_best_supertree_seen = best_supertree_of_current_hill;
 					}
@@ -401,6 +417,8 @@ int main(int argc, char** argv) {
 	//cout << "The best tree found:\n" << the_best_supertree_seen << endl;
 
 	cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+	cout << "***  #of_iters: " << number_of_ratchet_iterations << ", percentage: " << percentage_of_clades_to_be_reweighted
+	     << " , new_weight: " << ratchet_weight << "  ***" << endl;
 	cout << "The initial   ST's score was: " << initial_suptrees_rf_score << endl;
 	cout << "The best-found ST's score is: " << the_best_rf_distance_seen << endl;
 	cout << "And it was found after " << number_of_ratchet_iterations << " number of ratchet iterations is: " << endl;
@@ -521,11 +539,12 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 				best_node_to_regraft = best_regraft_place_for_current_v;
 
 				//earlyyyyyyyyyyyyyyyyyy stippppping!
+				/*
 				which_sibling = 0;
 				(*iter)->spr(old_sibling, which_sibling);
 				//cout << "eeeeeeeeeeeeeeeearly stopping!!!\n";
 				return min_RF_dist_seen;
-
+				*/
 			}
 
 			//restore tree to consider next node to be pruned
@@ -1833,3 +1852,33 @@ void find_int_labels_and_frequencies(Node * root, int& current_label, unordered_
 		}
 	}
 }
+
+
+void reweight_a_portion_of_all_edges_at_once(Node* source_trees_array[], int percentage_to_be_reweighted, int new_weight) {
+
+	vector <Node*> all_internal_nodes;
+	for (int i = 0; i < NUMBER_OF_SOURCE_TREES_ZZ; ++i)	{
+		put_internal_nodes_in_vector(*source_trees_array[i], all_internal_nodes);
+	}
+
+	random_shuffle ( all_internal_nodes.begin(), all_internal_nodes.end() );
+	//num of nodes to be re-weighted
+	int num_of_edges_to_be_reweighted = (all_internal_nodes.size() * percentage_to_be_reweighted) / 100;
+
+	for (std::size_t i = 0; i != all_internal_nodes.size(); ++i) {
+		if (i < num_of_edges_to_be_reweighted) {
+			all_internal_nodes[i]->set_edge_weight(new_weight);
+		} else {	//(re)set all other edge weights to default value 1 (in case they have been changed in previous iterations)
+			all_internal_nodes[i]->set_edge_weight(1);
+		}
+	}
+
+}
+
+
+
+
+
+
+
+
