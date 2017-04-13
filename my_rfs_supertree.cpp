@@ -41,6 +41,8 @@
 #include "sparse_counts.h"
 #include "node_glom.h"
 #include <regex>
+#include <random>
+#include <chrono>       // std::chrono::system_clock
 
 
 void split(const string &s, char delim, vector<string> &elems);
@@ -138,8 +140,9 @@ struct grater_second {
 //////////////////////////////////////////////////////////////////////////////////
 int NUM_SPR_NGHBRS = 0;
 
+
 int main(int argc, char** argv) {
-	srand((unsigned)time(NULL));
+	srand(unsigned(time(0)));
 
 	//cout << "Please enter the pre-specified number of 'ratchet' iterations: " << endl;
 	//pre-specified number of iterations if it didn't stop after this number of iterations
@@ -245,8 +248,12 @@ int main(int argc, char** argv) {
 		//I turn set to vector to be able to use "random_shuffle" and "sort" methods
 		vector<pair<string, int> > taxa_frequencies_vector(frequencies.begin(), frequencies.end());
 		sort(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end(), grater_second<string, int>());
+		
 		//if you want to add taxa randomly un-comment next lines
-		//random_shuffle(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end());
+		// obtain a time-based seed:
+		//unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+		//shuffle (taxa_frequencies_vector.begin(), taxa_frequencies_vector.end(), std::default_random_engine(seed));
+
 
 		//for( auto const& i : taxa_frequencies_vector ) {
 		//	cout << i.first << " : " << i.second << endl;
@@ -284,6 +291,23 @@ int main(int argc, char** argv) {
 	//ratchet search loop
 	for (int ratchet_counter = 1; ratchet_counter < number_of_ratchet_iterations + 1; ratchet_counter++) {
 
+
+		//dynamic percentage
+		if (ratchet_counter <= 5 ) {
+			percentage_of_clades_to_be_reweighted = 30;
+		} else if ( 5 < ratchet_counter && ratchet_counter <= 10 ) {
+			percentage_of_clades_to_be_reweighted = 10;
+		} else if ( 10 < ratchet_counter && ratchet_counter <= 15 ) {
+			percentage_of_clades_to_be_reweighted = 80;
+		} else if ( 15 < ratchet_counter && ratchet_counter <= 25 ) {
+			percentage_of_clades_to_be_reweighted = 25;
+		} else if ( 25 < ratchet_counter && ratchet_counter <= 35 ) {
+			percentage_of_clades_to_be_reweighted = 10;
+		} else {	// >35
+			percentage_of_clades_to_be_reweighted = 30;
+		}
+
+
 		bool ratchet;
 		if (number_of_ratchet_iterations == 1) {	//in this case, only perform a regular unweighted hill-climbing search
 			ratchet = false;
@@ -302,7 +326,7 @@ int main(int argc, char** argv) {
 				source_trees_array[i]->reweight_edges_in_source_tree(percentage_of_clades_to_be_reweighted, ratchet_weight);
 				//cout << source_trees_array[i]->str_subtree_weighted() << endl;
 			}
-			
+
 
 			//2- consider all internal edges in one pool, and reweight X% of them at ones
 			//reweight_a_portion_of_all_edges_at_once(source_trees_array, percentage_of_clades_to_be_reweighted, ratchet_weight);
@@ -335,8 +359,8 @@ int main(int argc, char** argv) {
 			//cout << "best node to  prune: " << best_node_to_prune->str_subtree() << endl;
 			//cout << "best node to regrft: " << best_node_to_regraft->str_subtree() << endl;
 
-			//if weightde phase, then stop after 3 iterations, don't continue intill reaching local optimum
-			if (current_score < best_score_of_current_hill && !(!ratchet && iteration==2)) {
+			//if weightde phase, then stop after 3 iterations, i.e. don't continue until reaching local optimum
+			if (current_score < best_score_of_current_hill && !(ratchet && iteration == 4)) {
 
 				int which_sibling = 0;
 				Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
@@ -539,12 +563,12 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 				best_node_to_regraft = best_regraft_place_for_current_v;
 
 				//earlyyyyyyyyyyyyyyyyyy stippppping!
-				/*
+
 				which_sibling = 0;
 				(*iter)->spr(old_sibling, which_sibling);
 				//cout << "eeeeeeeeeeeeeeeearly stopping!!!\n";
 				return min_RF_dist_seen;
-				*/
+
 			}
 
 			//restore tree to consider next node to be pruned
@@ -1861,7 +1885,10 @@ void reweight_a_portion_of_all_edges_at_once(Node* source_trees_array[], int per
 		put_internal_nodes_in_vector(*source_trees_array[i], all_internal_nodes);
 	}
 
-	random_shuffle ( all_internal_nodes.begin(), all_internal_nodes.end() );
+	// obtain a time-based seed:
+	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+	shuffle (all_internal_nodes.begin(), all_internal_nodes.end(), std::default_random_engine(seed));
+
 	//num of nodes to be re-weighted
 	int num_of_edges_to_be_reweighted = (all_internal_nodes.size() * percentage_to_be_reweighted) / 100;
 

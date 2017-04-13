@@ -12,6 +12,7 @@
 #include <map>
 #include <set>
 #include "Forest.h"
+#include <chrono>       // std::chrono::system_clock
 
 using namespace std;
 
@@ -392,7 +393,10 @@ public:
 		vector <int> internal_nodes;
 		find_preordernum_of_internal_nodes(internal_nodes);
 		//shuffle prenums
-		random_shuffle ( internal_nodes.begin(), internal_nodes.end() );
+		// obtain a time-based seed:
+		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+		shuffle (internal_nodes.begin(), internal_nodes.end(), std::default_random_engine(seed));
+
 		//num of nodes to be re-weighted
 		int num_of_edges_to_be_reweighted = (internal_nodes.size() * percentage_to_be_reweighted) / 100;
 		//pick the first "num_of_edges_to_be_reweighted" elements as prenum of nodes to be reweighted
