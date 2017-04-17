@@ -102,7 +102,7 @@ void find_f_u_with_regard_to_R(vector<int>& cluster, vector<int>& source_tree_le
 void find_taxa_frequencies(Node* source_trees_array[], unordered_map<string, int>& taxa_frequencies);
 void reweight_a_portion_of_all_edges_at_once(Node* source_trees_array[], int percentage_to_be_reweighted, int new_weight);
 void perform_a_random_spr(Node& tree);
-int find_a_node_to_prune_and_its_best_regraft_like_simulated_annealing(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted, double& temp, double& cooling_rate);
+void find_a_random_node_to_prune_and_its_best_regraft_for_simulated_annealing(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted, double& temp, double& cooling_rate);
 void count_number_of_nodes_in_tree(Node&, int&);
 void find_all_non_descendant_nodes(Node*, Node*, vector<Node*>&);
 
@@ -210,6 +210,9 @@ int main(int argc, char** argv) {
 	cout << "Please enter desiered cooling rate: " << endl;
 	double cooling_rate = 0.001;
 	cin >>  cooling_rate;
+	cout << "Please enter desiered absolute_temperature (stopping criteria): " << endl;
+	double absolute_temp = 0.001;
+	cin >>  absolute_temp;
 
 
 
@@ -340,6 +343,11 @@ int main(int argc, char** argv) {
 	int the_best_rf_distance_seen = initial_suptrees_rf_score;
 
 
+
+	//just to print best seen score in SA
+	int best_visited_score_in_SA = INT_MAX;
+
+
 	////////////////////////////////////////////////
 	//////////////////////ratchet///////////////////
 	////////////////////////////////////////////////
@@ -366,7 +374,6 @@ int main(int argc, char** argv) {
 				//cout << source_trees_array[i]->str_subtree_weighted() << endl;
 			}
 
-
 			//2- consider all internal edges in one pool, and reweight X% of them at ones
 			//reweight_a_portion_of_all_edges_at_once(source_trees_array, percentage_of_clades_to_be_reweighted, ratchet_weight);
 
@@ -387,7 +394,8 @@ int main(int argc, char** argv) {
 		int nn = 0;	//let nn = #of_nodes (both internal and leaves)
 		count_number_of_nodes_in_tree(*supertree, nn);
 
-		while (temp > 1) {
+
+		while (temp > absolute_temp) {
 
 			NUM_SPR_NGHBRS = 0;
 			clock_t start_time_iter, finish_time_iter;
@@ -395,16 +403,37 @@ int main(int argc, char** argv) {
 
 			iteration ++;
 
-			//Node* best_node_to_prune;
-			//Node* best_node_to_regraft;
+			Node* best_node_to_prune;
+			Node* best_node_to_regraft;
 
 			//int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet);
-			//int current_score = find_a_node_to_prune_and_its_best_regraft_like_simulated_annealing(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet, temp, cooling_rate);
+			
+
 
 
 			////////////////////////////////////////////////////////////////////
-			//////////////**** Perform a random spr move *******////////////////
+			////####  SA: random node & its best regraft place  #######/////////
 			////////////////////////////////////////////////////////////////////
+
+			
+			find_a_random_node_to_prune_and_its_best_regraft_for_simulated_annealing(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet, temp, cooling_rate);
+			
+			//cout << "\n\ntree befor and after spr():\n";	
+			//cout << supertree->str_subtree() << "\n\n";
+
+			Node* undo = best_node_to_prune -> get_sibling();
+			int which_sibling = 0;
+			best_node_to_prune -> spr(best_node_to_regraft, which_sibling);
+			supertree = best_node_to_prune -> find_root();
+
+			//cout << supertree->str_subtree() << "\n\n";
+
+			////////////////////////////////////////////////////////////////////
+			////////////######  SA: random SPR neighbor  #######////////////////
+			////////////////////////////////////////////////////////////////////
+		
+			/*
+
 			int prenum_of_spr_on = 1 + (rand() % (int)(nn - 1));
 			Node* spr_on = supertree -> find_by_prenum(prenum_of_spr_on);
 			if (spr_on -> get_p() == NULL || (spr_on -> get_p())->get_p() == NULL) { //if spr_on is ROOT or CHILD OF ROOT, continue, since it has no sibling
@@ -425,7 +454,6 @@ int main(int argc, char** argv) {
 				break;
 			}
 
-
 			//cout << "___________ " << valid_nodes.size()  << endl;
 			//cout << "spr_on\n" << spr_on->str_subtree() << endl;
 			//cout << "undo: \n" << undo->str_subtree() << endl;
@@ -436,21 +464,20 @@ int main(int argc, char** argv) {
 			//cout << supertree->str_subtree() << "\n\n";
 			int which_sibling = 0;
 			Node* oldsb = spr_on -> spr(new_sibling, which_sibling);
+			supertree = spr_on -> find_root();
 			//cout << supertree->str_subtree() << "\n\n";
-
-
 			//if(undo == NULL) cout << "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!  undo is NULL   !!!!!!!!!\n";
+
+			*/
+
+			////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////
 
 
 			//since "supertree" is modeified, we need to set prenums and clusters
-			supertree = spr_on -> find_root();
 			set_cluster_and_cluster_size(supertree);
 			adjustTree(supertree);
-
 			int neighbor_RF_score = calculate_rf_score(*supertree, source_trees_array, non_shared_taxa_arr, ratchet);
-
-			////////////////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////////////////
 
 
 			//Decide if we should accept the neighbor
@@ -470,7 +497,8 @@ int main(int argc, char** argv) {
 				current_RF_score = neighbor_RF_score;
 			} else {
 				//cout << "--------------------------------------------------------------------------------------------worse neighbor was NOT taken" << endl;
-				spr_on -> spr(undo, which_sibling);
+				//spr_on -> spr(undo, which_sibling);
+				best_node_to_prune -> spr(undo, which_sibling);
 				adjustTree(supertree);
 				//cout << "++++\n" << supertree->str_subtree() << "\n\n";
 			}
@@ -482,10 +510,15 @@ int main(int argc, char** argv) {
 			}
 
 
+			if (current_RF_score < best_visited_score_in_SA) {
+				best_visited_score_in_SA = current_RF_score;
+			}
+
+
 			// Cool system
 			temp *= 1 - cooling_rate;
 
-			cout << "Iter: " << iteration <<  ", current temperature: " << temp << ", current_RF_dist: " << current_RF_score <<  "\n\n";
+			cout << "Iter: " << iteration <<  ", current temperature: " << temp << ", current_RF_dist: " << current_RF_score << ", neighbor_RF_score: " << neighbor_RF_score <<  "\n";
 			//cout << "__________________________________________________________________________________________________________________\n\n";
 
 
@@ -577,6 +610,8 @@ int main(int argc, char** argv) {
 	cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 	cout << "***  #of_iters: " << number_of_ratchet_iterations << ", percentage: " << percentage_of_clades_to_be_reweighted
 	     << " , new_weight: " << ratchet_weight << "  ***" << endl;
+	cout << "SIMULATED ANNEALING CONFIG: init_temp: " << temp_for_print << ", cooling_rate: " << cooling_rate << ", absolute_temp: " << absolute_temp << endl;
+	cout << "best_visited_score_in_SA : " << best_visited_score_in_SA << "\n\n";
 	cout << "The initial   ST's score was: " << initial_suptrees_rf_score << endl;
 	cout << "The best-found ST's score is: " << the_best_rf_distance_seen << endl;
 	cout << "And it was found after " << number_of_ratchet_iterations << " number of ratchet iterations is: " << endl;
@@ -2063,9 +2098,8 @@ void perform_a_random_spr(Node& tree) {
 
 
 
-int find_a_node_to_prune_and_its_best_regraft_like_simulated_annealing(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted, double& temp, double& cooling_rate) {
+void find_a_random_node_to_prune_and_its_best_regraft_for_simulated_annealing(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted, double& temp, double& cooling_rate) {
 
-	int current_RF_score = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted); //for early stopping
 	best_node_to_prune = &T;	// I added this line because of above line: Note if we are at local iptimum, then "best_node_to_prune" will be null
 
 	//cout << "T: " << T.str_subtree() << endl;
@@ -2076,7 +2110,7 @@ int find_a_node_to_prune_and_its_best_regraft_like_simulated_annealing(Node & T,
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	shuffle (nodes.begin(), nodes.end(), std::default_random_engine(seed));
 
-
+	bool candidate_found = false;
 	vector<Node*>::iterator iter, end;
 	//any internal node except root may be pruned, iter plays the role of "v" in the algorithm
 	for (iter = nodes.begin(), end = nodes.end(); iter != end;  iter++) { //for each internal node v in T to be pruned:
@@ -2085,69 +2119,25 @@ int find_a_node_to_prune_and_its_best_regraft_like_simulated_annealing(Node & T,
 			continue;
 		}
 
-		//cout << "-------------------------------------------------------------------\n";
-		Node* best_regraft_place_for_current_v = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, source_trees_array, non_shared_taxon_arr, weighted);
-		//cout << "---------spr_on(v): " << (*iter)->get_preorder_number() << endl;
-		//cout << "------best regraft: " << best_regraft_place_for_current_v->get_preorder_number() << endl;
 		Node* old_sibling = (*iter)->get_sibling();
-		//cout << "old_sibling prenum: " << old_sibling->get_preorder_number() << endl;
-
-
+		Node* best_regraft_place_for_current_v = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, source_trees_array, non_shared_taxon_arr, weighted);
 
 		//if "old_sibling==best_regraft_place_for_current_v" then no need to calculate anything for this v
 		if (old_sibling == best_regraft_place_for_current_v) {
-			//cout << "_________old_sibling == best_regraft______so no spr move_____\n";
-		} else {
-
-
-			old_sibling = (*iter)->spr(best_regraft_place_for_current_v);
-			//adjustTree(&T); NO NO NO! cuz you will do another spr to retrieve the orig tree
-
-			//cout << "-------------------------------------------------------------------\n";
-			//cout << "------T after : \n" << T.str_subtree() << endl;
-
-
-			//Now that we know for "v" to be pruned, what's the best regraft place,
-			//we have a best SPR neighbour, T'. We need to know how good is this neighbour,
-			//to ompare it to other best neighbours for different v's. Note, T is now T' (after spr move)
-			//Thus, we have to restrict it again inside calculate_rf_score() method.
-
-
-			int neighbor_RF_score = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted);
-
-			//Decide if we should accept the neighbor
-			double r = ((double) rand() / (RAND_MAX));  //randome number between 0 and 1
-			double probability = acceptanceProbability(current_RF_score, neighbor_RF_score, temp);
-			//cout << "randome#: " << r << endl;
-			//cout << "acceptance prob#: " << probability << endl;
-
-			if (probability > r) {
-
-				current_RF_score = neighbor_RF_score;
-				best_node_to_prune = *iter;
-				best_node_to_regraft = best_regraft_place_for_current_v;
-				//since modified T is going to be returned, we need to set prenums and clusters
-				adjustTree(&T);
-				set_cluster_and_cluster_size(&T);
-
-				break;
-
-			} else {
-				//restore tree to consider next node to be pruned
-				(*iter)->spr(old_sibling);
-
-				// Cool system
-				temp *= 1 - cooling_rate;
-
-				if ( temp <= 1) {
-					break;
-				}
-			}
-
+			//cout << "_________old_sibling == best_regraft______so no spr move___BUT COOL DOWN THE SYSTEM__\n";
+			temp *= 1 - cooling_rate;
+			continue;
+		} else { 	//we have found a node to prune and its best regraft, return
+			best_node_to_prune = *iter;
+			best_node_to_regraft = best_regraft_place_for_current_v;
+			candidate_found = true;
+			break;
 		}
 	}
 
-	return current_RF_score;
+	if( !candidate_found ) {
+		cout << "------->>>>>>LOCAL OPT, no candidate found for SA\n";
+	}
 
 }
 
