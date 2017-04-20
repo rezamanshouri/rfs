@@ -407,18 +407,18 @@ int main(int argc, char** argv) {
 			Node* best_node_to_regraft;
 
 			//int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet);
-			
+
 
 
 
 			////////////////////////////////////////////////////////////////////
 			////####  SA: random node & its best regraft place  #######/////////
 			////////////////////////////////////////////////////////////////////
+			/*
 
-			
 			find_a_random_node_to_prune_and_its_best_regraft_for_simulated_annealing(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet, temp, cooling_rate);
-			
-			//cout << "\n\ntree befor and after spr():\n";	
+
+			//cout << "\n\ntree befor and after spr():\n";
 			//cout << supertree->str_subtree() << "\n\n";
 
 			Node* undo = best_node_to_prune -> get_sibling();
@@ -428,30 +428,35 @@ int main(int argc, char** argv) {
 
 			//cout << supertree->str_subtree() << "\n\n";
 
+			*/
 			////////////////////////////////////////////////////////////////////
 			////////////######  SA: random SPR neighbor  #######////////////////
 			////////////////////////////////////////////////////////////////////
-		
-			/*
+
+
 
 			int prenum_of_spr_on = 1 + (rand() % (int)(nn - 1));
 			Node* spr_on = supertree -> find_by_prenum(prenum_of_spr_on);
-			if (spr_on -> get_p() == NULL || (spr_on -> get_p())->get_p() == NULL) { //if spr_on is ROOT or CHILD OF ROOT, continue, since it has no sibling
+			if (spr_on -> get_p() == NULL ) { //if spr_on is ROOT or CHILD OF ROOT, continue, since it has no sibling
 				continue;
 			}
 			Node* undo = spr_on -> get_sibling();	//to recover the tree in case new neighbor is not accepted
 
 			std::vector<Node*> valid_nodes;
 			find_all_non_descendant_nodes(supertree, spr_on, valid_nodes);
+			//shuffle the vector
+			unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+			shuffle (valid_nodes.begin(), valid_nodes.end(), std::default_random_engine(seed));
+
 			Node * new_sibling;
-			while (true) {	//try until finding a valid new_sibling
-				new_sibling =  *select_randomly(valid_nodes.begin(), valid_nodes.end());
-
-				if (new_sibling -> get_p() == NULL || new_sibling == undo) { //if new_sibling is ROOT, ignore
+			for (std::size_t i = 0; i != valid_nodes.size(); ++i) {
+				
+				new_sibling = valid_nodes[i];
+				if (new_sibling == undo) { //if new_sibling is ROOT, ignore
 					continue;
+				} else {
+					break;
 				}
-
-				break;
 			}
 
 			//cout << "___________ " << valid_nodes.size()  << endl;
@@ -463,12 +468,12 @@ int main(int argc, char** argv) {
 			//cout << "\n\ntree befor and after spr():\n";
 			//cout << supertree->str_subtree() << "\n\n";
 			int which_sibling = 0;
-			Node* oldsb = spr_on -> spr(new_sibling, which_sibling);
+			undo = spr_on -> spr(new_sibling, which_sibling);
 			supertree = spr_on -> find_root();
 			//cout << supertree->str_subtree() << "\n\n";
 			//if(undo == NULL) cout << "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!  undo is NULL   !!!!!!!!!\n";
 
-			*/
+
 
 			////////////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////////////
@@ -497,8 +502,8 @@ int main(int argc, char** argv) {
 				current_RF_score = neighbor_RF_score;
 			} else {
 				//cout << "--------------------------------------------------------------------------------------------worse neighbor was NOT taken" << endl;
-				//spr_on -> spr(undo, which_sibling);
-				best_node_to_prune -> spr(undo, which_sibling);
+				spr_on -> spr(undo, which_sibling);
+				//best_node_to_prune -> spr(undo, which_sibling);
 				adjustTree(supertree);
 				//cout << "++++\n" << supertree->str_subtree() << "\n\n";
 			}
@@ -2135,7 +2140,7 @@ void find_a_random_node_to_prune_and_its_best_regraft_for_simulated_annealing(No
 		}
 	}
 
-	if( !candidate_found ) {
+	if ( !candidate_found ) {
 		cout << "------->>>>>>LOCAL OPT, no candidate found for SA\n";
 	}
 
