@@ -101,6 +101,12 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void find_f_u_with_regard_to_R(vector<int>& cluster, vector<int>& source_tree_leaf_set, Node * R, Node*& lca, bool & found, int& f_u);
 void find_taxa_frequencies(Node* source_trees_array[], unordered_map<string, int>& taxa_frequencies);
 void reweight_a_portion_of_all_edges_at_once(Node* source_trees_array[], int percentage_to_be_reweighted, int new_weight);
+void find_all_non_descendant_nodes(Node*, Node*, vector<Node*>&);
+void find_all_spr_neghbors_rf_score_frequencies(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted, map<int, int>& score_frequencies);
+
+
+
+
 
 void print_weighted_tree(Node& n);
 
@@ -146,7 +152,7 @@ int main(int argc, char** argv) {
 
 	//cout << "Please enter the pre-specified number of 'ratchet' iterations: " << endl;
 	//pre-specified number of iterations if it didn't stop after this number of iterations
-	int number_of_ratchet_iterations = 50;
+	int number_of_ratchet_iterations = 1;
 	//cin >> number_of_ratchet_iterations;
 
 	//cout << "Please enter the percentage of clades to be re-weighted in Ratchet search (between 0 and 100): " << endl;
@@ -248,7 +254,7 @@ int main(int argc, char** argv) {
 		//I turn set to vector to be able to use "random_shuffle" and "sort" methods
 		vector<pair<string, int> > taxa_frequencies_vector(frequencies.begin(), frequencies.end());
 		sort(taxa_frequencies_vector.begin(), taxa_frequencies_vector.end(), grater_second<string, int>());
-		
+
 		//if you want to add taxa randomly un-comment next lines
 		// obtain a time-based seed:
 		//unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -290,23 +296,6 @@ int main(int argc, char** argv) {
 
 	//ratchet search loop
 	for (int ratchet_counter = 1; ratchet_counter < number_of_ratchet_iterations + 1; ratchet_counter++) {
-
-
-		//dynamic percentage
-		if (ratchet_counter <= 5 ) {
-			percentage_of_clades_to_be_reweighted = 30;
-		} else if ( 5 < ratchet_counter && ratchet_counter <= 10 ) {
-			percentage_of_clades_to_be_reweighted = 10;
-		} else if ( 10 < ratchet_counter && ratchet_counter <= 15 ) {
-			percentage_of_clades_to_be_reweighted = 80;
-		} else if ( 15 < ratchet_counter && ratchet_counter <= 25 ) {
-			percentage_of_clades_to_be_reweighted = 25;
-		} else if ( 25 < ratchet_counter && ratchet_counter <= 35 ) {
-			percentage_of_clades_to_be_reweighted = 10;
-		} else {	// >35
-			percentage_of_clades_to_be_reweighted = 30;
-		}
-
 
 		bool ratchet;
 		if (number_of_ratchet_iterations == 1) {	//in this case, only perform a regular unweighted hill-climbing search
@@ -358,6 +347,28 @@ int main(int argc, char** argv) {
 			//cout << "T: " << supertree->str_subtree() << endl;
 			//cout << "best node to  prune: " << best_node_to_prune->str_subtree() << endl;
 			//cout << "best node to regrft: " << best_node_to_regraft->str_subtree() << endl;
+
+
+
+			///////////////////////////////////////////////////////////////////
+			////////////////////  Findin RF Score Frequencies  ////////////////
+			///////////////////////////////////////////////////////////////////
+
+			/*
+			//find RF-score frequencies
+			map<int, int> score_frequencies;
+			find_all_spr_neghbors_rf_score_frequencies(*supertree, source_trees_array, non_shared_taxa_arr, ratchet, score_frequencies);
+			cout << "\nScore : frequency\n" ;
+			for(auto i : score_frequencies) {
+				cout << i.first << "  : " << i.second << endl;
+			}
+			cout << "----------------------\n";
+			*/
+
+			///////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////
+
+
 
 			//if weightde phase, then stop after 3 iterations, i.e. don't continue until reaching local optimum
 			if (current_score < best_score_of_current_hill && !(ratchet && iteration == 4)) {
@@ -547,28 +558,30 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 
 			int current_RF_dist = 0 ; //which (for unweighted case) is "num_clusters_not_in_T_prime", i.e. RF distance
 			current_RF_dist = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted);
-
+			//cout << "score: " << current_RF_dist << endl;
 
 			//cout << "best_seen_RF_dist: " << min_RF_dist_seen << ", and curent_RF_dist: " << current_RF_dist << endl;
 			int previous_min_score = min_RF_dist_seen;
-			if (current_RF_dist < min_RF_dist_seen) {
+			if (current_RF_dist <= min_RF_dist_seen) {
 				//cout << "\n\nbest F was : " << min_RF_dist_seen << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_RF_dist << endl;
 				//cout << "------T after : \n" << T.str_subtree() << endl;
 				//cout << "\n" << T.str_subtree() << "\n\n";
 				//cout << "-----best node to prun: " << (*iter)->str_subtree() <<  endl;
 				//cout << "--best node to regraft: " << best_regraft_place_for_current_v->str_subtree() <<  endl;
+				//cout << "_____a better score is found: " << current_RF_dist << "\n\n";
 
 				min_RF_dist_seen = current_RF_dist;
 				best_node_to_prune = *iter;
 				best_node_to_regraft = best_regraft_place_for_current_v;
 
-				//earlyyyyyyyyyyyyyyyyyy stippppping!
 
+				/*
+				//earlyyyyyyyyyyyyyyyyyy stippppping!
 				which_sibling = 0;
 				(*iter)->spr(old_sibling, which_sibling);
 				//cout << "eeeeeeeeeeeeeeeearly stopping!!!\n";
 				return min_RF_dist_seen;
-
+				*/
 			}
 
 			//restore tree to consider next node to be pruned
@@ -1902,6 +1915,73 @@ void reweight_a_portion_of_all_edges_at_once(Node* source_trees_array[], int per
 
 }
 
+
+
+
+
+//puts a pointer to all nodes in "T" which are not a DESCENDANT or PARENT of "target" node
+void find_all_non_descendant_nodes(Node* T, Node* target, vector<Node*>& nodes) {
+
+	if (T == target) {
+		return;
+	}
+	if (target->get_p() != T) {
+		nodes.push_back(T);
+	}
+
+	list<Node *>::iterator c;
+	list<Node *> children = T->get_children();
+	for (c = children.begin(); c != children.end(); c++) {
+		find_all_non_descendant_nodes(*c, target, nodes);
+	}
+
+}
+
+
+
+void find_all_spr_neghbors_rf_score_frequencies(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted, map<int, int>& score_frequencies) {
+
+	vector<Node*> internal_nodes;
+	put_all_nodes_in_vector(T, internal_nodes);
+	vector<Node*>::iterator iter, end;
+	//iterate over all nodes as the node to be pruned, then apply all its possible spr neighbors, and print the scores
+	//"iter" is actually "spr_on" node
+	for (iter = internal_nodes.begin(), end = internal_nodes.end(); iter != end;  iter++) {
+		if (!(*iter)->get_p()) { //if root, ignore
+			continue;
+		}
+
+		Node* undo = (*iter) -> get_sibling();	//to recover the tree after spr move
+		//cout << "spr_on prenum: " << (*iter) -> get_preorder_number() << endl;
+		//cout << "spr_on: \n";
+		//cout << (*iter) -> str_subtree() << endl;
+		//cout << "--------------\n";
+		//cout << "undo prenum: " << undo -> get_preorder_number() << endl;
+
+		//find all possible regraft places
+		std::vector<Node*> valid_regraft_nodes;
+		find_all_non_descendant_nodes(&T, *iter, valid_regraft_nodes);
+
+		for (auto new_sibling : valid_regraft_nodes) {
+			if(undo == new_sibling) {	//ignore if new_sibling is old_sibling
+				continue;
+			}
+
+			//cout << "new_sibl prenum: " << new_sibling -> get_preorder_number() << endl;
+
+			int which_sibling = 0;
+			undo = (*iter) -> spr( new_sibling , which_sibling);
+			int nghbr_score = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted);
+			//cout << nghbr_score << "\n";
+
+			++score_frequencies[nghbr_score];
+
+			(*iter) -> spr(undo, which_sibling);
+			//cout << "supertree after 2 apr()'s: \n";
+			//cout << T.str_subtree() << endl;
+		}
+	}
+}
 
 
 
