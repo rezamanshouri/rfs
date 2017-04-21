@@ -354,7 +354,7 @@ int main(int argc, char** argv) {
 			////////////////////  Findin RF Score Frequencies  ////////////////
 			///////////////////////////////////////////////////////////////////
 
-			/*
+			
 			//find RF-score frequencies
 			map<int, int> score_frequencies;
 			find_all_spr_neghbors_rf_score_frequencies(*supertree, source_trees_array, non_shared_taxa_arr, ratchet, score_frequencies);
@@ -363,7 +363,7 @@ int main(int argc, char** argv) {
 				cout << i.first << "  : " << i.second << endl;
 			}
 			cout << "----------------------\n";
-			*/
+			
 
 			///////////////////////////////////////////////////////////////////
 			///////////////////////////////////////////////////////////////////
