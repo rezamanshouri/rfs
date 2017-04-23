@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-O2 -g -std=c++11
+CFLAGS=-O2 -pg -Os -std=c++11
 OMPFLAGS=-fopenmp
 C64FLAGS=$(CFLAGS)
 LFLAGS=

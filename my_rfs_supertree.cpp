@@ -118,8 +118,8 @@ bool IsSubset(std::vector<T> A, std::vector<T> B)
 	return std::includes(A.begin(), A.end(), B.begin(), B.end());
 }
 
-
-//////////////////////from ratchet:
+/////////////////////////////////////////////////////////////////////
+//////////////////////   from ratchet:   ////////////////////////////
 vector<string> split(const string &s, char delim);
 void split(const string &s, char delim, vector<string> &elems);
 set<string> find_non_common_taxa_set(const string &supertree, const string &source_tree);
@@ -139,6 +139,19 @@ struct grater_second {
 		return a.second > b.second;
 	}
 };
+
+
+
+///////////////////////////////////////////////////////////////////////
+////////////////////   optimization  //////////////////////////////////
+int find_rf_dist_between_two_heterogenous_trees_2(Node & t1, Node & t2, bool weighted);
+int calculate_rf_score_2(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted);
+
+
+
+
+
+
 
 
 
@@ -236,7 +249,7 @@ int main(int argc, char** argv) {
 	set_int_labels_for_leaves_in_source_tree(supertree, int_label_map);  //finding int labels for all taxa in supertree
 
 	bool wghtd = false;
-	int initial_suptrees_rf_score = calculate_rf_score(*supertree, source_trees_array, non_shared_taxa_arr, wghtd);
+	int initial_suptrees_rf_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxa_arr, wghtd);
 	cout << "initial_suptrees_rf_score: " << initial_suptrees_rf_score << endl;
 
 	cout << "\nsource trees and supertree has been read, let's start running edge-ratchet algorithm using RFS" << endl;
@@ -273,7 +286,7 @@ int main(int argc, char** argv) {
 		rat->preorder_number();
 		set_cluster_and_cluster_size(rat);
 		set_int_labels_for_leaves_in_source_tree(rat, int_label_map);
-		int score = calculate_rf_score(*rat, source_trees_array, non_shared_taxa_arr, wghtd);
+		int score = calculate_rf_score_2(*rat, source_trees_array, non_shared_taxa_arr, wghtd);
 		cout << "\n----------------\nrandom addition init st score is: " << score << endl;
 
 		return 0;
@@ -353,7 +366,7 @@ int main(int argc, char** argv) {
 			///////////////////////////////////////////////////////////////////
 			////////////////////  Findin RF Score Frequencies  ////////////////
 			///////////////////////////////////////////////////////////////////
-
+			/*
 			
 			//find RF-score frequencies
 			map<int, int> score_frequencies;
@@ -364,7 +377,7 @@ int main(int argc, char** argv) {
 			}
 			cout << "----------------------\n";
 			
-
+			*/
 			///////////////////////////////////////////////////////////////////
 			///////////////////////////////////////////////////////////////////
 
@@ -515,7 +528,7 @@ void print_weighted_tree(Node & n) {
 //returns min_RF_dist_seen found
 int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
 
-	int min_RF_dist_seen = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted); //for early stopping
+	int min_RF_dist_seen = calculate_rf_score_2(T, source_trees_array, non_shared_taxon_arr, weighted); //for early stopping
 	best_node_to_prune = &T;	// I added this line because of above line: Note if we are at local iptimum, then "best_node_to_prune" will be null
 
 	//cout << "T: " << T.str_subtree() << endl;
@@ -557,7 +570,7 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 			//Thus, we have to restrict it again inside calculate_rf_score() method.
 
 			int current_RF_dist = 0 ; //which (for unweighted case) is "num_clusters_not_in_T_prime", i.e. RF distance
-			current_RF_dist = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted);
+			current_RF_dist = calculate_rf_score_2(T, source_trees_array, non_shared_taxon_arr, weighted);
 			//cout << "score: " << current_RF_dist << endl;
 
 			//cout << "best_seen_RF_dist: " << min_RF_dist_seen << ", and curent_RF_dist: " << current_RF_dist << endl;
@@ -1971,7 +1984,7 @@ void find_all_spr_neghbors_rf_score_frequencies(Node& T, Node* source_trees_arra
 
 			int which_sibling = 0;
 			undo = (*iter) -> spr( new_sibling , which_sibling);
-			int nghbr_score = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted);
+			int nghbr_score = calculate_rf_score_2(T, source_trees_array, non_shared_taxon_arr, weighted);
 			//cout << nghbr_score << "\n";
 
 			++score_frequencies[nghbr_score];
@@ -1982,6 +1995,103 @@ void find_all_spr_neghbors_rf_score_frequencies(Node& T, Node* source_trees_arra
 		}
 	}
 }
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////           optimiization             /////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+int calculate_rf_score_2(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
+	int rf_score = 0 ;
+
+	int score = 0;
+	for (int i = 0; i < NUMBER_OF_SOURCE_TREES_ZZ; ++i) {
+		rf_score += find_rf_dist_between_two_heterogenous_trees_2(T, *source_trees_array[i], weighted);
+	}
+
+	return rf_score;
+}
+
+//this is for special case where one of them, t1, is supertree
+//The actual reason to intorduce this method: in when calculating weghted rf dist, if you make a copy of the source tree with build_tree(), then weights are not copied!
+int find_rf_dist_between_two_heterogenous_trees_2(Node & t1, Node & t2, bool weighted) {
+	int dist = 0;
+
+	string t1_newick = t1.str_subtree();
+	//string t2_newick = t2.str_subtree();
+	//set<string> non_common_t1_and_t2 = find_non_common_taxa_set(t1_newick, t2_newick);	//assumes t1 is supertree
+	//set<string> non_common_t2_and_t1 = find_non_common_taxa_set(t2_newick, t1_newick);	//assumes t2 is supertree
+
+	vector<int> t1_cluster = t1.find_cluster_int_labels();
+	vector<int> t2_cluster = t2.find_cluster_int_labels();
+	vector<int> t1_but_not_t2;
+	set_difference (t1_cluster.begin(), t1_cluster.end(), t2_cluster.begin(), t2_cluster.end(), back_inserter(t1_but_not_t2));
+	vector<int> t2_but_not_t1;
+	set_difference (t2_cluster.begin(), t2_cluster.end(), t1_cluster.begin(), t1_cluster.end(), back_inserter(t2_but_not_t1));
+
+	Node* t1_copy = build_tree(t1_newick);
+	//Node* t2_copy = build_tree(t2_newick);
+	t1_copy->copy_fields_for_source_tree(t1);
+	//t2_copy->copy_fields_for_source_tree(t2);
+
+	//restrict t1 to t2 if needed
+	//if ( non_common_t1_and_t2.size() > 0 ) {
+	if ( t1_but_not_t2.size() > 0 ) {
+		//restrict_supertree(*t1_copy, non_common_t1_and_t2);
+		restrict_supertree_2(*t1_copy, t1_but_not_t2);
+		t1_copy->preorder_number();
+	}
+
+	//restrict t2 to t1 if needed
+	//if ( non_common_t2_and_t1.size() > 0 ) {
+	/*
+	if ( t2_but_not_t1.size() > 0 ) {
+		//restrict_supertree(*t2_copy, non_common_t2_and_t1);
+		restrict_supertree_2(*t2_copy, t2_but_not_t1);
+		t2_copy->preorder_number();
+	}
+	*/
+
+	//cout << t1.str_subtree() << endl;
+	//cout << t2.str_subtree() << "\n\n";
+
+	//cout << t1_copy->str_subtree() << endl;
+	//cout << t2_copy->str_subtree() << endl;
+
+	set_cluster_and_cluster_size(t1_copy);
+	//set_cluster_and_cluster_size(t2_copy);
+
+
+	if(weighted) {
+		dist = calculate_weighted_RF_distance(t2, *t1_copy);
+	} else {
+		dist = calculate_RF_distance(t2, *t1_copy);
+	}
+
+	
+
+	//cout << dist << endl;
+
+	t1_copy->delete_tree();
+	//t2_copy->delete_tree();
+
+	return dist;
+}
+
+
+
+
+
+
+
+
 
 
 
