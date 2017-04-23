@@ -53,6 +53,7 @@ void write_line_to_File(string s, const char* file_name);
 int calculate_RF_distance(Node& S, Node& T);
 int calculate_weighted_RF_distance(Node& S, Node& T);
 int calculate_rf_score(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted);
+int calculate_rf_score_2(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted);
 
 
 
@@ -127,7 +128,8 @@ set<string> find_non_common_taxa_set(const string &supertree, const string &sour
 //////////random addition of taxa
 void find_node_to_be_removed_2(Node & root, int int_label, Node* & taxan_to_be_removed);
 void restrict_supertree_2(Node & supertree, vector<int>& non_shared_taxon_set);
-int find_rf_dist_between_two_heterogenous_trees(Node& t1, Node& t2);
+int find_rf_dist_between_two_heterogenous_trees(Node& t1, Node& t2, bool weighted);
+int find_rf_dist_between_two_heterogenous_trees_2(Node& t1, Node& t2, bool weighted);
 void add_taxon_to_the_tree(Node& root, string taxon, int int_label, Node* source_trees_array[]);
 string build_init_st_with_taxon_addition(Node* source_trees_array[], unordered_map<string, int>& map, vector<pair<string, int> > taxa_freq);
 void find_int_labels_and_frequencies(Node * root, int& current_label, unordered_map<string, int>& map, unordered_map<string, int>& frequencies);
@@ -203,22 +205,30 @@ int main(int argc, char** argv) {
 	//cin >> ratchet_weight;
 
 
-	cout << "Please enter initial temperture: " << endl;
-	double temp = 30.0;
-	cin >>  temp;
+	//cout << "Please enter initial temperture: " << endl;
+	double temp = 1;
+	//cin >>  temp;
 	double temp_for_print = temp;
-	cout << "Please enter desiered cooling rate: " << endl;
+	//cout << "Please enter desiered cooling rate: " << endl;
 	double cooling_rate = 0.001;
-	cin >>  cooling_rate;
-	cout << "Please enter desiered absolute_temperature (stopping criteria): " << endl;
+	//cin >>  cooling_rate;
+	//cout << "Please enter desiered absolute_temperature (stopping criteria): " << endl;
 	double absolute_temp = 0.001;
-	cin >>  absolute_temp;
+	//cin >>  absolute_temp;
 
 
 
 	cout << "********************************************************************" << endl;
-	cout << "***Configuration: " << number_of_ratchet_iterations << "_" << percentage_of_clades_to_be_reweighted
+
+	cout << "***ER Configuration: " << number_of_ratchet_iterations << "_" << percentage_of_clades_to_be_reweighted
 	     << "_" << ratchet_weight << "  ***" << endl;
+
+	cout << "***SA Configuration: " << temp << "_" << cooling_rate
+	     << "_" << absolute_temp << "  ***" << endl;
+
+	cout << "********************************************************************" << endl;
+
+
 
 	string init_supertree;
 	ifstream init_sup("initial_supertree");
@@ -289,7 +299,7 @@ int main(int argc, char** argv) {
 	set_int_labels_for_leaves_in_source_tree(supertree, int_label_map);  //finding int labels for all taxa in supertree
 
 	bool wghtd = false;
-	int initial_suptrees_rf_score = calculate_rf_score(*supertree, source_trees_array, non_shared_taxa_arr, wghtd);
+	int initial_suptrees_rf_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxa_arr, wghtd);
 	cout << "initial_suptrees_rf_score: " << initial_suptrees_rf_score << endl;
 
 	cout << "\nsource trees and supertree has been read, let's start running edge-ratchet algorithm using RFS" << endl;
@@ -326,7 +336,7 @@ int main(int argc, char** argv) {
 		rat->preorder_number();
 		set_cluster_and_cluster_size(rat);
 		set_int_labels_for_leaves_in_source_tree(rat, int_label_map);
-		int score = calculate_rf_score(*rat, source_trees_array, non_shared_taxa_arr, wghtd);
+		int score = calculate_rf_score_2(*rat, source_trees_array, non_shared_taxa_arr, wghtd);
 		cout << "\n----------------\nrandom addition init st score is: " << score << endl;
 
 		return 0;
@@ -346,6 +356,7 @@ int main(int argc, char** argv) {
 
 	//just to print best seen score in SA
 	int best_visited_score_in_SA = INT_MAX;
+	string best_visited_supertree_in_SA;
 
 
 	////////////////////////////////////////////////
@@ -385,248 +396,213 @@ int main(int argc, char** argv) {
 			*/
 		}
 
-		int best_score_of_current_hill = INT_MAX;
-		string best_supertree_of_current_hill;
 
-		//search until reaching a local optimum
-		int iteration = 0;
-		int current_RF_score = initial_suptrees_rf_score;
-		int nn = 0;	//let nn = #of_nodes (both internal and leaves)
-		count_number_of_nodes_in_tree(*supertree, nn);
+		//each ratchet iteration ahs 2 SA searches: one with re-weighted edge weights, and one with no weighting
+		for (int i = 0; i < 2; ++i)  {
 
-
-		while (temp > absolute_temp) {
-
-			NUM_SPR_NGHBRS = 0;
 			clock_t start_time_iter, finish_time_iter;
 			start_time_iter = clock();
 
-			iteration ++;
-
-			Node* best_node_to_prune;
-			Node* best_node_to_regraft;
-
-			//int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet);
+			int iteration = 0;
+			int current_RF_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxa_arr, ratchet);;
+			int nn = 0;	//let nn = #of_nodes (both internal and leaves)
+			count_number_of_nodes_in_tree(*supertree, nn);
 
 
+			while (temp > absolute_temp) {
+
+				NUM_SPR_NGHBRS = 0;
+				iteration ++;
+
+				////////////////////////////////////////////////////////////////////
+				////####  SA: random node & its best regraft place  #######/////////
+				////////////////////////////////////////////////////////////////////
+
+				/*
+
+				Node* best_node_to_prune;
+				Node* best_node_to_regraft;
+				find_a_random_node_to_prune_and_its_best_regraft_for_simulated_annealing(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet, temp, cooling_rate);
+
+				//cout << "\n\ntree befor and after spr():\n";
+				//cout << supertree->str_subtree() << "\n\n";
+
+				Node* undo = best_node_to_prune -> get_sibling();
+				int which_sibling = 0;
+				best_node_to_prune -> spr(best_node_to_regraft, which_sibling);
+				supertree = best_node_to_prune -> find_root();
+
+				//cout << supertree->str_subtree() << "\n\n";
+
+				*/
+
+				////////////////////////////////////////////////////////////////////
+				////////////######  SA: random SPR neighbor  #######////////////////
+				////////////////////////////////////////////////////////////////////
 
 
-			////////////////////////////////////////////////////////////////////
-			////####  SA: random node & its best regraft place  #######/////////
-			////////////////////////////////////////////////////////////////////
-			/*
 
-			find_a_random_node_to_prune_and_its_best_regraft_for_simulated_annealing(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet, temp, cooling_rate);
-
-			//cout << "\n\ntree befor and after spr():\n";
-			//cout << supertree->str_subtree() << "\n\n";
-
-			Node* undo = best_node_to_prune -> get_sibling();
-			int which_sibling = 0;
-			best_node_to_prune -> spr(best_node_to_regraft, which_sibling);
-			supertree = best_node_to_prune -> find_root();
-
-			//cout << supertree->str_subtree() << "\n\n";
-
-			*/
-			////////////////////////////////////////////////////////////////////
-			////////////######  SA: random SPR neighbor  #######////////////////
-			////////////////////////////////////////////////////////////////////
-
-
-
-			int prenum_of_spr_on = 1 + (rand() % (int)(nn - 1));
-			Node* spr_on = supertree -> find_by_prenum(prenum_of_spr_on);
-			if (spr_on -> get_p() == NULL ) { //if spr_on is ROOT or CHILD OF ROOT, continue, since it has no sibling
-				continue;
-			}
-			Node* undo = spr_on -> get_sibling();	//to recover the tree in case new neighbor is not accepted
-
-			std::vector<Node*> valid_nodes;
-			find_all_non_descendant_nodes(supertree, spr_on, valid_nodes);
-			//shuffle the vector
-			unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-			shuffle (valid_nodes.begin(), valid_nodes.end(), std::default_random_engine(seed));
-
-			Node * new_sibling;
-			for (std::size_t i = 0; i != valid_nodes.size(); ++i) {
-				
-				new_sibling = valid_nodes[i];
-				if (new_sibling == undo) { //if new_sibling is ROOT, ignore
+				int prenum_of_spr_on = 1 + (rand() % (int)(nn - 1));
+				Node* spr_on = supertree -> find_by_prenum(prenum_of_spr_on);
+				if (spr_on -> get_p() == NULL ) { //if spr_on is ROOT or CHILD OF ROOT, continue, since it has no sibling
 					continue;
-				} else {
-					break;
 				}
-			}
+				Node* undo = spr_on -> get_sibling();	//to recover the tree in case new neighbor is not accepted
 
-			//cout << "___________ " << valid_nodes.size()  << endl;
-			//cout << "spr_on\n" << spr_on->str_subtree() << endl;
-			//cout << "undo: \n" << undo->str_subtree() << endl;
-			//cout << "new_sibling\n"  << new_sibling ->str_subtree() << endl;
+				std::vector<Node*> valid_nodes;
+				find_all_non_descendant_nodes(supertree, spr_on, valid_nodes);
+				//shuffle the vector
+				unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+				shuffle (valid_nodes.begin(), valid_nodes.end(), std::default_random_engine(seed));
 
+				Node * new_sibling;
+				for (std::size_t i = 0; i != valid_nodes.size(); ++i) {
 
-			//cout << "\n\ntree befor and after spr():\n";
-			//cout << supertree->str_subtree() << "\n\n";
-			int which_sibling = 0;
-			undo = spr_on -> spr(new_sibling, which_sibling);
-			supertree = spr_on -> find_root();
-			//cout << supertree->str_subtree() << "\n\n";
-			//if(undo == NULL) cout << "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!  undo is NULL   !!!!!!!!!\n";
+					new_sibling = valid_nodes[i];
+					if (new_sibling == undo) { //if new_sibling is ROOT, ignore
+						continue;
+					} else {
+						break;
+					}
+				}
 
-
-
-			////////////////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////////////////
-
-
-			//since "supertree" is modeified, we need to set prenums and clusters
-			set_cluster_and_cluster_size(supertree);
-			adjustTree(supertree);
-			int neighbor_RF_score = calculate_rf_score(*supertree, source_trees_array, non_shared_taxa_arr, ratchet);
+				//cout << "___________ " << valid_nodes.size()  << endl;
+				//cout << "spr_on\n" << spr_on->str_subtree() << endl;
+				//cout << "undo: \n" << undo->str_subtree() << endl;
+				//cout << "new_sibling\n"  << new_sibling ->str_subtree() << endl;
 
 
-			//Decide if we should accept the neighbor
-			//double r = ((double) rand() / (RAND_MAX));  //randome number between 0 and 1
-			std::random_device rd;  //Will be used to obtain a seed for the random number engine
-			std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-			std::uniform_real_distribution<> dis(0, 1);
-			double r = dis(gen);
-			double probability = acceptanceProbability(current_RF_score, neighbor_RF_score, temp);
-			//cout << "randome#: " << r << endl;
-			//cout << "acceptance prob#: " << probability  << "______curr_score: " << current_RF_score << ", nghbr_score: " << neighbor_RF_score << endl;
+				//cout << "\n\ntree befor and after spr():\n";
+				//cout << supertree->str_subtree() << "\n\n";
+				int which_sibling = 0;
+				undo = spr_on -> spr(new_sibling, which_sibling);
+				supertree = spr_on -> find_root();
+				//cout << supertree->str_subtree() << "\n\n";
+				//if(undo == NULL) cout << "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!  undo is NULL   !!!!!!!!!\n";
 
-			//cout << "current_RF_score: " << current_RF_score << ", neighbor_RF_score: " << neighbor_RF_score << ", probability>r  : " << probability << ">?" << r << endl;
-			if (probability > r) {
-				//if (probability < 1) cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++worse neighbor was taken" << endl;
 
-				current_RF_score = neighbor_RF_score;
-			} else {
-				//cout << "--------------------------------------------------------------------------------------------worse neighbor was NOT taken" << endl;
-				spr_on -> spr(undo, which_sibling);
-				//best_node_to_prune -> spr(undo, which_sibling);
+
+				////////////////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////////////////
+
+
+				//since "supertree" is modeified, we need to set prenums and clusters
+				set_cluster_and_cluster_size(supertree);
 				adjustTree(supertree);
-				//cout << "++++\n" << supertree->str_subtree() << "\n\n";
+				int neighbor_RF_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxa_arr, ratchet);
+
+
+				//Decide if we should accept the neighbor
+				//double r = ((double) rand() / (RAND_MAX));  //randome number between 0 and 1
+				std::random_device rd;  //Will be used to obtain a seed for the random number engine
+				std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+				std::uniform_real_distribution<> dis(0, 1);
+				double r = dis(gen);
+				double probability = acceptanceProbability(current_RF_score, neighbor_RF_score, temp);
+				//cout << "randome#: " << r << endl;
+				//cout << "acceptance prob#: " << probability  << "______curr_score: " << current_RF_score << ", nghbr_score: " << neighbor_RF_score << endl;
+
+				//cout << "current_RF_score: " << current_RF_score << ", neighbor_RF_score: " << neighbor_RF_score << ", probability>r  : " << probability << ">?" << r << endl;
+				if (probability > r) {
+					//if (probability < 1) cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++worse neighbor was taken" << endl;
+
+					current_RF_score = neighbor_RF_score;
+				} else {
+					//cout << "--------------------------------------------------------------------------------------------worse neighbor was NOT taken" << endl;
+					spr_on -> spr(undo, which_sibling);
+					//best_node_to_prune -> spr(undo, which_sibling);
+					adjustTree(supertree);
+					//cout << "++++\n" << supertree->str_subtree() << "\n\n";
+				}
+
+
+
+				/*
+				//keep track of best seen supertree/score
+				if (current_RF_score < the_best_rf_distance_seen) {
+					the_best_rf_distance_seen = current_RF_score;
+					the_best_supertree_seen = supertree->str_subtree();
+				}
+
+
+				//keep track of best visited supertree/score visited in SA search in case the search does NOT converge to the best seen supertree/score
+				if (current_RF_score < best_visited_score_in_SA) {
+					best_visited_score_in_SA = current_RF_score;
+					best_visited_supertree_in_SA = supertree->str_subtree();
+				}
+				*/
+
+
+				// Cool system
+				temp *= 1 - cooling_rate;
+
+				if (iteration % 100 == 0 ) cout << "Iter: " << iteration <<  ", current temperature: " << temp << ", current_RF_score: " << current_RF_score << ", neighbor_RF_score: " << neighbor_RF_score <<  "\n";
+
+			}//end-of-while: end of one SA search
+
+
+			// One SA search finished (i.e. stopping criteria has met)
+			temp = temp_for_print;
+
+			finish_time_iter = clock();
+			float diff ((float)finish_time_iter - (float)start_time_iter);
+			float iter_time = diff / CLOCKS_PER_SEC;
+			cout << "\nAfter: " << iteration << " SA iterations and " << iter_time << " seconds, we converged to RF score of: " << current_RF_score << "\n";
+			//cout << "\n" << supertree->str_subtree() << "\n";
+
+
+			if (ratchet) { //now perform a regular branch swapping
+				cout << "\nOne SA search finished with re-weighted edges." << endl;
+				cout << "---------------------------------------------------\n" << endl;
+
+				ratchet = false;
+				iteration = 0;
+			} else { //we are at the end of one ratchet iteration
+				if (current_RF_score < the_best_rf_distance_seen) { //keep track of best supertree seen so far
+					cout << "\nOne SA search finished with no edge weights. ###" << endl;
+					cout << "The supertree at the end of this SA search:\n" << supertree->str_subtree() << endl;
+					cout << "##############Whoooooooop!! Better supertree seen####################" << current_RF_score << endl;
+					cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
+					cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
+
+					the_best_rf_distance_seen = current_RF_score;
+					the_best_supertree_seen = supertree->str_subtree();
+				}
+
+				cout << "=======================================end of " << ratchet_counter << "-th ratchet iter=========================================" << endl;
+				cout << "========================================================================================================" << endl;
+
+				break;  //end of second phase of ONE ratchet iteration
 			}
 
-
-			if (current_RF_score < the_best_rf_distance_seen) {
-				the_best_rf_distance_seen = current_RF_score;
-				the_best_supertree_seen = supertree->str_subtree();
-			}
+		}  //end of one ratchet iteration
 
 
-			if (current_RF_score < best_visited_score_in_SA) {
-				best_visited_score_in_SA = current_RF_score;
-			}
-
-
-			// Cool system
-			temp *= 1 - cooling_rate;
-
-			cout << "Iter: " << iteration <<  ", current temperature: " << temp << ", current_RF_dist: " << current_RF_score << ", neighbor_RF_score: " << neighbor_RF_score <<  "\n";
-			//cout << "__________________________________________________________________________________________________________________\n\n";
-
-
-			/*
-
-						//if weightde phase, then stop after 3 iterations, i.e. don't continue until reaching local optimum
-						if (temp > 1) {
-
-							//Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft);
-							//set_cluster_and_cluster_size(supertree);
-
-
-							//supertree = best_node_to_prune->find_root();
-							//adjustTree(supertree);
-
-							//best_score_of_current_hill = current_score;
-							//best_supertree_of_current_hill = supertree->str_subtree();
-
-							finish_time_iter = clock();
-							float diff ((float)finish_time_iter - (float)start_time_iter);
-							float iter_time = diff / CLOCKS_PER_SEC;
-							cout << "Iter: " << iteration << ", num_spr_neighbours: " <<
-							     NUM_SPR_NGHBRS <<  ", current temperature: " << temp << ", RF_dist: " << current_score << ", time(sec) : " << iter_time << "\n";
-							//cout << "\n" << supertree->str_subtree() << "\n\n\n";
-
-
-						}
-						else { // local optimum
-
-							if (ratchet) {
-								cout << "\nratchet local opt (re-weighted) reached." << endl;
-								cout << "---------------------------------------------------\n" << endl;
-							} else {
-								cout << "\nregular local opt (original weights) reached. ###" << endl;
-							}
-
-							//cout << "We have reached a local optimum which has better \(or equal\) WRF distance than all its spr-neighbors\n";
-							//cout << "The best SuperTree found after " << iteration << " number of iterations is: " "\n";
-							//cout << "And its RF distance is " << best_score_of_current_hill << "\n";
-							//cout << "--------------------------------------------------------" << endl;
-
-
-
-							if (!ratchet) { //we are at the end of one ratchet iteration
-								if (best_score_of_current_hill < the_best_rf_distance_seen) { //keep track of best supertree seen so far
-									cout << "##############Whoooooooop!! Better supertree seen####################" << best_score_of_current_hill << endl;
-									cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
-									cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
-									cout << best_supertree_of_current_hill << endl;
-									the_best_rf_distance_seen = best_score_of_current_hill;
-									the_best_supertree_seen = best_supertree_of_current_hill;
-								}
-
-								cout << "=======================================end of " << ratchet_counter << "-th ratchet iter=========================================" << endl;
-								cout << "========================================================================================================" << endl;
-
-								break;  //end of second phase of ONE ratchet iteration
-
-							} else { //now perform a regular branch swapping
-
-								ratchet = false;
-								iteration = 0;
-							}
-
-
-							best_score_of_current_hill = INT_MAX;	//this line so necessary!!
-							//Because we are about to start a completely new hill climbing with new objective function.
-							//without this line, after 2nd ratchet iter, no improvement will be made since the weighted
-							//distance is always larger than un-weighted and the init ST from previous step is local opt
-							//already.
-						}
-
-
-
-			*/
-		}//end of one branch swapping search loop
-
-	}//end of ratchet search loop
+	}//end of ratchet iterations for loop
 
 
 	finish_time_total = clock();
 	float diff ((float)finish_time_total - (float)start_time_total);
 	float seconds = diff / CLOCKS_PER_SEC;
-	//cout << "The #of clock ticks of this iteration: " << diff << endl;
-	//cout << "\n" << source_trees_array[0]->str_subtree() << endl;
-	//cout << "init_supertree:\n" << init_supertree << endl;
-	//cout << "The best tree found:\n" << the_best_supertree_seen << endl;
+//cout << "The #of clock ticks of this iteration: " << diff << endl;
+//cout << "\n" << source_trees_array[0]->str_subtree() << endl;
+//cout << "init_supertree:\n" << init_supertree << endl;
+//cout << "The best tree found:\n" << the_best_supertree_seen << endl;
 
 	cout << "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 	cout << "***  #of_iters: " << number_of_ratchet_iterations << ", percentage: " << percentage_of_clades_to_be_reweighted
 	     << " , new_weight: " << ratchet_weight << "  ***" << endl;
 	cout << "SIMULATED ANNEALING CONFIG: init_temp: " << temp_for_print << ", cooling_rate: " << cooling_rate << ", absolute_temp: " << absolute_temp << endl;
-	cout << "best_visited_score_in_SA : " << best_visited_score_in_SA << "\n\n";
+
 	cout << "The initial   ST's score was: " << initial_suptrees_rf_score << endl;
 	cout << "The best-found ST's score is: " << the_best_rf_distance_seen << endl;
-	cout << "And it was found after " << number_of_ratchet_iterations << " number of ratchet iterations is: " << endl;
-	cout << "the running time is: " << seconds << " sec." << "\n\n";
-	cout << the_best_supertree_seen << endl;
+	cout << "the total running time is: " << seconds << " sec." << "\n\n";
+	cout << "\n\nbest seen supertree: \n" << the_best_supertree_seen << endl;
 	cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
 
 
 
-	//don't forget to free memory!!
+//don't forget to free memory!!
 	supertree->delete_tree();
 	for (int i = 0; i < number_of_source_trees; ++i) {
 		source_trees_array[i]->delete_tree();
@@ -678,7 +654,7 @@ void print_weighted_tree(Node & n) {
 //returns min_RF_dist_seen found
 int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], Node* & best_node_to_prune, Node* & best_node_to_regraft, bool weighted) {
 
-	int min_RF_dist_seen = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted); //for early stopping
+	int min_RF_dist_seen = calculate_rf_score_2(T, source_trees_array, non_shared_taxon_arr, weighted); //for early stopping
 	best_node_to_prune = &T;	// I added this line because of above line: Note if we are at local iptimum, then "best_node_to_prune" will be null
 
 	//cout << "T: " << T.str_subtree() << endl;
@@ -720,7 +696,7 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 			//Thus, we have to restrict it again inside calculate_rf_score() method.
 
 			int current_RF_dist = 0 ; //which (for unweighted case) is "num_clusters_not_in_T_prime", i.e. RF distance
-			current_RF_dist = calculate_rf_score(T, source_trees_array, non_shared_taxon_arr, weighted);
+			current_RF_dist = calculate_rf_score_2(T, source_trees_array, non_shared_taxon_arr, weighted);
 
 
 			//cout << "best_seen_RF_dist: " << min_RF_dist_seen << ", and current_RF_dist: " << current_RF_dist << endl;
@@ -888,6 +864,7 @@ int calculate_rf_score(Node & T, Node * source_trees_array[], set<string> non_sh
 
 
 //based on your notes, weighted_RF_dist(T,S)= [(sum of edge weights of bipartitions in S not in T) + (sum of (edge weights-2) of bipartitions in T) + (#of bipartitions in T)]
+//NOTE::: THE ORDER OF ARGUMENTS!! IF supertree is FIRST, WEIGHTS OF SOURCE TREE WILL BE IGNORED
 int calculate_weighted_RF_distance(Node & S, Node & T) {
 	int the_portion_RF_dist_by_S = 0;
 	int number_of_clades_shared_between_S_and_T = 0;
@@ -1907,7 +1884,7 @@ void restrict_supertree_2(Node & supertree, vector<int>& non_shared_taxon_set) {
 }
 
 
-int find_rf_dist_between_two_heterogenous_trees(Node & t1, Node & t2) {
+int find_rf_dist_between_two_heterogenous_trees(Node & t1, Node & t2, bool weighted) {
 	int dist = 0;
 
 	string t1_newick = t1.str_subtree();
@@ -1952,7 +1929,13 @@ int find_rf_dist_between_two_heterogenous_trees(Node & t1, Node & t2) {
 	set_cluster_and_cluster_size(t1_copy);
 	//set_cluster_and_cluster_size(t2_copy);
 
-	dist = calculate_RF_distance(*t1_copy, *t2_copy);
+	if(weighted) {
+		dist = calculate_weighted_RF_distance(*t1_copy, *t2_copy);
+	} else {
+		dist = calculate_RF_distance(*t1_copy, *t2_copy);
+	}
+
+	
 
 	//cout << dist << endl;
 
@@ -1984,8 +1967,9 @@ void add_taxon_to_the_tree(Node & root, string taxon, int int_label, Node * sour
 		t->spr(new_sibling);
 		//cout << root.str_subtree() << endl;
 		int score = 0;
+		bool weighted = false;
 		for (int i = 0; i < NUMBER_OF_SOURCE_TREES_ZZ; ++i) {
-			score += find_rf_dist_between_two_heterogenous_trees(root, *source_trees_array[i]);
+			score += find_rf_dist_between_two_heterogenous_trees(root, *source_trees_array[i], weighted);
 		}
 
 		//cout << " === " << score << "\n";
@@ -2176,4 +2160,95 @@ void find_all_non_descendant_nodes(Node* T, Node* target, vector<Node*>& nodes) 
 	}
 
 }
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////           optimiization             /////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+int calculate_rf_score_2(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
+	int rf_score = 0 ;
+
+	int score = 0;
+	for (int i = 0; i < NUMBER_OF_SOURCE_TREES_ZZ; ++i) {
+		rf_score += find_rf_dist_between_two_heterogenous_trees_2(T, *source_trees_array[i], weighted);
+	}
+
+	return rf_score;
+}
+
+//this is for special case where one of them, t1, is supertree
+//The actual reason to intorduce this method: in when calculating weghted rf dist, if you make a copy of the source tree with build_tree(), then weights are not copied!
+int find_rf_dist_between_two_heterogenous_trees_2(Node & t1, Node & t2, bool weighted) {
+	int dist = 0;
+
+	string t1_newick = t1.str_subtree();
+	//string t2_newick = t2.str_subtree();
+	//set<string> non_common_t1_and_t2 = find_non_common_taxa_set(t1_newick, t2_newick);	//assumes t1 is supertree
+	//set<string> non_common_t2_and_t1 = find_non_common_taxa_set(t2_newick, t1_newick);	//assumes t2 is supertree
+
+	vector<int> t1_cluster = t1.find_cluster_int_labels();
+	vector<int> t2_cluster = t2.find_cluster_int_labels();
+	vector<int> t1_but_not_t2;
+	set_difference (t1_cluster.begin(), t1_cluster.end(), t2_cluster.begin(), t2_cluster.end(), back_inserter(t1_but_not_t2));
+	vector<int> t2_but_not_t1;
+	set_difference (t2_cluster.begin(), t2_cluster.end(), t1_cluster.begin(), t1_cluster.end(), back_inserter(t2_but_not_t1));
+
+	Node* t1_copy = build_tree(t1_newick);
+	//Node* t2_copy = build_tree(t2_newick);
+	t1_copy->copy_fields_for_source_tree(t1);
+	//t2_copy->copy_fields_for_source_tree(t2);
+
+	//restrict t1 to t2 if needed
+	//if ( non_common_t1_and_t2.size() > 0 ) {
+	if ( t1_but_not_t2.size() > 0 ) {
+		//restrict_supertree(*t1_copy, non_common_t1_and_t2);
+		restrict_supertree_2(*t1_copy, t1_but_not_t2);
+		t1_copy->preorder_number();
+	}
+
+	//restrict t2 to t1 if needed
+	//if ( non_common_t2_and_t1.size() > 0 ) {
+	/*
+	if ( t2_but_not_t1.size() > 0 ) {
+		//restrict_supertree(*t2_copy, non_common_t2_and_t1);
+		restrict_supertree_2(*t2_copy, t2_but_not_t1);
+		t2_copy->preorder_number();
+	}
+	*/
+
+	//cout << t1.str_subtree() << endl;
+	//cout << t2.str_subtree() << "\n\n";
+
+	//cout << t1_copy->str_subtree() << endl;
+	//cout << t2_copy->str_subtree() << endl;
+
+	set_cluster_and_cluster_size(t1_copy);
+	//set_cluster_and_cluster_size(t2_copy);
+
+
+	if(weighted) {
+		dist = calculate_weighted_RF_distance(t2, *t1_copy);
+	} else {
+		dist = calculate_RF_distance(t2, *t1_copy);
+	}
+
+	
+
+	//cout << dist << endl;
+
+	t1_copy->delete_tree();
+	//t2_copy->delete_tree();
+
+	return dist;
+}
+
+
+
+
 

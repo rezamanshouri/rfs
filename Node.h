@@ -2345,7 +2345,7 @@ public:
 		}
 		Node *old_sibling = get_sibling();
 		if (old_sibling == new_sibling) {
-			cout << ">>>>>>>>>>old_sibling == new_sibling\n";
+			//cout << ">>>>>>>>>>old_sibling == new_sibling\n";
 			return NULL;
 		}
 		Node *grandparent = p->p;
