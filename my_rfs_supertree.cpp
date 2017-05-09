@@ -89,7 +89,7 @@ void set_cluster_and_cluster_size(Node* T);
 void set_cluster_size_in_supertree(Node* T);
 void reset_fields_to_initial_values(Node* T);
 Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& spr_on, Node* source_trees_array[], set<string> non_shared_taxon_set[], bool weighted);
-void traverse_S_and_update_alpha_beta_in_Q(Node& T, Node& Q_in_restricted_st, Node& v_in_restricted_st, Node& S, Node& S_prime, bool weighted);
+void traverse_S_and_update_alpha_beta_in_Q(Node& old_sibling_of_v_in_T, Node& T, Node& Q_in_restricted_st, Node& v_in_restricted_st, Node& S, Node& S_prime, bool weighted);
 void find_b_in_lemma12(Node& S, Node& R); // i'm not using this now
 void suppress_nodes_with_mapping_in_Rv(Node& S_prime, Node& v);
 void find_best_regraft_place(Node& n, Node*& best_regraft_place, int& max);
@@ -414,11 +414,11 @@ int main(int argc, char** argv) {
 				NUM_SPR_NGHBRS = 0;
 				iteration ++;
 
-				////////////////////////////////////////////////////////////////////
-				////####  SA: random node & its best regraft place  #######/////////
-				////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////
+				////####  SA2: Random node to prune & its Best regraft place (RB) #######/////////
+				//////////////////////////////////////////////////////////////////////////////////
 
-				/*
+				
 
 				Node* best_node_to_prune;
 				Node* best_node_to_regraft;
@@ -434,13 +434,13 @@ int main(int argc, char** argv) {
 
 				//cout << supertree->str_subtree() << "\n\n";
 
-				*/
+				
 
-				////////////////////////////////////////////////////////////////////
-				////////////######  SA: random SPR neighbor  #######////////////////
-				////////////////////////////////////////////////////////////////////
+				///////////////////////////////////////////////////////////////////////////////////////////////////
+				////////////######  SA: Random node to prune & Random node to regraft (RR)  #######////////////////
+				///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+				/*
 
 				int prenum_of_spr_on = 1 + (rand() % (int)(nn - 1));
 				Node* spr_on = supertree -> find_by_prenum(prenum_of_spr_on);
@@ -480,7 +480,7 @@ int main(int argc, char** argv) {
 				//cout << supertree->str_subtree() << "\n\n";
 				//if(undo == NULL) cout << "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!  undo is NULL   !!!!!!!!!\n";
 
-
+				*/
 
 				////////////////////////////////////////////////////////////////////
 				////////////////////////////////////////////////////////////////////
@@ -509,8 +509,8 @@ int main(int argc, char** argv) {
 					current_RF_score = neighbor_RF_score;
 				} else {
 					//cout << "--------------------------------------------------------------------------------------------worse neighbor was NOT taken" << endl;
-					spr_on -> spr(undo, which_sibling);
-					//best_node_to_prune -> spr(undo, which_sibling);
+					//spr_on -> spr(undo, which_sibling);
+					best_node_to_prune -> spr(undo, which_sibling);
 					adjustTree(supertree);
 					//cout << "++++\n" << supertree->str_subtree() << "\n\n";
 				}
@@ -1042,7 +1042,7 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 			S_prime->copy_fields_for_source_tree(*source_trees_array[i]);
 			suppress_nodes_with_mapping_in_Rv(*S_prime, *v_in_restricted_st);  //S' in lemma 12 is now  constructed from S
 
-			traverse_S_and_update_alpha_beta_in_Q(*Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
+			traverse_S_and_update_alpha_beta_in_Q(*Q, *Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
 
 			S_prime->delete_tree();  //prevent memory leak
 			restricted_suptree->delete_tree();
@@ -1113,7 +1113,7 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 			S_prime->copy_fields_for_source_tree(*source_trees_array[i]);
 			suppress_nodes_with_mapping_in_Rv(*S_prime, *v_in_restricted_st);  //S' in lemma 12 is now  constructed from S
 
-			traverse_S_and_update_alpha_beta_in_Q(*Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
+			traverse_S_and_update_alpha_beta_in_Q(*old_sibling, *Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
 			//preorder_traversal(*Q);
 
 			S_prime->delete_tree();
@@ -1147,7 +1147,9 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 
 //Given the way R is constructed, lca_mapping of any node in S, is either in T_v OR in T_T. (NOTE this is a recursive function and S plays the role of u in the alg in paper)
 //The way I implemented here, avoids some duplicate work (in compare to when I pass R as parameter instead of T and v).
-void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, Node & v_in_restricted_st,
+//I need Q to update alpha beta valuse in it
+//I need old_sibling_of_v_in_T for lemma 12 to check if u's cluster existed in T
+void traverse_S_and_update_alpha_beta_in_Q(Node& old_sibling_of_v_in_T, Node & Q, Node & Q_in_restricted_st, Node & v_in_restricted_st,
         Node & S, Node & S_prime, bool weighted) { //note S here is u in paper's notation
 
 	//only for internal nodes, i.e. non-root and non-leaf
@@ -1158,11 +1160,11 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 		list<Node *>::iterator c;
 		list<Node *> children = S.get_children();
 		for (c = children.begin(); c != children.end(); c++) {
-			traverse_S_and_update_alpha_beta_in_Q(Q, Q_in_restricted_st, v_in_restricted_st, **c, S_prime, weighted);
+			traverse_S_and_update_alpha_beta_in_Q(old_sibling_of_v_in_T, Q, Q_in_restricted_st, v_in_restricted_st, **c, S_prime, weighted);
 		}
 	} else {  //if internal node
 
-		//cout << "++++++++++++++++++++node u in S being considered: " << S.str_subtree() << endl;
+		//cout << "\n\n++++++++++++++++++++node u in S being considered: " << S.str_subtree() << endl;
 		//cout << "its lca_mapping is: " << S.get_lca_mapping()->str_subtree() << endl;
 		Node* a;
 
@@ -1214,6 +1216,7 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 				if (weighted) {
 					int w = S.get_edge_weight();
 					//b_in_lemma12->increment_alpha_in_all_descendants(w);
+					/*
 					if ( !Q.find_by_prenum(b_in_lemma12->get_preorder_number()) ) {
 						cout << "\n.................u:\n " << S.str_subtree() << endl;
 						cout << "it's prenum: " << S.get_preorder_number() << endl;
@@ -1232,12 +1235,13 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 						cout << "\n.................Q restricted: " << Q_in_restricted_st.str_subtree() << endl;
 						preorder_traversal(Q_in_restricted_st);
 					}
+					*/
 
 					(Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->increment_alpha_in_all_descendants(w);
 					//cout << "_____w_______increment alpha on : " << b_in_lemma12->str_subtree() << endl;
 				} else {
 
-
+					/*
 					if ( !Q.find_by_prenum(b_in_lemma12->get_preorder_number()) ) {
 						cout << "\n.................u:\n " << S.str_subtree() << endl;
 						cout << "it's prenum: " << S.get_preorder_number() << endl;
@@ -1255,17 +1259,61 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 
 						cout << "\n.................Q restricted: " << Q_in_restricted_st.str_subtree() << endl;
 						preorder_traversal(Q_in_restricted_st);
-					};
+					}
+					*/
 
 
+					///////////////////////////////////////////////////////////////////////////////////////////////
+					//  We increment alpha u, which is S here, only if (other than above condition) f_T(u)=0:   ///
+					///////////////////////////////////////////////////////////////////////////////////////////////
+
+					std::vector<int> u_cluster = S.get_cluster();
+					//cout << "u_cluster: ";
+					//for (auto const& i : u_cluster) cout << i << ", ";
+					//cout << "\n";
 
 
+					/*
+					std::vector<int> old_sib_in_T_cluster = old_sibling_of_v_in_T.find_cluster_int_labels();
+					//cout << "old_sib_in_T_cluster: ";
+					//for (auto const& i : old_sib_in_T_cluster) cout << i << ", ";
+					//cout << "\n";
 
+					std::vector<int> v_cluster = v_in_restricted_st.find_cluster_int_labels();
+					//cout << "v_cluster: ";
+					//for (auto i : v_cluster) cout << i << ", ";
+					//cout << "\n";
 
-					//b_in_lemma12->increment_alpha_in_all_descendants(1);
-					//cout << "node on which increment is called: " << (Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->str_subtree() << endl;
-					(Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->increment_alpha_in_all_descendants(1);
-					//cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
+					//find v's parent cluster in T, i.e. before making R from T
+					for (auto const& i : old_sib_in_T_cluster) v_cluster.push_back(i);
+					sort(v_cluster.begin(), v_cluster.end());
+					//cout << "parent_of_v_in_T_cluster: ";
+					//for (auto i : v_cluster) cout << i << ", ";
+					//cout << "\n";
+
+					//if (u_cluster !=  v_cluster) {
+						(Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->increment_alpha_in_all_descendants(1);
+						//cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
+						//cout << "lemma12 \n" ;
+					}
+					*/
+
+					int which_sibling = 0;
+					Node * undo = v_in_restricted_st.spr(&old_sibling_of_v_in_T, which_sibling);
+
+					Node* lca_of_u_in_T;	//lca of node u in S' in R_in_restriced
+					Node* T_before_making_R = Q.get_p();	//Q is always child of T
+					bool f = false;
+					compute_lca_mapping_helper_2(u_cluster, T_before_making_R, lca_of_u_in_T, f);
+					v_in_restricted_st.spr(undo, which_sibling);
+
+					//if u's cluster is the same as v's parent's cluster, then u's cluster existed in T, although not in R, and therefore we should not increment alpha!!!
+					if (u_cluster.size() != (lca_of_u_in_T->find_leaves()).size() ) {
+						(Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->increment_alpha_in_all_descendants(1);
+						//cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
+						//cout << "lemma12 \n" ;
+					}
+
 				}
 
 			}
@@ -1275,7 +1323,7 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 		list<Node *>::iterator c;
 		list<Node *> children = S.get_children();
 		for (c = children.begin(); c != children.end(); c++) {
-			traverse_S_and_update_alpha_beta_in_Q(Q, Q_in_restricted_st, v_in_restricted_st, **c, S_prime, weighted);
+			traverse_S_and_update_alpha_beta_in_Q(old_sibling_of_v_in_T, Q, Q_in_restricted_st, v_in_restricted_st, **c, S_prime, weighted);
 		}
 
 
