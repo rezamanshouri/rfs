@@ -289,15 +289,15 @@ public:
 	//increments alpha value in all descendants of this
 	void increment_alpha_in_all_descendants(int weight) {
 		//if (is_leaf()) {	//this case was ignored in their algorithm, and is a bug if if ignored (note this won't happen for beta)
-		if (int_label != -1) {	//remember is_leaf() won't work here since after restricting ST, we may have "internal" nodes with no children
+		//if (int_label != -1) {	//remember is_leaf() won't work here since after restricting ST, we may have "internal" nodes with no children
 			alpha += weight;
-		} else {
+		//} else {
 			list<Node *>::iterator c;
 			list<Node *> children = get_children();
 			for (c = children.begin(); c != children.end(); c++)  {
 				(*c)->increment_alpha_in_all_descendants_hlpr(weight);
 			}
-		}
+		//}
 	}
 
 	void increment_alpha_in_all_descendants_hlpr(int weight) {

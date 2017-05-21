@@ -45,9 +45,6 @@
 #include <chrono>       // std::chrono::system_clock
 
 
-void split(const string &s, char delim, vector<string> &elems);
-vector<string> split(const string &s, char delim);
-set<string> find_non_common_taxa_set(const string &supertree, const string &source_tree);
 string change_branch_lengths(const string &tree, int percentage_to_be_reweighted, int new_weight);
 void write_line_to_File(string s, const char* file_name);
 int calculate_RF_distance(Node& S, Node& T);
@@ -88,7 +85,7 @@ void set_cluster_and_cluster_size(Node* T);
 void set_cluster_size_in_supertree(Node* T);
 void reset_fields_to_initial_values(Node* T);
 Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node& T, Node& spr_on, Node* source_trees_array[], set<string> non_shared_taxon_set[], bool weighted);
-void traverse_S_and_update_alpha_beta_in_Q(Node& T, Node& Q_in_restricted_st, Node& v_in_restricted_st, Node& S, Node& S_prime, bool weighted);
+void traverse_S_and_update_alpha_beta_in_Q(Node& old_sibling_of_v_in_T, Node& Q, Node& Q_in_restricted_st, Node& v_in_restricted_st, Node& S, Node& S_prime, bool weighted);
 void find_b_in_lemma12(Node& S, Node& R); // i'm not using this now
 void suppress_nodes_with_mapping_in_Rv(Node& S_prime, Node& v);
 void find_best_regraft_place(Node& n, Node*& best_regraft_place, int& max);
@@ -101,14 +98,13 @@ void put_all_nodes_in_vector(Node& n, vector<Node*>& nodes);
 void find_f_u_with_regard_to_R(vector<int>& cluster, vector<int>& source_tree_leaf_set, Node * R, Node*& lca, bool & found, int& f_u);
 void find_taxa_frequencies(Node* source_trees_array[], unordered_map<string, int>& taxa_frequencies);
 void reweight_a_portion_of_all_edges_at_once(Node* source_trees_array[], int percentage_to_be_reweighted, int new_weight);
-void find_all_non_descendant_nodes(Node*, Node*, vector<Node*>&);
+void find_all_valid_regraft_nodes(Node*, Node*, vector<Node*>&);
 void find_all_spr_neghbors_rf_score_frequencies(Node& T, Node* source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted, map<int, int>& score_frequencies);
+/////considering all best neghbors in loal search
+int find_all_best_nodes_to_prune_and_their_best_regraft_places(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], vector<pair<Node*, vector<Node*>>>& result, bool weighted);
+vector<Node*> apply_SPR_RS_algorithm_to_find_ALL_best_regraft_places(Node & T, Node & v, Node * source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted);
+void find_ALL_best_regraft_places(Node & T, vector<Node*>& best_regraft_places, int& max);
 
-
-
-
-
-void print_weighted_tree(Node& n);
 
 template <typename T>
 bool IsSubset(std::vector<T> A, std::vector<T> B)
@@ -141,7 +137,7 @@ struct grater_second {
 };
 
 
-
+void print_weighted_tree(Node& n);
 ///////////////////////////////////////////////////////////////////////
 ////////////////////   optimization  //////////////////////////////////
 int find_rf_dist_between_two_heterogenous_trees_2(Node & t1, Node & t2, bool weighted);
@@ -222,10 +218,10 @@ int main(int argc, char** argv) {
 
 	//non-shared taxa between each source tree and any supertree is the same in any iteration.
 	//thus, I calculate it once here and just use it.
-	set<string> non_shared_taxa_arr[number_of_source_trees];
+	set<string> non_shared_taxon_arr[number_of_source_trees];
 	int cntr2 = 0;
 	for (string t : source_trees_newick) {
-		non_shared_taxa_arr[cntr2] = find_non_common_taxa_set(init_supertree, t);
+		non_shared_taxon_arr[cntr2] = find_non_common_taxa_set(init_supertree, t);
 		cntr2 ++;
 	}
 
@@ -249,7 +245,7 @@ int main(int argc, char** argv) {
 	set_int_labels_for_leaves_in_source_tree(supertree, int_label_map);  //finding int labels for all taxa in supertree
 
 	bool wghtd = false;
-	int initial_suptrees_rf_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxa_arr, wghtd);
+	int initial_suptrees_rf_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxon_arr, wghtd);
 	cout << "initial_suptrees_rf_score: " << initial_suptrees_rf_score << endl;
 
 	cout << "\nsource trees and supertree has been read, let's start running edge-ratchet algorithm using RFS" << endl;
@@ -286,7 +282,7 @@ int main(int argc, char** argv) {
 		rat->preorder_number();
 		set_cluster_and_cluster_size(rat);
 		set_int_labels_for_leaves_in_source_tree(rat, int_label_map);
-		int score = calculate_rf_score_2(*rat, source_trees_array, non_shared_taxa_arr, wghtd);
+		int score = calculate_rf_score_2(*rat, source_trees_array, non_shared_taxon_arr, wghtd);
 		cout << "\n----------------\nrandom addition init st score is: " << score << endl;
 
 		return 0;
@@ -356,10 +352,38 @@ int main(int argc, char** argv) {
 			Node* best_node_to_prune;
 			Node* best_node_to_regraft;
 			//cout << "\ninit  ST: " << supertree->str_subtree() << "\n";
-			int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxa_arr, best_node_to_prune, best_node_to_regraft, ratchet);
-			//cout << "T: " << supertree->str_subtree() << endl;
-			//cout << "best node to  prune: " << best_node_to_prune->str_subtree() << endl;
-			//cout << "best node to regrft: " << best_node_to_regraft->str_subtree() << endl;
+			int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxon_arr, best_node_to_prune, best_node_to_regraft, ratchet);
+
+			cout << "best_node_to_prune prenum: " << best_node_to_prune -> get_preorder_number() << endl;
+			cout << "best_regraft_node  prenum: " << best_node_to_regraft -> get_preorder_number() << endl;
+
+
+			///////////////////////////////////////////////////////////////////
+			////////////   considering all best nghbrs in local search  ///////
+			///////////////////////////////////////////////////////////////////
+
+			vector<pair<Node*, vector<Node*>>> best_nodes_to_prune_and_their_best_regraft_places;
+			int current_score1 = find_all_best_nodes_to_prune_and_their_best_regraft_places(*supertree, source_trees_array, non_shared_taxon_arr, best_nodes_to_prune_and_their_best_regraft_places, ratchet);
+
+
+
+			for (auto const& n1 : best_nodes_to_prune_and_their_best_regraft_places) {
+				int ii = 0;
+				cout << "\n---prun_prenum: " << n1.first -> get_preorder_number() << endl;
+				for (auto const& n2 : n1.second) {
+					int ww = 0;
+					Node* olds = n1.first -> spr(n2 , ww);
+					int curr_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxon_arr, ratchet);
+					n1.first -> spr(olds, ww);
+					cout << "---regraft_prenum: " << n2 -> get_preorder_number() << " \n---RF_score: " << curr_score << endl;
+				} cout << "\n";
+			}
+
+
+
+			///////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////
+
 
 
 
@@ -367,16 +391,16 @@ int main(int argc, char** argv) {
 			////////////////////  Findin RF Score Frequencies  ////////////////
 			///////////////////////////////////////////////////////////////////
 			/*
-			
+
 			//find RF-score frequencies
 			map<int, int> score_frequencies;
-			find_all_spr_neghbors_rf_score_frequencies(*supertree, source_trees_array, non_shared_taxa_arr, ratchet, score_frequencies);
+			find_all_spr_neghbors_rf_score_frequencies(*supertree, source_trees_array, non_shared_taxon_arr, ratchet, score_frequencies);
 			cout << "\nScore : frequency\n" ;
-			for(auto i : score_frequencies) {
+			for(auto const& i : score_frequencies) {
 				cout << i.first << "  : " << i.second << endl;
 			}
 			cout << "----------------------\n";
-			
+
 			*/
 			///////////////////////////////////////////////////////////////////
 			///////////////////////////////////////////////////////////////////
@@ -384,7 +408,7 @@ int main(int argc, char** argv) {
 
 
 			//if weightde phase, then stop after 3 iterations, i.e. don't continue until reaching local optimum
-			if (current_score < best_score_of_current_hill && !(ratchet && iteration == 4)) {
+			if (current_score < best_score_of_current_hill) {
 
 				int which_sibling = 0;
 				Node* old_sibling = best_node_to_prune->spr(best_node_to_regraft, which_sibling);
@@ -402,7 +426,7 @@ int main(int argc, char** argv) {
 				float iter_time = diff / CLOCKS_PER_SEC;
 				cout << "Iter: " << iteration << ", num_spr_neighbours: " <<
 				     NUM_SPR_NGHBRS << ", RF_dist: " << current_score << ", time(sec) : " << iter_time << "\n";
-				//cout << "\n" << supertree->str_subtree() << "\n\n\n";
+				cout << "===============================================================================\n";			//cout << "T: " << supertree->str_subtree() << endl;
 
 
 			}
@@ -536,11 +560,14 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 	put_all_nodes_in_vector(T, internal_nodes); 	//just to avoid dealing with recursive calls :D
 	vector<Node*>::iterator iter, end;
 	//any internal node except root may be pruned, iter plays the role of "v" in the algorithm
+
+
 	for (iter = internal_nodes.begin(), end = internal_nodes.end(); iter != end;  iter++) { //for each internal node v in T to be pruned:
 
 		if (!(*iter)->get_p()) { //root
 			continue;
 		}
+
 
 		//cout << "-------------------------------------------------------------------\n";
 		Node* best_regraft_place_for_current_v = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, source_trees_array, non_shared_taxon_arr, weighted);
@@ -571,7 +598,7 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 
 			int current_RF_dist = 0 ; //which (for unweighted case) is "num_clusters_not_in_T_prime", i.e. RF distance
 			current_RF_dist = calculate_rf_score_2(T, source_trees_array, non_shared_taxon_arr, weighted);
-			//cout << "score: " << current_RF_dist << endl;
+			//cout << "-----current node to prune prenum: " << (*iter)-> get_preorder_number() << "______current rf score: " << current_RF_dist << endl;
 
 			//cout << "best_seen_RF_dist: " << min_RF_dist_seen << ", and curent_RF_dist: " << current_RF_dist << endl;
 			int previous_min_score = min_RF_dist_seen;
@@ -804,25 +831,24 @@ void weighted_RF_dist_hlpr(Node & S, Node & T_prime, int& the_portion_RF_dist_by
 
 
 //finds node for which "alpha - beta" is maximized
-//ASSUMES T is the root of Q, i.e. only containing VALID regraft places for v under examination
-void find_best_regraft_place(Node & T, Node*& best_regraft_place, int& max) {
+//Q is the root of clade containing all&only VALID regraft places for current v under examination
+void find_best_regraft_place(Node & Q, Node*& best_regraft_place, int& max) {
 	NUM_SPR_NGHBRS++;
-	int best = T.get_alpha() - T.get_beta();
-	//cout << "....alpha-beta....for: " << T.str_subtree() << ": " <<  T.get_alpha() << "-" << T.get_beta() << " = " << best << endl;
+	int best = Q.get_alpha() - Q.get_beta();
+	//cout << "....alpha-beta....for: " << Q.str_subtree() << ": " <<  Q.get_alpha() << "-" << Q.get_beta() << " = " << best << endl;
 	if (best > max) {
-		//cout << best << "____is better with prenum: " << T.get_preorder_number() << endl;
 		max = best;
-		best_regraft_place = &T;
+		best_regraft_place = &Q;
 	}
 
 	//after considering each node to be pruned, we update alpha beta values, BUT they should be reset to 0
-	//I do it here cuz 1- I don't change T untill I find the best spr move (i.e. best node to be pruned and best place for it to be regrafted),
+	//I do it here cuz 1- I don't change Q untill I find the best spr move (i.e. best node to be pruned and best place for it to be regrafted),
 	//2-this is the last time I will need current alpha beta for the current v to be pruned
-	T.set_alpha(0);
-	T.set_beta(0);
+	Q.set_alpha(0);
+	Q.set_beta(0);
 
 	list<Node *>::iterator c;
-	list<Node *> children = T.get_children();
+	list<Node *> children = Q.get_children();
 	for (c = children.begin(); c != children.end(); c++) {
 		find_best_regraft_place(**c, best_regraft_place, max);
 	}
@@ -917,7 +943,8 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 			S_prime->copy_fields_for_source_tree(*source_trees_array[i]);
 			suppress_nodes_with_mapping_in_Rv(*S_prime, *v_in_restricted_st);  //S' in lemma 12 is now  constructed from S
 
-			traverse_S_and_update_alpha_beta_in_Q(*Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
+			Node* old_sib_in_rectricted_st = v_in_restricted_st->get_sibling();
+			traverse_S_and_update_alpha_beta_in_Q(*old_sib_in_rectricted_st, *Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
 
 			S_prime->delete_tree();  //prevent memory leak
 			restricted_suptree->delete_tree();
@@ -936,12 +963,14 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 
 		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
 
-			//There are two cases where SPR move won'y change RF distance between current ST and source_trees_array[i],
+			//There are two cases where SPR move won't change RF distance between current ST and source_trees_array[i],
 			//and thus we should ignore them:
-			//////////////////////////case 1:
+
+			///////  case 1:   ////
 			//if the induced subtree at v, doesn't have any taxa in a source tree, S, then pruning and regrafting
 			//v (at any place) will not change the RF distance, i.e.  RF_dist(T,S) = RF_dist(T',S)
-			//////////////////////////case 2:
+
+			//////   case 2:   ////
 			//if the induced subtree at v contains all the taxa in source_trees_array[i].
 			//since the clusters are sorted we can use std:include()
 
@@ -988,11 +1017,17 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 			S_prime->copy_fields_for_source_tree(*source_trees_array[i]);
 			suppress_nodes_with_mapping_in_Rv(*S_prime, *v_in_restricted_st);  //S' in lemma 12 is now  constructed from S
 
-			traverse_S_and_update_alpha_beta_in_Q(*Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
+			//cout << "S' : " << S_prime->str_subtree() << endl;
+
+			Node* old_sib_in_rectricted_st = v_in_restricted_st->get_sibling();
+			traverse_S_and_update_alpha_beta_in_Q(*old_sib_in_rectricted_st, *Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
 			//preorder_traversal(*Q);
 
 			S_prime->delete_tree();
 			R_for_restricted_supertree->delete_tree();	//this will delete "restricted_st" as well
+
+
+			//cout << "\n---------------------------------------------\n";
 
 			//R clean up should be at the end since I will need to call find_best_regraft_place() on Q before restoring T
 		}//end of for-loop
@@ -1022,7 +1057,9 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 
 //Given the way R is constructed, lca_mapping of any node in S, is either in T_v OR in T_T. (NOTE this is a recursive function and S plays the role of u in the alg in paper)
 //The way I implemented here, avoids some duplicate work (in compare to when I pass R as parameter instead of T and v).
-void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, Node & v_in_restricted_st,
+//I need Q to update alpha beta valuse in it
+//I need old_sibling_of_v_in_T for lemma 12 to check if u's cluster existed in T
+void traverse_S_and_update_alpha_beta_in_Q(Node& old_sibling_of_v_in_T, Node & Q, Node & Q_in_restricted_st, Node & v_in_restricted_st,
         Node & S, Node & S_prime, bool weighted) { //note S here is u in paper's notation
 
 	//only for internal nodes, i.e. non-root and non-leaf
@@ -1033,11 +1070,11 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 		list<Node *>::iterator c;
 		list<Node *> children = S.get_children();
 		for (c = children.begin(); c != children.end(); c++) {
-			traverse_S_and_update_alpha_beta_in_Q(Q, Q_in_restricted_st, v_in_restricted_st, **c, S_prime, weighted);
+			traverse_S_and_update_alpha_beta_in_Q(old_sibling_of_v_in_T, Q, Q_in_restricted_st, v_in_restricted_st, **c, S_prime, weighted);
 		}
 	} else {  //if internal node
 
-		//cout << "++++++++++++++++++++node u in S being considered: " << S.str_subtree() << endl;
+		//cout << "\n\n++++++++++++++++++++node u in S being considered: " << S.str_subtree() << endl;
 		//cout << "its lca_mapping is: " << S.get_lca_mapping()->str_subtree() << endl;
 		Node* a;
 
@@ -1089,6 +1126,7 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 				if (weighted) {
 					int w = S.get_edge_weight();
 					//b_in_lemma12->increment_alpha_in_all_descendants(w);
+					/*
 					if ( !Q.find_by_prenum(b_in_lemma12->get_preorder_number()) ) {
 						cout << "\n.................u:\n " << S.str_subtree() << endl;
 						cout << "it's prenum: " << S.get_preorder_number() << endl;
@@ -1107,12 +1145,13 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 						cout << "\n.................Q restricted: " << Q_in_restricted_st.str_subtree() << endl;
 						preorder_traversal(Q_in_restricted_st);
 					}
+					*/
 
 					(Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->increment_alpha_in_all_descendants(w);
 					//cout << "_____w_______increment alpha on : " << b_in_lemma12->str_subtree() << endl;
 				} else {
 
-
+					/*
 					if ( !Q.find_by_prenum(b_in_lemma12->get_preorder_number()) ) {
 						cout << "\n.................u:\n " << S.str_subtree() << endl;
 						cout << "it's prenum: " << S.get_preorder_number() << endl;
@@ -1130,17 +1169,38 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 
 						cout << "\n.................Q restricted: " << Q_in_restricted_st.str_subtree() << endl;
 						preorder_traversal(Q_in_restricted_st);
-					};
+					}
+					*/
 
 
+					///////////////////////////////////////////////////////////////////////////////////////////////
+					//  We increment alpha u, which is S here, only if (other than above condition) f_T(u)=0:   ///
+					///////////////////////////////////////////////////////////////////////////////////////////////
+
+					std::vector<int> u_cluster = S.get_cluster();
+					//cout << "u_cluster: ";
+					//for (auto const& i : u_cluster) cout << i << ", ";
+					//cout << "\n";
 
 
+					/*
+					int which_sibling = 0;
+					Node * undo = v_in_restricted_st.spr(&old_sibling_of_v_in_T, which_sibling);
 
+					Node* lca_of_u_in_T;	//lca of node u in S' in R_in_restriced
+					Node* T_before_making_R = Q.get_p();	//Q is always child of T
+					bool f = false;
+					compute_lca_mapping_helper_2(u_cluster, T_before_making_R, lca_of_u_in_T, f);
+					v_in_restricted_st.spr(undo, which_sibling);
 
-					//b_in_lemma12->increment_alpha_in_all_descendants(1);
-					//cout << "node on which increment is called: " << (Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->str_subtree() << endl;
-					(Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->increment_alpha_in_all_descendants(1);
-					//cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
+					//if u's cluster is the same as v's parent's cluster, then u's cluster existed in T, although not in R, and therefore we should not increment alpha!!!
+					if (u_cluster.size() != (lca_of_u_in_T->find_leaves()).size() ) {
+					*/
+						(Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->increment_alpha_in_all_descendants(1);
+						//cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
+						//cout << "lemma12 \n" ;
+					//}
+
 				}
 
 			}
@@ -1150,7 +1210,7 @@ void traverse_S_and_update_alpha_beta_in_Q(Node & Q, Node & Q_in_restricted_st, 
 		list<Node *>::iterator c;
 		list<Node *> children = S.get_children();
 		for (c = children.begin(); c != children.end(); c++) {
-			traverse_S_and_update_alpha_beta_in_Q(Q, Q_in_restricted_st, v_in_restricted_st, **c, S_prime, weighted);
+			traverse_S_and_update_alpha_beta_in_Q(old_sibling_of_v_in_T, Q, Q_in_restricted_st, v_in_restricted_st, **c, S_prime, weighted);
 		}
 
 
@@ -1353,7 +1413,7 @@ void find_int_labels_for_leaves_in_supertree(Node * root, int& current_label, un
 		root->set_int_label(current_label);
 		current_label++;
 	} else {
-		for (auto child : root->get_children()) {
+		for (auto const& child : root->get_children()) {
 			find_int_labels_for_leaves_in_supertree(child, current_label, map);
 		}
 	}
@@ -1364,7 +1424,7 @@ void set_int_labels_for_leaves_in_source_tree(Node * root, unordered_map<string,
 	if (root->is_leaf()) {
 		root->set_int_label(map.find(root->get_name())->second);
 	} else {
-		for (auto child : root->get_children()) {
+		for (auto const& child : root->get_children()) {
 			set_int_labels_for_leaves_in_source_tree(child, map);
 		}
 	}
@@ -1560,7 +1620,7 @@ void restrict_supertree_without_suppressing_nodes(Node & supertree, set<string>&
 	Node* n;  //this willl be the node whose "name" is "taxon"
 	Node* p;  //this will be the parent of "n"
 
-	for (auto taxon : non_shared_taxon_set) {
+	for (auto const& taxon : non_shared_taxon_set) {
 
 		n = 0;
 		find_node_to_be_removed(supertree, taxon, n);
@@ -1587,7 +1647,7 @@ void restrict_supertree(Node & supertree, set<string>& non_shared_taxon_set) {
 	Node* n;  //this willl be the node whose "name" is "taxon"
 	Node* p;  //this will be the parent of "n"
 
-	for (auto taxon : non_shared_taxon_set) {
+	for (auto const& taxon : non_shared_taxon_set) {
 
 		n = 0;
 		find_node_to_be_removed(supertree, taxon, n);
@@ -1625,7 +1685,7 @@ void find_node_to_be_removed(Node & root, string taxon, Node* & taxan_to_be_remo
 			taxan_to_be_removed = &root;
 		}
 	} else {
-		for (auto child : root.get_children()) {
+		for (auto const& child : root.get_children()) {
 			find_node_to_be_removed(*child, taxon, taxan_to_be_removed);
 		}
 	}
@@ -1644,7 +1704,7 @@ set<string> find_non_common_taxa_set(const string & supertree, const string & so
 	string temp1 = regex_replace(source_tree, reg, " ");  //replacing all parenthesis, comma, and semi-colon with white space
 	temp1 = regex_replace(temp1, regex("^ +| +$|( ) +"), "$1"); //removing leading, trailing and extra spaces
 	vector<string> source_tree_taxon_vector = split(temp1, ' ');
-	for (auto i : source_tree_taxon_vector) {
+	for (auto const& i : source_tree_taxon_vector) {
 		source_tree_taxon_set.insert(i);
 	}
 
@@ -1653,7 +1713,7 @@ set<string> find_non_common_taxa_set(const string & supertree, const string & so
 	string temp2 = regex_replace(supertree, reg, " ");  //replacing all parenthesis, comma, and semi-colon with white space
 	temp2 = regex_replace(temp2, regex("^ +| +$|( ) +"), "$1"); //removing leading, trailing and extra spaces
 	vector<string> supertree_taxon_vector = split(temp2, ' ');
-	for (auto i : supertree_taxon_vector) {
+	for (auto const& i : supertree_taxon_vector) {
 		supertree_taxon_set.insert(i);
 	}
 
@@ -1702,7 +1762,7 @@ void traverse_tree_and_update_frequencies(Node * root, unordered_map<string, int
 	if (root->is_leaf()) {
 		taxa_frequencies[root->get_name()] ++;
 	} else {
-		for (auto child : root->get_children()) {
+		for (auto const& child : root->get_children()) {
 			traverse_tree_and_update_frequencies(child, taxa_frequencies);
 		}
 	}
@@ -1720,7 +1780,7 @@ void find_node_to_be_removed_2(Node & root, int int_label, Node* & taxan_to_be_r
 			taxan_to_be_removed = &root;
 		}
 	} else {
-		for (auto child : root.get_children()) {
+		for (auto const& child : root.get_children()) {
 			find_node_to_be_removed_2(*child, int_label, taxan_to_be_removed);
 		}
 	}
@@ -1731,7 +1791,7 @@ void restrict_supertree_2(Node & supertree, vector<int>& non_shared_taxon_set) {
 	Node* n;  //this willl be the node whose "name" is "taxon"
 	Node* p;  //this will be the parent of "n"
 
-	for (auto taxon : non_shared_taxon_set) {
+	for (auto const& taxon : non_shared_taxon_set) {
 
 		n = 0;
 		find_node_to_be_removed_2(supertree, taxon, n);
@@ -1832,7 +1892,7 @@ void add_taxon_to_the_tree(Node & root, string taxon, int int_label, Node * sour
 
 	int lowest_rf_score = INT_MAX;
 	Node* best_new_sibling = NULL;
-	for (auto new_sibling : nodes) {
+	for (auto const& new_sibling : nodes) {
 		t->spr(new_sibling);
 		//cout << root.str_subtree() << endl;
 		int score = 0;
@@ -1897,7 +1957,7 @@ void find_int_labels_and_frequencies(Node * root, int& current_label, unordered_
 		}
 
 	} else {
-		for (auto child : root->get_children()) {
+		for (auto const& child : root->get_children()) {
 			find_int_labels_and_frequencies(child, current_label, map, frequencies);
 		}
 	}
@@ -1933,7 +1993,7 @@ void reweight_a_portion_of_all_edges_at_once(Node* source_trees_array[], int per
 
 
 //puts a pointer to all nodes in "T" which are not a DESCENDANT or PARENT of "target" node
-void find_all_non_descendant_nodes(Node* T, Node* target, vector<Node*>& nodes) {
+void find_all_valid_regraft_nodes(Node* T, Node* target, vector<Node*>& nodes) {
 
 	if (T == target) {
 		return;
@@ -1945,7 +2005,7 @@ void find_all_non_descendant_nodes(Node* T, Node* target, vector<Node*>& nodes) 
 	list<Node *>::iterator c;
 	list<Node *> children = T->get_children();
 	for (c = children.begin(); c != children.end(); c++) {
-		find_all_non_descendant_nodes(*c, target, nodes);
+		find_all_valid_regraft_nodes(*c, target, nodes);
 	}
 
 }
@@ -1973,10 +2033,10 @@ void find_all_spr_neghbors_rf_score_frequencies(Node& T, Node* source_trees_arra
 
 		//find all possible regraft places
 		std::vector<Node*> valid_regraft_nodes;
-		find_all_non_descendant_nodes(&T, *iter, valid_regraft_nodes);
+		find_all_valid_regraft_nodes(&T, *iter, valid_regraft_nodes);
 
-		for (auto new_sibling : valid_regraft_nodes) {
-			if(undo == new_sibling) {	//ignore if new_sibling is old_sibling
+		for (auto const& new_sibling : valid_regraft_nodes) {
+			if (undo == new_sibling) {	//ignore if new_sibling is old_sibling
 				continue;
 			}
 
@@ -1995,6 +2055,318 @@ void find_all_spr_neghbors_rf_score_frequencies(Node& T, Node* source_trees_arra
 		}
 	}
 }
+
+
+
+
+//if there is more than one "best" neghbor, return all of them
+int find_all_best_nodes_to_prune_and_their_best_regraft_places(Node & T, Node * source_trees_array[], set<string> non_shared_taxon_arr[], vector<pair<Node*, vector<Node*>>>& result, bool weighted) {
+
+	int min_RF_dist_seen = INT_MAX;
+
+	//cout << "T: " << T.str_subtree() << endl;
+	vector<Node*> internal_nodes;
+	put_all_nodes_in_vector(T, internal_nodes); 	//just to avoid dealing with recursive calls :D
+	vector<Node*>::iterator iter, end;
+	//any internal node except root may be pruned, iter plays the role of "v" in the algorithm
+	for (iter = internal_nodes.begin(), end = internal_nodes.end(); iter != end;  iter++) { //for each internal node v in T to be pruned:
+
+		if (!(*iter)->get_p()) { //root
+			continue;
+		}
+
+		//cout << "-------------------------------------------------------------------\n";
+		vector<Node*> best_regraft_places_for_current_v = apply_SPR_RS_algorithm_to_find_ALL_best_regraft_places(T, **iter, source_trees_array, non_shared_taxon_arr, weighted);
+		//cout << "---------spr_on(v): " << (*iter)->get_preorder_number() << endl;
+		//cout << "------best regraft: " << best_regraft_place_for_current_v->get_preorder_number() << endl;
+		Node* old_sibling = (*iter)->get_sibling();
+		//cout << "old_sibling prenum: " << old_sibling->get_preorder_number() << endl;
+
+
+
+		//if "old_sibling==best_regraft_place_for_current_v" then no need to calculate anything for this v
+		if (old_sibling == best_regraft_places_for_current_v[0]) {
+			//cout << "_________old_sibling == best_regraft______so no spr move_____\n";
+		} else {
+
+			int which_sibling = 0;
+			old_sibling = (*iter)->spr(best_regraft_places_for_current_v[0], which_sibling);
+			//adjustTree(&T); NO NO NO! cuz you will do another spr to retrieve the orig tree
+
+			//cout << "-------------------------------------------------------------------\n";
+			//cout << "------T after : \n" << T.str_subtree() << endl;
+
+
+			//Now that we know for "v" to be pruned, what's the best regraft place,
+			//we have a best SPR neighbour, T'. We need to know how good is this neighbour,
+			//to ompare it to other best neighbours for different v's. Note, T is now T' (after spr move)
+			//Thus, we have to restrict it again inside calculate_rf_score() method.
+
+			int current_RF_dist = 0 ; //which (for unweighted case) is "num_clusters_not_in_T_prime", i.e. RF distance
+			current_RF_dist = calculate_rf_score_2(T, source_trees_array, non_shared_taxon_arr, weighted);
+			//cout << "score: " << current_RF_dist << endl;
+
+
+			if (current_RF_dist == min_RF_dist_seen) {
+				pair<Node*, vector<Node*>> pp = make_pair((*iter), best_regraft_places_for_current_v);
+				result.push_back(pp);
+			}
+
+			//cout << "best_seen_RF_dist: " << min_RF_dist_seen << ", and curent_RF_dist: " << current_RF_dist << endl;
+			if (current_RF_dist < min_RF_dist_seen) {
+				//cout << "\n\nbest F was : " << min_RF_dist_seen << ">>>>>>>>>>>>>>>>>>>>>>>>>>> better SPR move with F: " << current_RF_dist << endl;
+				//cout << "------T after : \n" << T.str_subtree() << endl;
+				//cout << "\n" << T.str_subtree() << "\n\n";
+				//cout << "-----best node to prun: " << (*iter)->str_subtree() <<  endl;
+				//cout << "--best node to regraft: " << best_regraft_place_for_current_v->str_subtree() <<  endl;
+				//cout << "_____a better score is found: " << current_RF_dist << "\n\n";
+
+				min_RF_dist_seen = current_RF_dist;
+				result.clear();
+				pair<Node*, vector<Node*>> pp = make_pair((*iter), best_regraft_places_for_current_v);
+				result.push_back(pp);
+
+				/*
+				//earlyyyyyyyyyyyyyyyyyy stippppping!
+				which_sibling = 0;
+				(*iter)->spr(old_sibling, which_sibling);
+				//cout << "eeeeeeeeeeeeeeeearly stopping!!!\n";
+				return min_RF_dist_seen;
+				*/
+			}
+
+			//restore tree to consider next node to be pruned
+			(*iter)->spr(old_sibling, which_sibling);
+			//reset_alpha_beta(T);
+
+		}
+	}
+
+	return min_RF_dist_seen;
+
+}
+
+
+vector<Node*> apply_SPR_RS_algorithm_to_find_ALL_best_regraft_places(Node & T, Node & v, Node * source_trees_array[], set<string> non_shared_taxon_arr[], bool weighted) {
+
+	//cout << "--------------v to be pruned: " << v.str_subtree() << " --------------\n";
+	Node* best_regraft_place = NULL;
+	Node* Q = NULL;
+	Node* Q_in_restricted_st = NULL;
+	Node* v_in_restricted_st = NULL;
+	Node* old_sibling = NULL;
+	Node* R = NULL;
+	int which_sibling = 0;
+
+
+	//1- preprocessing step:
+	////////////////////////////////////////////////////////
+	//we make tree R = SPR(v,rt(T)) from T with the following steps:
+	//1- create a new node, R, and make rt(T) to be its child
+	//2- Make the spr move as v->spr(rt(T),0), i.e. prune p(v) from tree and regraft it between rt(T) and R
+	//depending on whether parent of v is T, preprocessin step (and hence step 2 of alg) should be implemented a little different
+
+	//2- Calculating alpha and beta in Q:
+	///////////////////////////////////////////////////////////
+	//The algorithm traverses through S, and updates alpha and beta values in Q (which is the parameter T).
+	//Note I pass T (rather than R) to the following function, since T repreents Q in the paper's notation, and we only care about alpha&beta vaues in Q.
+
+
+	//BUT if v's parent is T (root), then handle it separately
+	if (v.get_p() == &T) {
+		//cout << "---v is child of T, and should be handled differently---" << endl;
+		Q = v.get_sibling();
+
+		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+			//cout << "current source tree:" << source_trees_array[i]->str_subtree() << endl;
+
+			//There are two cases where SPR move won'y change RF distance between current ST and source_trees_array[i],
+			//and thus we should ignore them:
+			//////////////////////////case 1:
+			//if the induced subtree at v, doesn't have any taxa in a source tree, S, then pruning and regrafting
+			//v (at any place) will not change the RF distance, i.e.  RF_dist(T,S) = RF_dist(T',S)
+			//////////////////////////case 2:
+			//if the induced subtree at v contains all the taxa in source_trees_array[i].
+			//since the clusters are sorted we can use std:include()
+
+			vector<int> v_cluster = v.find_cluster_int_labels();
+			vector<int> current_source_trre_root_cluster = source_trees_array[i]->get_cluster();
+			vector<int> intersection;
+			set_intersection(v_cluster.begin(), v_cluster.end(), current_source_trre_root_cluster.begin(), current_source_trre_root_cluster.end(), back_inserter(intersection));
+
+			//case 1
+			if (intersection.size() == 0 ) {
+				//cout << "the induced subtree at v does not include any taxa in current source tree, thus we ignore it.\n";
+				continue;
+			}
+
+			//case 2
+			if (intersection.size() == current_source_trre_root_cluster.size()) {
+				//cout << "the induced subtree at v includes all taxa in current source tree, thus we ignore it.\n";
+				continue;
+			}
+			// In other words, if root of current source tree's LCA is v or a descendant of it.
+			//Overlooking above case will cause 'double free' error when you try delete S_prime since S_prime is going to be a singletone node
+			//which has already been free'ed once in suppress_nodes_with_mapping_in_Rv()
+
+
+			//find restricted supertrees to current source tree
+			Node* restricted_suptree = build_tree(T.str_subtree());
+			restricted_suptree->copy_fields_for_supertree(T);	//prenum is also copied so no adjustTree() needed
+			restrict_supertree_without_suppressing_nodes(*restricted_suptree, non_shared_taxon_arr[i]);
+
+			v_in_restricted_st = restricted_suptree->find_by_prenum(v.get_preorder_number());//corresponding node in restricted_st
+
+
+			//if sibling is a leaf not present in current source tree,  then there is no valid place to regraft it, thus ignore
+			if (! (Q_in_restricted_st =  v_in_restricted_st->get_sibling()) ) {
+				continue;
+			}
+
+			compute_lca_mapping_S_R(*source_trees_array[i], *restricted_suptree);  //No need for R here, T will do the work
+			set_cluster_size_in_supertree(restricted_suptree);
+
+			//Find S' in lemma 12:
+			Node* S_prime = build_tree(source_trees_array[i]->str_subtree() + ";"); //make a copy of S (not the best way to mak ea copy, I know, should be fixed)
+			S_prime->copy_fields_for_source_tree(*source_trees_array[i]);
+			suppress_nodes_with_mapping_in_Rv(*S_prime, *v_in_restricted_st);  //S' in lemma 12 is now  constructed from S
+
+			traverse_S_and_update_alpha_beta_in_Q(*Q, *Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
+
+			S_prime->delete_tree();  //prevent memory leak
+			restricted_suptree->delete_tree();
+
+		}//end of for-loop
+
+	} else { //normal case
+		//cout << "---normal case: i.e. v is not the child of root---" << endl;
+
+		Q = &T; //here Q is going to be T
+		R = new Node();
+		R->add_child(&T);
+		//cunstructing R which is SPR(v,rt(T))
+		old_sibling = v.spr(&T, which_sibling);
+		adjustTree(R);//DON'T FORGET THIS!!!
+
+		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+
+			//There are two cases where SPR move won'y change RF distance between current ST and source_trees_array[i],
+			//and thus we should ignore them:
+			//////////////////////////case 1:
+			//if the induced subtree at v, doesn't have any taxa in a source tree, S, then pruning and regrafting
+			//v (at any place) will not change the RF distance, i.e.  RF_dist(T,S) = RF_dist(T',S)
+			//////////////////////////case 2:
+			//if the induced subtree at v contains all the taxa in source_trees_array[i].
+			//since the clusters are sorted we can use std:include()
+
+			vector<int> v_cluster = v.find_cluster_int_labels();
+			vector<int> current_source_trre_root_cluster = source_trees_array[i]->get_cluster();
+			vector<int> intersection;
+			set_intersection(v_cluster.begin(), v_cluster.end(), current_source_trre_root_cluster.begin(), current_source_trre_root_cluster.end(), back_inserter(intersection));
+
+			//case 1
+			if (intersection.size() == 0 ) {
+				//cout << "the induced subtree at v does not include any taxa in current source tree, thus we ignore it.\n";
+				continue;
+			}
+
+			//case 2
+			if (intersection.size() == current_source_trre_root_cluster.size()) {
+				//cout << "the induced subtree at v includes all taxa in current source tree, thus we ignore it.\n";
+				continue;
+			}
+			// In other words, if root of current source tree's LCA is v or a descendant of it.
+			//Overlooking above case will cause 'double free' error when you try delete S_prime since S_prime is going to be a singletone node
+			//which has already been free'ed once in suppress_nodes_with_mapping_in_Rv()
+
+
+			//find restricted supertrees to current source tree
+			Node * temp = build_tree(R->str_subtree());
+			///I need the following line cuz:
+			//build_tree() ignores extra parenthesis which here represent Node R with one child
+			Node * R_for_restricted_supertree = new Node();
+			R_for_restricted_supertree->add_child(temp);
+			R_for_restricted_supertree->copy_fields_for_supertree(*R);	//prenum is also copied so no adjustTree() needed
+			restrict_supertree_without_suppressing_nodes(*R_for_restricted_supertree, non_shared_taxon_arr[i]);
+
+			//corresponding nodes in restricted R
+			v_in_restricted_st = R_for_restricted_supertree->find_by_prenum(v.get_preorder_number());
+			Q_in_restricted_st = R_for_restricted_supertree->find_by_prenum(T.get_preorder_number());
+
+
+			compute_lca_mapping_S_R(*source_trees_array[i], *R_for_restricted_supertree);
+			set_cluster_size_in_supertree(R_for_restricted_supertree);
+
+			//Find S' in lemma 12:
+			Node* S_prime = build_tree(source_trees_array[i]->str_subtree() + ";"); //make a copy of S (not the best way to mak ea copy, I know, should be fixed)
+			S_prime->copy_fields_for_source_tree(*source_trees_array[i]);
+			suppress_nodes_with_mapping_in_Rv(*S_prime, *v_in_restricted_st);  //S' in lemma 12 is now  constructed from S
+
+			traverse_S_and_update_alpha_beta_in_Q(*old_sibling, *Q, *Q_in_restricted_st, *v_in_restricted_st, *source_trees_array[i], *S_prime, weighted);
+			//preorder_traversal(*Q);
+
+			S_prime->delete_tree();
+			R_for_restricted_supertree->delete_tree();	//this will delete "restricted_st" as well
+
+			//R clean up should be at the end since I will need to call find_best_regraft_place() on Q before restoring T
+		}//end of for-loop
+
+	}
+
+	//cout << "\nQ is: " << Q->str_subtree()  << endl;
+	//cout << "The final alpha beta values in nodes in Q after the algorithm finishes are as follow: " << endl;
+	//preorder_traversal(*Q);
+	int max_alpha_minus_beta = INT_MIN;
+	vector<Node*> best_regraft_places;
+	find_ALL_best_regraft_places(*Q, best_regraft_places, max_alpha_minus_beta);  //NOTE Q should be passed
+
+
+	//restore T from R in normal case, and also prevent mem-leack
+	if (v.get_p() != &T) {
+		//int which_sibling = 1; NO!!! YOU SHOULD NOT DO THIS, spr() TAKES CARE OF IT SO THAT WHEN YOU CALL IT AGAIN TO RETRIEVE T, IT WON'T MESSED UP
+		v.spr(old_sibling, which_sibling);  // Note T has been changed here, and it should be retrieved to its original form
+		T.cut_parent(); // after finding best place to regraft and make the corresponding SPR move, R is a node with only one child T, we don't need R anymore.
+		T.preorder_number();	// OMG! don't forget this.
+		//(v.get_p()) -> cut_parent(); // NOTE v is not a descendant of T anymore, they are SEPARATE trees
+		R->delete_tree();
+	}
+
+
+	return best_regraft_places;
+}
+
+
+void find_ALL_best_regraft_places(Node & T, vector<Node*>& best_regraft_places, int& max) {
+	NUM_SPR_NGHBRS++;
+	int best = T.get_alpha() - T.get_beta();
+	//cout << "....alpha-beta....for: " << T.str_subtree() << ": " <<  T.get_alpha() << "-" << T.get_beta() << " = " << best << endl;
+
+	/*
+	if (best == max) {
+		best_regraft_places.push_back(&T);
+	}
+	*/
+
+	if (best > max) {
+		//cout << best << "____is better with prenum: " << T.get_preorder_number() << endl;
+		max = best;
+		best_regraft_places.clear();
+		best_regraft_places.push_back(&T);
+	}
+
+	//after considering each node to be pruned, we update alpha beta values, BUT they should be reset to 0
+	//I do it here cuz 1- I don't change T untill I find the best spr move (i.e. best node to be pruned and best place for it to be regrafted),
+	//2-this is the last time I will need current alpha beta for the current v to be pruned
+	T.set_alpha(0);
+	T.set_beta(0);
+
+	list<Node *>::iterator c;
+	list<Node *> children = T.get_children();
+	for (c = children.begin(); c != children.end(); c++) {
+		find_ALL_best_regraft_places(**c, best_regraft_places, max);
+	}
+}
+
 
 
 
@@ -2069,13 +2441,13 @@ int find_rf_dist_between_two_heterogenous_trees_2(Node & t1, Node & t2, bool wei
 	//set_cluster_and_cluster_size(t2_copy);
 
 
-	if(weighted) {
+	if (weighted) {
 		dist = calculate_weighted_RF_distance(t2, *t1_copy);
 	} else {
 		dist = calculate_RF_distance(t2, *t1_copy);
 	}
 
-	
+
 
 	//cout << dist << endl;
 
