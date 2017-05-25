@@ -463,6 +463,31 @@ public:
 	}
 
 
+	//count total #of nodes: both internal nodes and leaves
+	void count_total_number_of_nodes(int& count) {
+		count++;
+
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c)->count_num_internal_nodes_for_source_tree(count);
+		}
+	}
+
+
+	void has_descendant_with_prenum (int n, bool found) {
+		if (pre_num == n) {
+			found = true;
+		}
+
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c) -> has_descendant_with_prenum(n, found);
+		}
+
+	}
+
 	/*
 		//count #of internal nodes (for RF dist calculation)
 		//NOTE this will be called on restricted ST whose "degree 2 nodes" and "nodes with no taxa descendant" are not deleted
@@ -2315,12 +2340,12 @@ public:
 		Node *reverse;
 		int prev_child_loc = 0;
 		if (p == NULL || new_sibling == NULL) {
-			//cout << ">>>>>from Node.h spr() method: p == NULL || new_sibling == NULL\n";
+			cout << ">>>>>>>>>>>>from Node.h spr() method: p == NULL || new_sibling == NULL\n";
 			return NULL;
 		}
 		Node *old_sibling = get_sibling();
 		if (old_sibling == new_sibling) {
-			//cout << "old_sibling == new_sibling\n";
+			//cout << ">>>>>>>>>>old_sibling == new_sibling\n";
 			return NULL;
 		}
 		Node *grandparent = p->p;
@@ -2351,7 +2376,7 @@ public:
 		}
 		else {	//if spr_on (i.e. this) is a child of root
 			if (old_sibling->is_leaf()) {
-				cout << "old_sibling->is_leaf() is true and return null(i.e. do nothing)\n";
+				cout << ">>>>>>>>>>>>>>old_sibling->is_leaf() is true and return null(i.e. do nothing)\n";
 				return NULL;
 			}
 			Node *root = p;
