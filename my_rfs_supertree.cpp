@@ -146,7 +146,7 @@ int calculate_rf_score_2(Node& T, Node* source_trees_array[], set<string> non_sh
 
 
 
-
+void set_lca_exists_in_T_of_nodes_in_S(Node & S, Node & R);
 
 
 
@@ -569,12 +569,12 @@ int find_best_node_to_prune_and_its_best_regraft_place(Node & T, Node * source_t
 		}
 
 
-		//cout << "-------------------------------------------------------------------\n";
+		//cout << "\n\n-------------------------------------------------------------------\n";
+		//cout << "---------spr_on(v): " << (*iter)->str_subtree() << " -------------------\n" ;
 		Node* best_regraft_place_for_current_v = apply_SPR_RS_algorithm_to_find_best_regraft_place(T, **iter, source_trees_array, non_shared_taxon_arr, weighted);
-		//cout << "---------spr_on(v): " << (*iter)->get_preorder_number() << endl;
-		//cout << "------best regraft: " << best_regraft_place_for_current_v->get_preorder_number() << endl;
-		Node* old_sibling = (*iter)->get_sibling();
+		//cout << "------best regraft: " << best_regraft_place_for_current_v->str_subtree() << endl;
 		//cout << "old_sibling prenum: " << old_sibling->get_preorder_number() << endl;
+		Node* old_sibling = (*iter)->get_sibling();
 
 
 
@@ -836,7 +836,7 @@ void find_best_regraft_place(Node & Q, Node*& best_regraft_place, int& max) {
 	NUM_SPR_NGHBRS++;
 	int best = Q.get_alpha() - Q.get_beta();
 	//cout << "....alpha-beta....for: " << Q.str_subtree() << ": " <<  Q.get_alpha() << "-" << Q.get_beta() << " = " << best << endl;
-	if (best > max) {
+	if (best >= max) {
 		max = best;
 		best_regraft_place = &Q;
 	}
@@ -953,6 +953,24 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 
 	} else { //normal case
 		//cout << "---normal case: i.e. v is not the child of root---" << endl;
+
+
+
+
+
+		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
+			Node * T_copy = build_tree(T.str_subtree());
+			T_copy -> copy_fields_for_supertree(T);
+			restrict_supertree(*T_copy, non_shared_taxon_arr[i]);
+			//cout << "______________________________________________\n";
+			set_lca_exists_in_T_of_nodes_in_S(*source_trees_array[i], *T_copy);
+			//cout << "______________________________________________\n";
+
+		}
+
+
+
+
 
 		Q = &T; //here Q is going to be T
 		R = new Node();
@@ -1074,7 +1092,7 @@ void traverse_S_and_update_alpha_beta_in_Q(Node& old_sibling_of_v_in_T, Node & Q
 		}
 	} else {  //if internal node
 
-		//cout << "\n\n++++++++++++++++++++node u in S being considered: " << S.str_subtree() << endl;
+		//cout << "\n\n_____node u in S being considered: " << S.str_subtree() << endl;
 		//cout << "its lca_mapping is: " << S.get_lca_mapping()->str_subtree() << endl;
 		Node* a;
 
@@ -1101,7 +1119,23 @@ void traverse_S_and_update_alpha_beta_in_Q(Node& old_sibling_of_v_in_T, Node & Q
 					//cout << "________w____increment beta on : " << a->str_subtree() << endl;
 				} else {
 					//a->increment_beta_in_all_descendants(1);
-					(Q.find_by_prenum(a->get_preorder_number()))->increment_beta_in_all_descendants(1);
+
+
+
+
+
+					if (S.get_lca_exists_in_T()) {
+						(Q.find_by_prenum(a->get_preorder_number()))->increment_beta_in_all_descendants(1);
+					} else {
+						Q.increment_alpha_in_all_descendants_except(a, 1);
+
+					}
+
+
+
+
+
+
 					//cout << "____________increment beta on : " << a->str_subtree() << endl;
 					//cout << "node on which increment is called: " << (Q.find_by_prenum(a->get_preorder_number()))->str_subtree() << endl;
 				}
@@ -1196,9 +1230,18 @@ void traverse_S_and_update_alpha_beta_in_Q(Node& old_sibling_of_v_in_T, Node & Q
 					//if u's cluster is the same as v's parent's cluster, then u's cluster existed in T, although not in R, and therefore we should not increment alpha!!!
 					if (u_cluster.size() != (lca_of_u_in_T->find_leaves()).size() ) {
 					*/
+
+					if (! S.get_lca_exists_in_T()) {
+
 						(Q.find_by_prenum(b_in_lemma12->get_preorder_number()))->increment_alpha_in_all_descendants(1);
-						//cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
-						//cout << "lemma12 \n" ;
+						//cout << "+++ F_T(u) = 0 --> increment alpha\n";
+
+					} else {
+						Q.increment_beta_in_all_descendants_except(b_in_lemma12, 1);
+						//cout << "+++ F_T(u) = 1\n";
+					}
+					//cout << "____________increment alpha on b lemma 12: " << b_in_lemma12->str_subtree() << endl;
+					//cout << "lemma12 \n" ;
 					//}
 
 				}
@@ -1260,7 +1303,7 @@ void find_b_in_lemma12(Node & u, Node & S, Node & R, Node & v) {
 
 
 //for all u in I(S), find the LCA mapping of u:
-//1-Let's cluster(u) be set of leaves in subtree rooted u in tree S,
+//1-Let cluster(u) be set of leaves in subtree rooted at u in tree S,
 //2-Find LCA of cluster(u) in tree R, and set its lca_mapping
 //NOTE: lca_mapping is the prenum f the LCA node in R
 void compute_lca_mapping_S_R(Node & S, Node & R) {
@@ -2462,7 +2505,33 @@ int find_rf_dist_between_two_heterogenous_trees_2(Node & t1, Node & t2, bool wei
 
 
 
+////////////bug in RFS alg: check if L_T(u)==0
+void set_lca_exists_in_T_of_nodes_in_S(Node & S, Node & R) {
 
+	if (S.is_leaf()) {
+		S.set_lca_exists_in_T(true);
+	} else {
+		Node* lca_mapping;
+		vector<int> cluster = S.get_cluster();
+		bool f = false;
+		compute_lca_mapping_helper_2(cluster, &R, lca_mapping, f);
+
+		//cout << "\n  u: " << S.str_subtree() << endl;
+		//cout << "lca: " << lca_mapping->str_subtree() << endl;
+		if ( S.get_cluster_size() == (lca_mapping -> find_leaves()).size() ) {
+			S.set_lca_exists_in_T(true);
+		} else {
+			S.set_lca_exists_in_T(false);
+		}
+
+		//recursively set children's lca_mapping
+		list<Node *>::iterator c;
+		list<Node *> children = S.get_children();
+		for (c = children.begin(); c != children.end(); c++) {
+			set_lca_exists_in_T_of_nodes_in_S(**c, R);
+		}
+	}
+}
 
 
 

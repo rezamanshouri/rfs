@@ -51,10 +51,12 @@ private:
 	//for finding LCA mapping of u in I(S), I need to find cluter corresponding to u, since source trees won't change, why not do it once and store it in DS? :)
 
 	int edge_weight;	//this will be the weight of the edge between this and its parent
-	Node* lca_mapping;  //for the cluster associated to this node, lca_mapping is the prenum of the LCA node in supertree
+	Node* lca_mapping;  //for the cluster associated to this node, lca_mapping is a poniter to the LCA node in supertree
 	int lca_hlpr;
 	Node* b_in_lemma12;
 	bool XXX;
+
+	bool lca_exists_in_T;
 
 	//////rfs implementation
 
@@ -112,6 +114,7 @@ public:
 		this->beta = 0;
 		this->int_label = -1;
 		this->lca_mapping = 0;
+		this->lca_exists_in_T = false;
 		this->lca_hlpr = 0;
 		this->b_in_lemma12 = 0;
 		this->edge_weight = 1;
@@ -232,6 +235,15 @@ public:
 		return XXX;
 	}
 
+
+	bool set_lca_exists_in_T(bool b) {
+		lca_exists_in_T = b;
+	}
+	bool get_lca_exists_in_T() {
+		return lca_exists_in_T;
+	}
+
+
 	void find_cluster_int_labels_hlpr(vector<int> &leaves) {
 		list<Node *>::iterator c;
 		for (c = children.begin(); c != children.end(); c++) {
@@ -290,13 +302,13 @@ public:
 	void increment_alpha_in_all_descendants(int weight) {
 		//if (is_leaf()) {	//this case was ignored in their algorithm, and is a bug if if ignored (note this won't happen for beta)
 		//if (int_label != -1) {	//remember is_leaf() won't work here since after restricting ST, we may have "internal" nodes with no children
-			alpha += weight;
+		alpha += weight;
 		//} else {
-			list<Node *>::iterator c;
-			list<Node *> children = get_children();
-			for (c = children.begin(); c != children.end(); c++)  {
-				(*c)->increment_alpha_in_all_descendants_hlpr(weight);
-			}
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c)->increment_alpha_in_all_descendants_hlpr(weight);
+		}
 		//}
 	}
 
@@ -309,6 +321,83 @@ public:
 			(*c)->increment_alpha_in_all_descendants_hlpr(weight);
 		}
 	}
+
+
+
+/////////////////////////////////
+
+	//increments alpha value in all descendants of this
+	void increment_alpha_in_all_descendants_except(Node* n, int weight) {
+		//if (is_leaf()) {	//this case was ignored in their algorithm, and is a bug if if ignored (note this won't happen for beta)
+		
+		if(this == n) {
+			return;
+		}
+
+		alpha += weight;
+
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c)->increment_alpha_in_all_descendants_except_hlpr(n, weight);
+		}
+
+	}
+
+	void increment_alpha_in_all_descendants_except_hlpr(Node* n, int weight) {
+		
+		if(this == n) {
+			return;
+		}
+
+		set_alpha(get_alpha() + weight);
+
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c)->increment_alpha_in_all_descendants_except_hlpr(n, weight);
+		}
+	}
+
+
+
+	void increment_beta_in_all_descendants_except(Node* n, int weight) {
+		//if (is_leaf()) {	//this case was ignored in their algorithm, and is a bug if if ignored (note this won't happen for beta)
+		
+		if(this == n) {
+			return;
+		}
+
+		beta += weight;
+
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c)->increment_beta_in_all_descendants_except_hlpr(n, weight);
+		}
+
+	}
+
+	void increment_beta_in_all_descendants_except_hlpr(Node* n, int weight) {
+		
+		if(this == n) {
+			return;
+		}
+
+		set_beta(get_beta() + weight);
+
+		list<Node *>::iterator c;
+		list<Node *> children = get_children();
+		for (c = children.begin(); c != children.end(); c++)  {
+			(*c)->increment_beta_in_all_descendants_except_hlpr(n, weight);
+		}
+	}
+
+
+///////////////////////////////////////////////////
+
+
+
 
 	//increments beta value in all descendants of this
 	void increment_beta_in_all_descendants(int weight) {
