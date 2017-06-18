@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
 	int initial_suptrees_rf_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxon_arr, wghtd);
 	cout << "initial_suptrees_rf_score: " << initial_suptrees_rf_score << endl;
 
-	cout << "\nsource trees and supertree has been read, let's start running edge-ratchet algorithm using RFS" << endl;
+	//cout << "\nsource trees and supertree has been read, let's start running edge-ratchet algorithm using RFS" << endl;
 	cout << "********************************************************************" << endl;
 
 
@@ -342,49 +342,13 @@ int main(int argc, char** argv) {
 
 		//search until reaching a local optimum
 		int iteration = 0;
+		bool local_opt = false;
 		while (true) {
 			NUM_SPR_NGHBRS = 0;
 			clock_t start_time_iter, finish_time_iter;
 			start_time_iter = clock();
 
 			iteration ++;
-
-			Node* best_node_to_prune;
-			Node* best_node_to_regraft;
-			//cout << "\ninit  ST: " << supertree->str_subtree() << "\n";
-			int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxon_arr, best_node_to_prune, best_node_to_regraft, ratchet);
-
-			cout << "best_node_to_prune prenum: " << best_node_to_prune -> get_preorder_number() << endl;
-			cout << "best_regraft_node  prenum: " << best_node_to_regraft -> get_preorder_number() << endl;
-
-
-			///////////////////////////////////////////////////////////////////
-			////////////   considering all best nghbrs in local search  ///////
-			///////////////////////////////////////////////////////////////////
-
-			vector<pair<Node*, vector<Node*>>> best_nodes_to_prune_and_their_best_regraft_places;
-			int current_score1 = find_all_best_nodes_to_prune_and_their_best_regraft_places(*supertree, source_trees_array, non_shared_taxon_arr, best_nodes_to_prune_and_their_best_regraft_places, ratchet);
-
-
-
-			for (auto const& n1 : best_nodes_to_prune_and_their_best_regraft_places) {
-				int ii = 0;
-				cout << "\n---prun_prenum: " << n1.first -> get_preorder_number() << endl;
-				for (auto const& n2 : n1.second) {
-					int ww = 0;
-					Node* olds = n1.first -> spr(n2 , ww);
-					int curr_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxon_arr, ratchet);
-					n1.first -> spr(olds, ww);
-					cout << "---regraft_prenum: " << n2 -> get_preorder_number() << " \n---RF_score: " << curr_score << endl;
-				} cout << "\n";
-			}
-
-
-
-			///////////////////////////////////////////////////////////////////
-			///////////////////////////////////////////////////////////////////
-
-
 
 
 			///////////////////////////////////////////////////////////////////
@@ -407,6 +371,167 @@ int main(int argc, char** argv) {
 
 
 
+			///////////////////////////////////////////////////////////////////
+			////////////   considering all best nghbrs in local search  ///////
+			///////////////////////////////////////////////////////////////////
+
+		
+
+			//if (local_opt) {
+
+				vector<pair<Node*, vector<Node*>>> best_nodes_to_prune_and_their_best_regraft_places;
+				int current_score = find_all_best_nodes_to_prune_and_their_best_regraft_places(*supertree, source_trees_array, non_shared_taxon_arr, best_nodes_to_prune_and_their_best_regraft_places, ratchet);
+
+				cout << "---------------------------------------------------------\n";
+				cout << "There are " << best_nodes_to_prune_and_their_best_regraft_places.size() << " neghibors in 1st-SPR neighborhood with same best score of: " << current_score << endl;
+				cout << "----------------------------------------------------------\n";
+				cout << "1 SPR\t\t2nd SPR\t\tbest score\n";
+				cout << "prune,\t\tprune,\t\tachievable\n";
+				cout << "regraft\t\tregraft\t\tin 2nd SPR\n";
+				cout << "------\t\t-------\t\t----------\n";
+
+				Node* first_spr_best_node_to_prune = best_nodes_to_prune_and_their_best_regraft_places[0].first;	
+				Node* first_spr_best_node_to_regraft = best_nodes_to_prune_and_their_best_regraft_places[0].second[0];
+				Node* second_spr_best_node_to_prune = nullptr;
+				Node* second_spr_best_node_to_regraft = nullptr;				
+				int best_2nd_spr_score = current_score;	// the score achievable from 2nd best spr move from current supertree			
+				for (auto const& n1 : best_nodes_to_prune_and_their_best_regraft_places) {
+					for (auto const& n2 : n1.second) {
+						cout << n1.first-> get_preorder_number() << "," << n2-> get_preorder_number() << "\t\t";
+
+						int ws = 0;
+						Node* olds = n1.first -> spr(n2 , ws);
+						adjustTree(supertree);
+						set_cluster_and_cluster_size(supertree);
+
+
+						//int second_spr_score = calculate_rf_score_2(*supertree, source_trees_array, non_shared_taxon_arr, ratchet);
+						Node* b_prune;	//2nd spr
+						Node* b_regraft; //2nd spr	
+						int second_spr_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxon_arr, b_prune, b_regraft, ratchet);
+
+						cout << b_prune-> get_preorder_number() << "," << b_regraft-> get_preorder_number() << "\t\t";
+						cout << second_spr_score << endl;
+
+						if(second_spr_score < best_2nd_spr_score) {
+							first_spr_best_node_to_prune = n1.first;	
+							first_spr_best_node_to_regraft = n2;
+							second_spr_best_node_to_prune = b_prune;
+							second_spr_best_node_to_regraft = b_regraft;
+							best_2nd_spr_score = second_spr_score;
+							current_score = second_spr_score;	//"current_score" has not cheanged yet since 2nd spr has not actually happend yet, but here is good place to update it
+						}
+
+
+						n1.first -> spr(olds, ws);
+						adjustTree(supertree);
+						set_cluster_and_cluster_size(supertree);
+
+					} 
+					cout << "\n";
+				}
+				cout << "Best 1st spr (prun,regraft) prenum: " << first_spr_best_node_to_prune -> get_preorder_number() << ", " << first_spr_best_node_to_regraft -> get_preorder_number() << endl;
+				cout << "----------------------------------------------------------\n";
+
+
+				if(second_spr_best_node_to_prune != nullptr) {	
+					//there is a better score in the neghborhood of some of the best spr neighbors of the current supertree 
+					//Thus, we can save some time by directly preforming the 2 SPR operations consecutively
+
+					//perform 2 SPRs
+					Node* old_sibling_1 = first_spr_best_node_to_prune -> spr(first_spr_best_node_to_regraft);	//which_sibling is set to 0
+					adjustTree(supertree);
+					Node* old_sibling_2 = second_spr_best_node_to_prune -> spr(second_spr_best_node_to_regraft);	//which_sibling is set to 0
+
+					set_cluster_and_cluster_size(supertree);
+					adjustTree(supertree);
+
+					supertree = first_spr_best_node_to_prune->find_root();
+					
+
+					best_score_of_current_hill = best_2nd_spr_score;
+					best_supertree_of_current_hill = supertree->str_subtree();
+
+					finish_time_iter = clock();
+					float diff ((float)finish_time_iter - (float)start_time_iter);
+					float iter_time = diff / CLOCKS_PER_SEC;
+					cout << "Iter: " << 2*iteration << ", num_spr_neighbours: " <<
+					     NUM_SPR_NGHBRS << ", RF_dist: " << current_score << ", time(sec) : " << iter_time << "\n";
+					cout << "===============================================================================\n";
+				
+				} else { //1 spr away from local optimum
+						//there is no better score in the neghborhood of any of the best spr neighbors of the current supertree 
+						//i.e. after 1 spr (first_spr_best_node_to_prune -> (first_spr_best_node_to_regraft, w)), we are at the local optimum
+						//perform that 1 spr, then you are at local optimum
+
+					Node* old_sibling_1 = first_spr_best_node_to_prune -> spr(first_spr_best_node_to_regraft);
+					set_cluster_and_cluster_size(supertree);
+					adjustTree(supertree);
+					supertree = first_spr_best_node_to_prune->find_root();
+
+					best_score_of_current_hill = best_2nd_spr_score;
+					best_supertree_of_current_hill = supertree->str_subtree();
+
+
+					if (ratchet) {
+						cout << "\nratchet local opt (re-weighted) reached." << endl;
+						cout << "---------------------------------------------------\n" << endl;
+					} else {
+						cout << "\nregular local opt (original weights) reached. ###" << endl;
+					}
+
+					if (!ratchet) { //we are at the end of one ratchet iteration
+						if (best_score_of_current_hill < the_best_rf_distance_seen) { //keep track of best supertree seen so far
+							cout << "##############Whoooooooop!! Better supertree seen####################" << best_score_of_current_hill << endl;
+							cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
+							cout << "##############Whoooooooop!! Better supertree seen####################" << endl;
+							cout << best_supertree_of_current_hill << endl;
+							the_best_rf_distance_seen = best_score_of_current_hill;
+							the_best_supertree_seen = best_supertree_of_current_hill;
+						}
+
+						cout << "=======================================end of " << ratchet_counter << "-th ratchet iter=========================================" << endl;
+						cout << "========================================================================================================" << endl;
+
+						break;  //end of second phase of ONE ratchet iteration
+
+					} else { //now perform a regular branch swapping
+
+						ratchet = false;
+						iteration = 0;
+					}
+
+					best_score_of_current_hill = INT_MAX;
+				}
+				
+
+
+			//}
+
+			//if (current_score == 77) local_opt = true;
+
+		
+	
+			///////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////
+
+
+
+
+			///////////////////////////////////////////////////////////////////
+			////////////     Consider only one of the best neghbors     ///////
+			///////////////////////////////////////////////////////////////////
+		/*	
+
+			Node* best_node_to_prune;
+			Node* best_node_to_regraft;
+			int current_score = find_best_node_to_prune_and_its_best_regraft_place(*supertree, source_trees_array, non_shared_taxon_arr, best_node_to_prune, best_node_to_regraft, ratchet);
+
+			cout << "best_node_to_prune prenum: " << best_node_to_prune -> get_preorder_number() << endl;
+			cout << "best_regraft_node  prenum: " << best_node_to_regraft -> get_preorder_number() << endl;
+			
+
+
 			//if weightde phase, then stop after 3 iterations, i.e. don't continue until reaching local optimum
 			if (current_score < best_score_of_current_hill) {
 
@@ -427,7 +552,6 @@ int main(int argc, char** argv) {
 				cout << "Iter: " << iteration << ", num_spr_neighbours: " <<
 				     NUM_SPR_NGHBRS << ", RF_dist: " << current_score << ", time(sec) : " << iter_time << "\n";
 				cout << "===============================================================================\n";			//cout << "T: " << supertree->str_subtree() << endl;
-
 
 			}
 			else { // local optimum
@@ -474,6 +598,11 @@ int main(int argc, char** argv) {
 				//distance is always larger than un-weighted and the init ST from previous step is local opt
 				//already.
 			}
+		*/	
+		
+			//////////////////////end of "taking one best neighbor"////////////////////////
+			///////////////////////////////////////////////////////////////////////////////			
+
 
 		}//end of one branch swapping search loop
 
@@ -514,10 +643,11 @@ int main(int argc, char** argv) {
 void preorder_traversal(Node & n) {
 
 	//cout << n.str_subtree() << endl;
-	cout << "prenum is : " << n.get_preorder_number() << endl;
-	cout << "clade: " << n.str_subtree() << "\n" << endl;
+	//cout << "prenum is : " << n.get_preorder_number() << endl;
+	//cout << "clade: " << n.str_subtree() << "\n" << endl;
 	//cout << n.get_alpha() << "-" << n.get_beta() << "= " << n.get_alpha() - n.get_beta() << endl;
 	//cout << "(edge to parent) weight: " << n.get_edge_weight() << "\n" << endl;
+	cout << n.get_preorder_number() << ", ";
 
 	//just for testing:
 	list<Node *>::iterator c;
@@ -836,7 +966,7 @@ void find_best_regraft_place(Node & Q, Node*& best_regraft_place, int& max) {
 	NUM_SPR_NGHBRS++;
 	int best = Q.get_alpha() - Q.get_beta();
 	//cout << "....alpha-beta....for: " << Q.str_subtree() << ": " <<  Q.get_alpha() << "-" << Q.get_beta() << " = " << best << endl;
-	if (best >= max) {
+	if (best > max) {
 		max = best;
 		best_regraft_place = &Q;
 	}
@@ -957,7 +1087,7 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 
 
 
-
+		/*
 		for (int i = 0; i <::NUMBER_OF_SOURCE_TREES_ZZ; i++) {
 			Node * T_copy = build_tree(T.str_subtree());
 			T_copy -> copy_fields_for_supertree(T);
@@ -967,7 +1097,7 @@ Node* apply_SPR_RS_algorithm_to_find_best_regraft_place(Node & T, Node & v, Node
 			//cout << "______________________________________________\n";
 
 		}
-
+		*/
 
 
 
